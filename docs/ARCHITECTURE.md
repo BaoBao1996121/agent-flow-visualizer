@@ -23,6 +23,7 @@ flowchart TB
     LEDGER --> PROJECT[Versioned pure reducers]
     PROJECT --> WORLD[World state]
     PROJECT --> TIMELINE[Timeline / cost / coverage]
+    PROJECT --> COVERAGE[Adapter visibility / blind spots]
     LEDGER --> CAUSAL[Causal slice]
     LEDGER --> REPLAY[Replay service]
     LEDGER --> STREAM[SSE / future WebSocket]
@@ -78,6 +79,8 @@ The local implementation now stores immutable world snapshots keyed by run, redu
 The local branch implementation materializes a parent prefix into a new ledger, remaps event/causal identity, adds `derived_from` links to the parent, records the parent state hash, and appends `run.forked`. It never executes a model or tool. A future database backend should represent branches as parent snapshot + tail DAG to avoid copying long prefixes.
 
 Pixel rendering consumes world state. It cannot update authoritative state itself.
+
+Instrumentation visibility is a projection, not a score. It combines the event families recorded at the current cursor with versioned built-in adapter capability contracts. The state name `observed` means “an event or metric signal is present in the ledger,” not that every event has `evidence.level=observed`; the truth mix remains a separate dimension. The other states are `observable_not_seen` and `outside_adapter_contract`; “not seen” is never treated as proof that an operation did not occur. Third-party adapters without a registered contract are shown as unregistered.
 
 ### 5. Delivery
 

@@ -48,6 +48,8 @@ def test_schema_endpoint_publishes_truth_contract(tmp_path):
     body = response.json()
     assert body["schema_version"] == "0.1.0"
     assert body["reducer_version"] == "0.1.0"
+    assert body["coverage_contract_version"] == "0.1.0"
+    assert "anthill.ag-ui" in body["adapter_coverage_contracts"]
     assert "compaction.completed" in body["event_types"]
     assert set(body["evidence_levels"]) == {
         "observed",
@@ -84,6 +86,25 @@ def test_one_click_demo_is_explicitly_synthetic_and_projects_all_core_chambers(t
     assert world["evidence_counts"]["inferred"] == 2
     assert world["zone_activity"] == {}
     assert all(item["status"] == "recovered" for item in world["errors"])
+
+
+def test_world_visibility_tracks_the_historical_cursor_without_absence_claims(tmp_path):
+    client = client_for(tmp_path)
+    run_id = client.post("/api/anthill/demo").json()["run_id"]
+
+    historical = client.get(
+        f"/api/anthill/runs/{run_id}/world", params={"at_seq": 20}
+    ).json()
+    head = client.get(f"/api/anthill/runs/{run_id}/world").json()
+
+    historical_domains = {
+        row["domain"]: row for row in historical["visibility"]["domains"]
+    }
+    head_domains = {row["domain"]: row for row in head["visibility"]["domains"]}
+    assert historical_domains["tool"]["event_count"] == 1
+    assert head_domains["tool"]["event_count"] == 6
+    assert historical["visibility"]["score"] is None
+    assert head["visibility"]["warnings"]
 
 
 def test_agui_import_is_metadata_only_and_immediately_projectable(tmp_path):

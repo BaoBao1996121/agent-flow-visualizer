@@ -790,6 +790,7 @@
             this.renderCognition();
             this.renderChamberList();
             this.renderStatePanel();
+            this.renderCoveragePanel();
             this.renderEventFeed();
             this.renderTimeline();
             const isHead = this.cursorSeq === this.headSeq;
@@ -908,6 +909,73 @@
                     <header><span>${esc(block.title)}</span><b>${esc(block.value)}</b></header>
                     <dl>${block.rows.map(([key, value, className]) => `<dt>${esc(key)}</dt><dd class="${esc(className)}">${esc(value)}</dd>`).join('')}</dl>
                 </section>`).join('');
+        }
+
+        renderCoveragePanel() {
+            const visibility = this.worldResponse?.visibility;
+            const container = $('coverage-content');
+            if (!visibility) {
+                $('coverage-heading').textContent = 'VISIBILITY UNKNOWN';
+                $('coverage-subheading').textContent = 'This server did not return an instrumentation contract.';
+                container.className = 'coverage-content empty-detail';
+                container.textContent = '升级服务端后再检查适配器能力与盲区。';
+                return;
+            }
+            const domains = visibility.domains || [];
+            const observed = domains.filter(row => row.status === 'observed');
+            const notSeen = domains.filter(row => row.status === 'observable_not_seen');
+            const outside = domains.filter(row => row.status === 'outside_adapter_contract');
+            $('coverage-heading').textContent = `${observed.length} DOMAINS WITH SIGNALS`;
+            $('coverage-subheading').textContent = `Contract ${visibility.contract_version} · no synthetic coverage score.`;
+            const signalText = row => {
+                const parts = [];
+                if (row.event_count) parts.push(`${row.event_count} EVT`);
+                if (row.measurement_keys?.length) parts.push(`${row.measurement_keys.length} METRIC`);
+                return parts.join(' · ') || '0 SEEN';
+            };
+            const domainRow = row => `
+                <div class="coverage-domain ${esc(row.status)}">
+                    <i></i><span>${esc(row.domain.toUpperCase())}</span>
+                    <b>${esc(row.status === 'observable_not_seen' ? 'CAN OBSERVE · 0 SEEN' : signalText(row))}</b>
+                </div>`;
+            const adapters = (visibility.adapters || []).map(adapter => `
+                <article class="coverage-adapter ${adapter.registered ? '' : 'unregistered'}">
+                    <header><strong>${esc(adapter.label)}</strong><span>${esc(adapter.kind.toUpperCase())}</span></header>
+                    <code>${esc(adapter.adapter)} · ${esc(adapter.event_count)} EVT</code>
+                    <p>${esc(adapter.can_observe.length ? `CAN OBSERVE: ${adapter.can_observe.join(', ')}` : 'NO NEW OBSERVATION CONTRACT')}</p>
+                </article>`).join('');
+            const blindSpots = (visibility.blind_spots || []).map(item => `<li>${esc(item)}</li>`).join('');
+            const unregistered = visibility.unregistered_adapters?.length
+                ? `<div class="coverage-alert">UNREGISTERED: ${esc(visibility.unregistered_adapters.join(', '))}</div>`
+                : '';
+            container.className = 'coverage-content';
+            container.innerHTML = `
+                <div class="coverage-warning">${esc(visibility.warnings?.[0] || 'Unobserved does not mean absent.')}</div>
+                ${unregistered}
+                <section class="coverage-section">
+                    <header><span>VISIBLE EVENT / METRIC SIGNALS</span><b>${observed.length}</b></header>
+                    <div class="coverage-domains">${observed.map(domainRow).join('') || '<div class="empty-detail">No semantic domain observed</div>'}</div>
+                </section>
+                <section class="coverage-section">
+                    <header><span>OBSERVABLE / NOT SEEN</span><b>${notSeen.length}</b></header>
+                    <div class="coverage-domains">${notSeen.map(domainRow).join('') || '<div class="empty-detail">No declared-but-unseen domain</div>'}</div>
+                </section>
+                <section class="coverage-section">
+                    <header><span>OUTSIDE CONTRACT</span><b>${outside.length}</b></header>
+                    <p class="coverage-muted">${esc(outside.map(row => row.domain).join(', ') || 'none')}</p>
+                </section>
+                <section class="coverage-section">
+                    <header><span>UNKNOWN FOG TYPES</span><b>${visibility.unmapped_event_types?.length || 0}</b></header>
+                    <p class="coverage-muted">${esc(visibility.unmapped_event_types?.join(', ') || 'none')}</p>
+                </section>
+                <section class="coverage-section">
+                    <header><span>ADAPTER CONTRACTS</span><b>${visibility.adapters?.length || 0}</b></header>
+                    ${adapters || '<div class="empty-detail">No adapter identity observed</div>'}
+                </section>
+                <section class="coverage-section">
+                    <header><span>KNOWN BLIND SPOTS</span><b>${visibility.blind_spots?.length || 0}</b></header>
+                    <ul class="coverage-blind-spots">${blindSpots || '<li>No registered blind-spot statement</li>'}</ul>
+                </section>`;
         }
 
         renderEventFeed(zoneFilter = null) {

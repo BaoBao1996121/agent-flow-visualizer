@@ -19,6 +19,11 @@ from .adapters.agui import (
 )
 from .adapters.otlp import OtlpImportError, otlp_json_to_events
 from .branching import materialize_fork_events
+from .coverage import (
+    COVERAGE_CONTRACT_VERSION,
+    build_instrumentation_visibility,
+    describe_adapter_contracts,
+)
 from .projection_service import WorldProjectionService
 from .projections import (
     REDUCER_VERSION,
@@ -129,6 +134,8 @@ def create_anthill_router(
             "evidence_levels": [item.value for item in EvidenceLevel],
             "source_fidelities": [item.value for item in SourceFidelity],
             "zone_by_family": ZONE_BY_FAMILY,
+            "coverage_contract_version": COVERAGE_CONTRACT_VERSION,
+            "adapter_coverage_contracts": describe_adapter_contracts(),
             "truth_contract": {
                 "observed": "Captured directly while the runtime executed",
                 "declared": "Explicitly present in source or framework configuration",
@@ -376,6 +383,7 @@ def create_anthill_router(
                 "events_replayed": result.events_replayed,
                 "warnings": result.warnings,
             },
+            "visibility": build_instrumentation_visibility(state),
             "state": state.model_dump(mode="json"),
         }
 

@@ -77,7 +77,7 @@ Long traces must collapse by semantic stage before they become graph hairballs.
 
 ## Current scope
 
-The current implementation proves the event kernel, Python and OTLP/OpenInference paths, local ledger, snapshot-accelerated deterministic projection, time travel, comparison, explicit causal slicing, and the first pixel observatory. It does not yet prove:
+The current implementation proves the event kernel, Python, OTLP/OpenInference, and AG-UI JSON/NDJSON paths, local ledger, snapshot-accelerated deterministic projection, time travel, comparison, explicit causal slicing, cursor-specific instrumentation visibility, and the first pixel observatory. It does not yet prove:
 
 - arbitrary repository import;
 - production multi-process ingestion;

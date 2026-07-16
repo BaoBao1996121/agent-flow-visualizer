@@ -5,7 +5,7 @@
 
 ![Agent Anthill overview](docs/assets/anthill-overview.png)
 
-> Alpha · application `0.4.0` · event protocol `0.1.0`
+> Alpha · application `0.5.0` · event protocol `0.1.0` · coverage contract `0.1.0`
 > Python runtime tracing, OTLP/OpenInference import, and AG-UI JSON/NDJSON import work today. Framework-native live adapters remain the next expansion, not a claim hidden behind the UI.
 
 Most agent visualizers answer “what looks busy?” Agent Anthill is built to answer harder questions:
@@ -37,13 +37,14 @@ The pixel world is a semantic projection over an append-only event ledger. It is
 - Immutable, reducer-versioned world snapshots anchored to ledger event hashes; corrupt caches are ignored and recomputed from the ledger.
 - Side-effect-free materialized forks from any timeline cursor, with parent event/state hashes and remapped provenance links.
 - Explicit causal slices that never turn temporal adjacency into causation.
+- Cursor-specific instrumentation visibility: domains with recorded signals, registered adapter capabilities, declared blind spots, unregistered adapters, and Unknown Fog types—without a misleading aggregate score.
 - Synchronized two-run comparison with normalized progress, mechanism/metric diffs, and comparability warnings when project/task keys do not match.
 - Context budget, memory layers, compaction lineage, handoff, checkpoint, artifacts, usage, and incident projections.
 - FastAPI ingestion/query/replay/integrity APIs plus live SSE with gap detection and ledger resync.
 - Source X-Ray view for the original static call graph and real Python execution trace.
 - One-click, clearly labelled **synthetic fixture** covering all core chambers without network or model calls.
 - Metadata-only persistence by default; prompt, argument, return, and exception content require explicit opt-in.
-- 51 tests covering schema invariants, privacy, adapters, time travel, snapshots, branching, comparison, causality, tamper detection, concurrent append, and API behavior.
+- 55 tests covering schema invariants, privacy, adapters, time travel, snapshots, branching, comparison, causality, instrumentation visibility, tamper detection, concurrent append, and API behavior.
 
 ## Quick start
 
@@ -85,6 +86,12 @@ pixel object
 ```
 
 Unknown information stays in **Unknown Fog**. Missing telemetry never becomes a confident animation. The project does not expose private chain-of-thought; it only renders framework-provided plans, reasoning summaries, and observable operations.
+
+## Visibility without absence claims
+
+![Agent Anthill instrumentation visibility](docs/assets/anthill-coverage.png)
+
+The `COVERAGE` inspector answers two separate questions: which semantic domains have evidence at this timeline cursor, and which domains each registered adapter is designed to observe. It also lists declared blind spots, unregistered adapters, and unmapped event types. It intentionally emits no aggregate percentage: “observable but not seen” is not proof that an operation did not occur.
 
 ## Architecture
 
@@ -143,7 +150,7 @@ Useful endpoints:
 | `POST /api/anthill/import/otlp` | OTLP JSON/OpenInference span import |
 | `POST /api/anthill/import/agui` | AG-UI JSON or NDJSON event import |
 | `GET /api/anthill/runs/{run_id}/events` | Ordered, paginated event query |
-| `GET /api/anthill/runs/{run_id}/world?at_seq=17` | Historical world projection |
+| `GET /api/anthill/runs/{run_id}/world?at_seq=17` | Historical world plus cursor-specific instrumentation visibility |
 | `POST/GET /api/anthill/runs/{run_id}/snapshots` | Create/inspect projection snapshots |
 | `POST /api/anthill/runs/{run_id}/fork` | Materialize a no-rerun branch at a cursor |
 | `GET /api/anthill/runs/{run_id}/replay` | Replay window with initial/final state |

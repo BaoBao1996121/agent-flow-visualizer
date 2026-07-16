@@ -20,3 +20,16 @@ Sources checked before the spike:
 These results validate implementation assumptions, not full protocol
 conformance. AG-UI draft events and future protocol versions remain subject to
 change and are retained with their source type/version for reprocessing.
+
+## 2026-07-16 — instrumentation visibility projection
+
+| Assumption | Validation | Result |
+|---|---|---|
+| Historical `WorldState` contains enough authoritative aggregate data to build a cursor-specific visibility view. | Projected the 44-event exhibit through the ledger and proved `sum(event_type_counts) == event_count == 44`. | PASS. The projection must use the requested cursor state, never the head manifest. |
+| Current built-in adapters have stable identities suitable for a versioned capability registry. | Normalized demo, AG-UI, and OTLP fixtures and checked their adapter names against all built-in adapter identities. | PASS. Unregistered third-party adapters must be shown as unregistered, not assigned guessed capabilities. |
+| A bounded domain taxonomy covers every stable core event family. | Compared every `CoreEventType` prefix with the proposed domain set. | PASS for protocol `0.1.0`; extension families remain visible as extensions rather than being silently coerced. |
+
+The visibility model deliberately has no aggregate “coverage percentage.” It
+distinguishes `observed`, `observable_not_seen`, and
+`outside_adapter_contract`; none of those labels proves that an unobserved
+operation did or did not happen.

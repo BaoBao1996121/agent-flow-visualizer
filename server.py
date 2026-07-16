@@ -20,7 +20,7 @@ from anthill.adapters import flow_graph_to_events, trace_result_to_events
 from anthill.store import DuplicateEventError, JsonlEventStore
 
 
-app = FastAPI(title="Agent Anthill", version="0.4.0")
+app = FastAPI(title="Agent Anthill", version="0.5.0")
 
 # Local-first canonical event ledger. Set ANTHILL_DATA_DIR to keep recordings
 # elsewhere; event content defaults to metadata-only when runtime traces are

@@ -195,6 +195,7 @@
         <aside class="inspector" aria-label="证据检查器">
             <div class="inspector-tabs" role="tablist">
                 <button class="active" data-tab="state" type="button">STATE</button>
+                <button data-tab="coverage" type="button">COVERAGE</button>
                 <button data-tab="event" type="button">EVENT</button>
                 <button data-tab="causal" type="button">CAUSAL</button>
             </div>
@@ -210,6 +211,15 @@
                     <div class="section-title"><span>RECENT LEDGER</span><span class="section-code" id="recent-count">0</span></div>
                     <ol class="event-feed" id="event-feed"></ol>
                 </section>
+            </div>
+
+            <div class="inspector-panel" id="coverage-panel">
+                <div class="inspector-heading">
+                    <span class="section-kicker">INSTRUMENTATION VISIBILITY</span>
+                    <h2 id="coverage-heading">等待能力契约</h2>
+                    <p id="coverage-subheading">未见事件不等于操作没有发生。</p>
+                </div>
+                <div id="coverage-content" class="coverage-content empty-detail">选择 run 后显示适配器能力与盲区。</div>
             </div>
 
             <div class="inspector-panel" id="event-panel">

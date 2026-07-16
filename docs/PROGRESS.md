@@ -2,7 +2,7 @@
 
 ## Current state
 
-Agent Anthill `0.4.0` is a runnable local alpha with a versioned canonical event protocol, tamper-evident JSONL ledger, deterministic projection/snapshots, explicit causal inspection, historical playback, no-side-effect materialized forks, normalized run comparison, Python/OTLP/OpenInference/AG-UI inputs, and a Canvas + DOM observatory UI.
+Agent Anthill `0.5.0` is a runnable local alpha with a versioned canonical event protocol, tamper-evident JSONL ledger, deterministic projection/snapshots, explicit causal inspection, historical playback, no-side-effect materialized forks, normalized run comparison, Python/OTLP/OpenInference/AG-UI inputs, cursor-specific instrumentation visibility, and a Canvas + DOM observatory UI.
 
 Current verified baseline:
 
@@ -16,7 +16,7 @@ Current verified baseline:
 ## Next milestones
 
 1. Add a standard live OTLP receiver and AG-UI stream bridge with bounded ingestion/backpressure.
-2. Publish instrumentation-coverage maps, then add native LangGraph, Claude Code, and Codex hooks.
+2. Add native LangGraph, Claude Code, and Codex hooks with published capability contracts.
 3. Add queryable monitoring rules/exports and very-long-run server-side pagination.
 4. Replace materialized long-run branches with reference-based parent snapshot + tail DAG storage.
 5. Add sandboxed stub replay before considering any real rerun.
@@ -32,3 +32,5 @@ Current verified baseline:
 - Found and fixed cached Source X-Ray analysis skipping later persistence requests and leaking prior persistence metadata.
 - Added non-root/read-only Docker/Compose configuration and a CI container smoke job. Local Docker execution remains pending because Docker is unavailable on this workstation.
 - Added environment and assumption-validation records.
+- Added a fourth `COVERAGE` inspection layer that distinguishes observed domains, observable-but-not-seen domains, contract-external domains, blind spots, unregistered adapters, and Unknown Fog types without manufacturing a percentage.
+- Initialized local Git history on `main`; no remote or public repository has been created.
