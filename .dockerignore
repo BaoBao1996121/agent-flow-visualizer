@@ -1,0 +1,27 @@
+# Default-deny the build context so local traces, credentials, VCS metadata,
+# tests, caches, and developer files are never sent to the Docker daemon.
+**
+
+# Runtime root files.
+!server.py
+!requirements.txt
+!LICENSE
+!NOTICE
+
+# Runtime source and static assets.
+!analyzer/
+!analyzer/**
+!anthill/
+!anthill/**
+!tracer/
+!tracer/**
+!static/
+!static/**
+!samples/
+!samples/**
+
+# Keep generated Python artifacts out even inside allowlisted directories.
+**/__pycache__/
+**/*.py[cod]
+**/*.pyd
+**/*.so

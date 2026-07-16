@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Flow Visualizer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Cytoscape.js for graph visualization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+    <!-- Dagre layout for hierarchical graphs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header id="header">
+            <div class="header-left">
+                <h1>🔍 Agent Flow Visualizer</h1>
+                <span class="version">v0.2</span>
+            </div>
+            <div class="header-center">
+                <div class="input-group">
+                    <input type="text" id="project-path" placeholder="输入 Agent 项目目录路径..." />
+                    <button id="browse-btn" onclick="browseFolder()" title="浏览文件夹">
+                        <span class="btn-icon">📁</span>
+                    </button>
+                    <button id="analyze-btn" onclick="analyzeProject()">
+                        <span class="btn-icon">▶</span> 分析
+                    </button>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="search-box">
+                    <input type="text" id="node-search" placeholder="搜索节点..." oninput="onSearchInput(this.value)" onkeydown="if(event.key==='Enter'){event.shiftKey?searchPrev():searchNext()}" />
+                    <span class="search-nav">
+                        <button class="search-nav-btn" onclick="searchPrev()" title="上一个 (Shift+Enter)">▲</button>
+                        <button class="search-nav-btn" onclick="searchNext()" title="下一个 (Enter)">▼</button>
+                    </span>
+                    <span class="search-count" id="search-count"></span>
+                </div>
+                <button id="layout-btn" onclick="relayout()" title="重新布局" disabled>⟳ 布局</button>
+                <button id="fit-btn" onclick="fitGraph()" title="适应屏幕" disabled>⊞ 适应</button>
+                <button id="export-btn" onclick="exportImage()" title="导出PNG" disabled>📷 导出</button>
+                <select id="layout-select" onchange="changeLayout()" disabled>
+                    <option value="dagre">层级布局</option>
+                    <option value="breadthfirst">广度优先</option>
+                    <option value="circle">环形</option>
+                    <option value="concentric">同心圆</option>
+                    <option value="cose">力导向</option>
+                </select>
+            </div>
+        </header>
+
+        <!-- Main content -->
+        <div id="main">
+            <!-- Left sidebar - project info & legend -->
+            <aside id="sidebar-left">
+                <div class="panel" id="info-panel">
+                    <h3>项目信息</h3>
+                    <div id="project-info">
+                        <p class="placeholder">分析项目后显示信息</p>
+                    </div>
+                </div>
+
+                <div class="panel" id="legend-panel">
+                    <h3>图例</h3>
+                    <div class="legend">
+                        <div class="legend-item"><span class="legend-color" style="background:#4CAF50"></span> 入口点</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#2196F3"></span> LLM 调用</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#FF9800"></span> 工具/函数</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#f44336"></span> 决策分支</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#9C27B0"></span> 子 Agent</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#607D8B"></span> 数据处理</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#FF5722"></span> 输出</div>
+                        <div class="legend-item"><span class="legend-color" style="background:#9E9E9E"></span> 普通处理</div>
+                    </div>
+                </div>
+
+                <div class="panel" id="filter-panel">
+                    <h3>过滤器</h3>
+                    <div class="filters">
+                        <label><input type="checkbox" checked onchange="toggleNodeType('entry_point')"> 入口点</label>
+                        <label><input type="checkbox" checked onchange="toggleNodeType('llm_call')"> LLM 调用</label>
+                        <label><input type="checkbox" checked onchange="toggleNodeType('tool')"> 工具</label>
+                        <label><input type="checkbox" checked onchange="toggleNodeType('decision')"> 决策分支</label>
+                        <label><input type="checkbox" checked onchange="toggleNodeType('sub_agent')"> 子 Agent</label>
+                        <label><input type="checkbox" checked onchange="toggleNodeType('process')"> 普通处理</label>
+                        <label><input type="checkbox" checked onchange="toggleNodeType('output')"> 输出</label>
+                        <label><input type="checkbox" checked onchange="toggleNodeType('data_transform')"> 数据处理</label>
+                    </div>
+                </div>
+
+                <!-- Module Filter Panel -->
+                <div class="panel" id="module-filter-panel" style="display:none">
+                    <h3>模块过滤</h3>
+                    <div class="module-filter-actions">
+                        <button onclick="toggleAllModules(true)" class="btn-sm">全选</button>
+                        <button onclick="toggleAllModules(false)" class="btn-sm">全不选</button>
+                        <button onclick="collapseAllModules()" class="btn-sm" id="collapse-btn" title="折叠所有模块为单节点">折叠模块</button>
+                    </div>
+                    <div id="module-filter-list" class="module-filter-list"></div>
+                </div>
+
+                <!-- Simulation Panel -->
+                <div class="panel" id="simulation-panel">
+                    <h3>🌊 执行路径追踪</h3>
+                    <p class="panel-hint">选一个入口函数，查看代码的调用链路</p>
+                    <div id="sim-controls">
+                        <div class="sim-mode-toggle">
+                            <label class="mode-option" title="分析代码结构推断调用链路">
+                                <input type="radio" name="sim-mode" value="static" checked onchange="onSimModeChange()"> 📐 路径推演
+                            </label>
+                            <label class="mode-option" title="真正执行代码，记录实际调用">
+                                <input type="radio" name="sim-mode" value="trace" onchange="onSimModeChange()"> 🔴 实时运行
+                            </label>
+                        </div>
+                        <label>
+                            <span class="label-text">🚀 从哪个函数开始？</span>
+                            <select id="entry-select" disabled>
+                                <option value="">← 先点「分析」按钮</option>
+                            </select>
+                        </label>
+                        <div id="sim-static-options">
+                            <label>
+                                <span class="label-text">📝 模拟输入数据 <span class="label-optional">(可选)</span></span>
+                                <textarea id="sim-input" placeholder='{"query": "你好"}' rows="2" disabled></textarea>
+                            </label>
+                        </div>
+                        <div id="sim-trace-options" style="display:none">
+                            <label>
+                                <span class="label-text">📝 函数参数 <span class="label-optional">(JSON 数组，可选)</span></span>
+                                <textarea id="trace-args" placeholder='["参数1", "参数2"]' rows="2" disabled></textarea>
+                            </label>
+                        </div>
+                        <div class="sim-buttons">
+                            <button id="sim-btn" onclick="toggleSimulation()" disabled>
+                                ▶ 开始追踪
+                            </button>
+                            <button id="sim-step-btn" onclick="stepSimulation()" disabled>
+                                ⏭ 单步
+                            </button>
+                            <button id="sim-reset-btn" onclick="resetSimulation()" disabled>
+                                ⏹ 重置
+                            </button>
+                        </div>
+                        <div class="speed-control">
+                            <label>动画速度: <input type="range" id="sim-speed" min="200" max="3000" value="1000" step="100">
+                                <span class="speed-label">1s</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Graph canvas -->
+            <div id="graph-container">
+                <div id="cy"></div>
+                <div id="graph-stats" class="graph-stats" style="display:none">
+                    <div class="stat-item">节点 <span class="stat-value" id="stat-nodes">0</span></div>
+                    <div class="stat-item">边 <span class="stat-value" id="stat-edges">0</span></div>
+                    <div class="stat-item">模块 <span class="stat-value" id="stat-modules">0</span></div>
+                </div>
+                <div id="minimap"><canvas id="minimap-canvas"></canvas></div>
+                <div id="loading" class="hidden">
+                    <div class="spinner"></div>
+                    <p>正在分析项目...</p>
+                </div>
+                <div id="welcome" class="">
+                    <div class="welcome-content">
+                        <h2>🤖 Agent Flow Visualizer</h2>
+                        <p>输入 Python Agent 项目目录路径，点击「分析」按钮，即可可视化 Agent 内部结构。</p>
+                        <div class="features">
+                            <div class="feature">
+                                <span class="feature-icon">🔬</span>
+                                <h4>静态分析</h4>
+                                <p>AST 解析源码，自动识别 LLM 调用、工具、决策分支</p>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon">🌊</span>
+                                <h4>数据流模拟</h4>
+                                <p>动画展示不同输入在 Agent 内部的流转路径</p>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon">🎯</span>
+                                <h4>交互探索</h4>
+                                <p>点击节点查看源码、参数、Prompt 模板等详情</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right sidebar - node details -->
+            <aside id="sidebar-right" class="collapsed">
+                <div class="panel" id="detail-panel">
+                    <div class="panel-header">
+                        <h3>节点详情</h3>
+                        <button onclick="closeSidebar()" class="close-btn">✕</button>
+                    </div>
+                    <div id="node-detail">
+                        <p class="placeholder">点击节点查看详情</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Bottom status bar -->
+        <footer id="statusbar">
+            <span id="status-text">就绪</span>
+            <span id="status-stats"></span>
+        </footer>
+    </div>
+
+    <script src="/static/js/graph.js"></script>
+    <script src="/static/js/simulation.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

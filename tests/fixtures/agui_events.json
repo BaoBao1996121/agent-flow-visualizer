@@ -1,0 +1,125 @@
+{
+  "protocolVersion": "0.0.42",
+  "threadId": "thread-demo",
+  "events": [
+    {
+      "type": "RUN_STARTED",
+      "timestamp": 1784160000000,
+      "threadId": "thread-demo",
+      "runId": "agui-run",
+      "parentRunId": "parent-run",
+      "input": {"messages": [{"role": "user", "content": "SECRET_INPUT"}]}
+    },
+    {"type": "STEP_STARTED", "timestamp": 1784160000100, "stepName": "research"},
+    {
+      "type": "STATE_SNAPSHOT",
+      "timestamp": 1784160000200,
+      "snapshot": {"phase": "research", "private": "SECRET_STATE"}
+    },
+    {
+      "type": "ACTIVITY_SNAPSHOT",
+      "timestamp": 1784160000300,
+      "messageId": "activity-1",
+      "activityType": "PLAN",
+      "content": {"steps": ["SECRET_ACTIVITY"]}
+    },
+    {
+      "type": "TEXT_MESSAGE_START",
+      "timestamp": 1784160000400,
+      "messageId": "message-1",
+      "role": "assistant"
+    },
+    {
+      "type": "TEXT_MESSAGE_CONTENT",
+      "timestamp": 1784160000500,
+      "messageId": "message-1",
+      "delta": "SECRET_MESSAGE"
+    },
+    {
+      "type": "TOOL_CALL_START",
+      "timestamp": 1784160000600,
+      "toolCallId": "tool-1",
+      "toolCallName": "web_search",
+      "parentMessageId": "message-1"
+    },
+    {
+      "type": "TOOL_CALL_ARGS",
+      "timestamp": 1784160000700,
+      "toolCallId": "tool-1",
+      "delta": "{\"query\":\"SECRET_ARGUMENT\"}"
+    },
+    {"type": "TOOL_CALL_END", "timestamp": 1784160000800, "toolCallId": "tool-1"},
+    {
+      "type": "TOOL_CALL_RESULT",
+      "timestamp": 1784160000900,
+      "messageId": "tool-message-1",
+      "toolCallId": "tool-1",
+      "role": "tool",
+      "content": "SECRET_TOOL_RESULT"
+    },
+    {"type": "TEXT_MESSAGE_END", "timestamp": 1784160001000, "messageId": "message-1"},
+    {
+      "type": "ACTIVITY_DELTA",
+      "timestamp": 1784160001100,
+      "messageId": "activity-1",
+      "activityType": "PLAN",
+      "patch": [{"op": "add", "path": "/steps/1", "value": "SECRET_ACTIVITY_PATCH"}]
+    },
+    {
+      "type": "STATE_DELTA",
+      "timestamp": 1784160001200,
+      "delta": [{"op": "replace", "path": "/private", "value": "SECRET_STATE_PATCH"}]
+    },
+    {
+      "type": "MESSAGES_SNAPSHOT",
+      "timestamp": 1784160001300,
+      "messages": [{"id": "snapshot-1", "role": "assistant", "content": "SECRET_HISTORY"}]
+    },
+    {"type": "REASONING_START", "timestamp": 1784160001400, "messageId": "reasoning-1"},
+    {
+      "type": "REASONING_MESSAGE_START",
+      "timestamp": 1784160001500,
+      "messageId": "reasoning-summary-1",
+      "role": "reasoning"
+    },
+    {
+      "type": "REASONING_MESSAGE_CONTENT",
+      "timestamp": 1784160001600,
+      "messageId": "reasoning-summary-1",
+      "delta": "SECRET_REASONING_SUMMARY"
+    },
+    {
+      "type": "REASONING_MESSAGE_END",
+      "timestamp": 1784160001700,
+      "messageId": "reasoning-summary-1"
+    },
+    {
+      "type": "REASONING_ENCRYPTED_VALUE",
+      "timestamp": 1784160001800,
+      "subtype": "message",
+      "entityId": "reasoning-summary-1",
+      "encryptedValue": "SECRET_ENCRYPTED_VALUE"
+    },
+    {"type": "REASONING_END", "timestamp": 1784160001900, "messageId": "reasoning-1"},
+    {"type": "STEP_FINISHED", "timestamp": 1784160002000, "stepName": "research"},
+    {
+      "type": "CUSTOM",
+      "timestamp": 1784160002100,
+      "name": "review_hint",
+      "value": {"note": "SECRET_CUSTOM"}
+    },
+    {
+      "type": "RAW",
+      "timestamp": 1784160002200,
+      "source": "example-provider",
+      "event": {"payload": "SECRET_RAW"}
+    },
+    {
+      "type": "RUN_FINISHED",
+      "timestamp": 1784160002300,
+      "threadId": "thread-demo",
+      "runId": "agui-run",
+      "result": {"answer": "SECRET_RESULT"}
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check --no-cache .
+      - run: pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --check static/js/anthill.js
+      - run: node --check static/js/app.js
+      - run: node --check static/js/graph.js
+      - run: node --check static/js/simulation.js
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build hardened image
+        run: docker build --tag agent-anthill:ci .
+      - name: Start non-root read-only container
+        run: >-
+          docker run --detach --name agent-anthill-ci
+          --publish 127.0.0.1:8765:8765
+          --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=64m
+          --cap-drop ALL --security-opt no-new-privileges
+          --pids-limit 256
+          --mount type=volume,source=agent-anthill-ci-data,target=/app/.anthill-data
+          agent-anthill:ci
+      - name: Smoke health, identity, and writable ledger volume
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8765/api/anthill/schema >/dev/null; then
+              break
+            fi
+            if [ "$attempt" = 30 ]; then
+              docker logs agent-anthill-ci
+              exit 1
+            fi
+            sleep 1
+          done
+          docker exec agent-anthill-ci python -c "import os; assert os.getuid() == 10001"
+          curl --fail --silent --request POST http://127.0.0.1:8765/api/anthill/demo >/dev/null
+          curl --fail --silent http://127.0.0.1:8765/api/anthill/runs | grep 'demo_'
+      - name: Cleanup container
+        if: always()
+        run: |
+          docker rm --force agent-anthill-ci || true
+          docker volume rm agent-anthill-ci-data || true

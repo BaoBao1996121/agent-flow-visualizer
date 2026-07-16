@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07100f" />
+    <title>Agent Anthill — Runtime Observatory</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/static/css/anthill.css" />
+</head>
+<body>
+    <div class="app-shell" id="app-shell">
+        <header class="topbar">
+            <a class="brand" href="/" aria-label="Agent Anthill 首页">
+                <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                <span class="brand-copy">
+                    <strong>AGENT ANTHILL</strong>
+                    <small>runtime observatory / 事实驱动的 Agent 蚁巢</small>
+                </span>
+            </a>
+
+            <div class="run-control">
+                <label for="run-select">RUN</label>
+                <select id="run-select" aria-label="选择运行记录">
+                    <option value="">正在读取事件账本…</option>
+                </select>
+                <button class="square-button accent" id="demo-button" type="button" title="生成明确标注的合成展品">
+                    <span>＋</span> 一键展品
+                </button>
+                <details class="import-menu" id="import-menu">
+                    <summary class="square-button" title="导入真实运行事件；默认只保存元数据">IMPORT ▾</summary>
+                    <div class="import-menu-panel">
+                        <span class="import-menu-note">METADATA-ONLY BY DEFAULT</span>
+                        <button id="otlp-button" type="button"><strong>OTLP / OPENINFERENCE</strong><span>JSON trace export</span></button>
+                        <button id="agui-button" type="button"><strong>AG-UI</strong><span>JSON / NDJSON events</span></button>
+                    </div>
+                </details>
+                <input id="otlp-file" type="file" accept="application/json,.json" hidden />
+                <input id="agui-file" type="file" accept="application/json,application/x-ndjson,.json,.ndjson,.jsonl" hidden />
+            </div>
+
+            <nav class="view-switch" aria-label="视图">
+                <button class="view-button active" data-view="world" type="button">WORLD</button>
+                <button class="view-button" data-view="causal" type="button">CAUSAL</button>
+                <button class="view-button" data-view="compare" type="button">COMPARE</button>
+                <a class="view-button" href="/graph">SOURCE X-RAY</a>
+            </nav>
+
+            <div class="live-state" id="live-state" data-state="offline">
+                <span class="live-dot"></span>
+                <span id="live-label">LEDGER OFFLINE</span>
+            </div>
+        </header>
+
+        <aside class="intel-rail" aria-label="运行总览">
+            <section class="synthetic-banner" id="synthetic-banner" hidden>
+                <span>SYNTHETIC FIXTURE</span>
+                此 run 是无网络演示展品，不是真实 Agent 采集。
+            </section>
+
+            <section class="rail-section run-card">
+                <div class="section-kicker">RUN HEALTH</div>
+                <div class="run-title" id="run-title">尚未选择 run</div>
+                <div class="status-line">
+                    <span class="status-chip" id="run-status">UNKNOWN</span>
+                    <span class="integrity-chip" id="integrity-status">未校验</span>
+                </div>
+                <dl class="run-stats">
+                    <div><dt>EVENTS</dt><dd id="event-count">—</dd></div>
+                    <div><dt>CURSOR</dt><dd id="cursor-count">— / —</dd></div>
+                    <div><dt>ADAPTERS</dt><dd id="adapter-count">—</dd></div>
+                    <div><dt>ERRORS</dt><dd id="error-count">—</dd></div>
+                </dl>
+            </section>
+
+            <section class="rail-section">
+                <div class="section-title">
+                    <span>TRUTH MIX</span>
+                    <button class="text-button" id="truth-help" type="button">规则</button>
+                </div>
+                <div class="truth-bars" id="truth-bars">
+                    <div data-truth="observed"><span>OBSERVED</span><i><b></b></i><em>0</em></div>
+                    <div data-truth="declared"><span>DECLARED</span><i><b></b></i><em>0</em></div>
+                    <div data-truth="inferred"><span>INFERRED</span><i><b></b></i><em>0</em></div>
+                    <div data-truth="counterfactual_verified"><span>VERIFIED</span><i><b></b></i><em>0</em></div>
+                </div>
+                <p class="microcopy">动画的线型来自证据等级；未知数据保持为雾。</p>
+            </section>
+
+            <section class="rail-section cognition-section">
+                <div class="section-title"><span>COGNITION</span><span class="section-code">LIVE STATE</span></div>
+                <div class="context-meter">
+                    <div class="meter-label"><span>CONTEXT</span><strong id="context-label">—</strong></div>
+                    <div class="meter-track"><b id="context-fill"></b><i id="context-limit"></i></div>
+                </div>
+                <div class="memory-grid">
+                    <div><span>WORKING</span><strong id="memory-working">0</strong></div>
+                    <div><span>EPISODIC</span><strong id="memory-episodic">0</strong></div>
+                    <div><span>SEMANTIC</span><strong id="memory-semantic">0</strong></div>
+                </div>
+                <div class="compact-readout">
+                    <span>COMPACTION</span>
+                    <strong id="compact-status">IDLE</strong>
+                    <small id="compact-delta">没有压缩记录</small>
+                </div>
+            </section>
+
+            <section class="rail-section chamber-index">
+                <div class="section-title"><span>CHAMBERS</span><span class="section-code">ACTIVE / EVENTS</span></div>
+                <div id="chamber-list" class="chamber-list"></div>
+            </section>
+
+            <footer class="rail-footer">
+                <span>LOCAL-FIRST</span>
+                <span>CONTENT: <b id="privacy-mode">METADATA</b></span>
+            </footer>
+        </aside>
+
+        <main class="world-stage" id="world-stage">
+            <div class="stage-grid" aria-hidden="true"></div>
+            <canvas id="anthill-canvas" width="1120" height="660" aria-label="Agent 运行蚁巢世界"></canvas>
+            <div class="canvas-vignette" aria-hidden="true"></div>
+
+            <section class="compare-stage" id="compare-stage" hidden>
+                <header class="compare-header">
+                    <div>
+                        <span class="section-kicker">SYNCHRONIZED MECHANISM COMPARISON</span>
+                        <h1>同一进度，不同系统</h1>
+                    </div>
+                    <label>RIGHT RUN
+                        <select id="compare-run-select"></select>
+                    </label>
+                </header>
+                <div class="comparability-banner" id="comparability-banner"></div>
+                <div class="compare-columns">
+                    <article class="compare-side left" id="compare-left"></article>
+                    <section class="compare-delta" id="compare-delta"></section>
+                    <article class="compare-side right" id="compare-right"></article>
+                </div>
+            </section>
+
+            <div class="world-headup">
+                <div class="coordinates"><span id="world-mode">HEAD / LIVE</span><b id="world-clock">T+00:00.000</b></div>
+                <div class="truth-legend" aria-label="证据图例">
+                    <span class="truth-observed">实线 观测</span>
+                    <span class="truth-declared">双线 声明</span>
+                    <span class="truth-inferred">点线 推断</span>
+                    <span class="truth-verified">发光 验证</span>
+                </div>
+            </div>
+
+            <div class="world-empty" id="world-empty">
+                <div class="empty-glyph" aria-hidden="true"><i></i><i></i><i></i></div>
+                <h1>事件账本还是空的</h1>
+                <p>创建一个明确标注的合成展品，或在 Source X-Ray 中追踪本地 Python Agent。</p>
+                <div class="empty-actions">
+                    <button class="primary-action" id="empty-demo-button" type="button">启动一键展品</button>
+                    <button class="secondary-action" id="empty-otlp-button" type="button">导入 OTLP JSON</button>
+                    <button class="secondary-action" id="empty-agui-button" type="button">导入 AG-UI 事件</button>
+                    <a class="secondary-action" href="/graph">打开源码追踪器</a>
+                </div>
+            </div>
+
+            <div class="canvas-tooltip" id="canvas-tooltip" hidden></div>
+
+            <section class="timeline-console" aria-label="时间旅行控制台">
+                <div class="transport">
+                    <button id="jump-start" type="button" title="回到开头">|◀</button>
+                    <button id="step-back" type="button" title="后退一条">◀</button>
+                    <button id="play-toggle" class="play" type="button" title="播放 / 暂停">▶</button>
+                    <button id="step-forward" type="button" title="前进一条">▶</button>
+                    <button id="jump-head" type="button" title="回到实时头部">▶|</button>
+                </div>
+                <div class="timeline-main">
+                    <div class="timeline-labels">
+                        <span id="timeline-event">等待事件</span>
+                        <span><b id="timeline-seq">SEQ —</b><i id="timeline-time">—</i></span>
+                    </div>
+                    <input id="timeline-range" type="range" min="0" max="0" value="0" step="1" disabled aria-label="事件时间轴" />
+                    <div class="timeline-ticks" id="timeline-ticks"></div>
+                </div>
+                <label class="speed-control">SPEED
+                    <select id="play-speed">
+                        <option value="1000">0.5×</option>
+                        <option value="520" selected>1×</option>
+                        <option value="240">2×</option>
+                        <option value="100">5×</option>
+                    </select>
+                </label>
+                <button class="fork-button" id="fork-run" type="button" title="从当前事件创建不执行副作用的物化分支">⑂ FORK HERE</button>
+                <button class="follow-button active" id="follow-live" type="button"><i></i> FOLLOW LIVE</button>
+            </section>
+        </main>
+
+        <aside class="inspector" aria-label="证据检查器">
+            <div class="inspector-tabs" role="tablist">
+                <button class="active" data-tab="state" type="button">STATE</button>
+                <button data-tab="event" type="button">EVENT</button>
+                <button data-tab="causal" type="button">CAUSAL</button>
+            </div>
+
+            <div class="inspector-panel active" id="state-panel">
+                <div class="inspector-heading">
+                    <span class="section-kicker">CURRENT PROJECTION</span>
+                    <h2 id="state-heading">等待 run</h2>
+                    <p id="state-subheading">选择一条运行记录后，这里会显示真实状态投影。</p>
+                </div>
+                <div class="state-stack" id="state-stack"></div>
+                <section class="event-feed-section">
+                    <div class="section-title"><span>RECENT LEDGER</span><span class="section-code" id="recent-count">0</span></div>
+                    <ol class="event-feed" id="event-feed"></ol>
+                </section>
+            </div>
+
+            <div class="inspector-panel" id="event-panel">
+                <div class="inspector-heading">
+                    <span class="section-kicker">RAW EVIDENCE</span>
+                    <h2 id="event-heading">未选择事件</h2>
+                    <p id="event-summary">点击角色、房间或事件账本中的条目。</p>
+                </div>
+                <div id="event-detail" class="event-detail empty-detail">没有事件</div>
+            </div>
+
+            <div class="inspector-panel" id="causal-panel">
+                <div class="inspector-heading">
+                    <span class="section-kicker">EXPLICIT CAUSALITY</span>
+                    <h2 id="causal-heading">因果切片</h2>
+                    <p>只显示 causation_id 与明确 link；相邻时间不会被冒充成因果。</p>
+                </div>
+                <div class="causal-controls">
+                    <button type="button" data-direction="ancestors" class="active">上游</button>
+                    <button type="button" data-direction="both">上下游</button>
+                    <button type="button" data-direction="descendants">下游</button>
+                </div>
+                <div id="causal-graph" class="causal-graph empty-detail">选择一个事件以构建因果切片</div>
+            </div>
+        </aside>
+    </div>
+
+    <dialog id="truth-dialog" class="truth-dialog">
+        <form method="dialog">
+            <button class="dialog-close" aria-label="关闭">×</button>
+            <span class="section-kicker">TRUTH CONTRACT</span>
+            <h2>画面能声称什么，取决于证据</h2>
+            <dl>
+                <div data-truth="observed"><dt>OBSERVED / 实线</dt><dd>运行时直接采到的事实，例如真实函数调用或原生 hook。</dd></div>
+                <div data-truth="declared"><dt>DECLARED / 双线</dt><dd>源码、配置或展品脚本明确声明的结构。</dd></div>
+                <div data-truth="inferred"><dt>INFERRED / 点线</dt><dd>可失败的语义判断，置信度永远不能是 100%。</dd></div>
+                <div data-truth="counterfactual_verified"><dt>VERIFIED / 发光</dt><dd>通过记录干预并重跑下游验证过的因果关系。</dd></div>
+            </dl>
+            <p>没有事件不代表没有发生。采集盲区显示成雾，而不是补一段好看的动画。</p>
+        </form>
+    </dialog>
+
+    <script src="/static/js/anthill.js"></script>
+</body>
+</html>

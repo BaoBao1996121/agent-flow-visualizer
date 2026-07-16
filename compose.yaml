@@ -1,0 +1,47 @@
+name: agent-anthill
+
+services:
+  anthill:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: agent-anthill:local
+    init: true
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${ANTHILL_PORT:-8765}:8765"
+    environment:
+      ANTHILL_DATA_DIR: /app/.anthill-data
+    volumes:
+      - anthill-data:/app/.anthill-data
+    read_only: true
+    # Initial local safety budget, not a measured production capacity target.
+    tmpfs:
+      - /tmp:size=64m,mode=1777,noexec,nosuid,nodev
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256 # Initial ceiling; tune only from measured adapter/process needs.
+    stop_grace_period: 20s
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:8765/api/anthill/schema', timeout=3).close()
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        # Initial workstation defaults; production retention needs its own policy.
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  anthill-data:
