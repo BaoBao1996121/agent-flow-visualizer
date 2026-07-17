@@ -39,13 +39,26 @@ Run the complete local gates:
 
 ```bash
 python -m pip install -r requirements-dev.txt
+npm ci
+npx playwright install chromium
 python -m pytest -q
 python -m ruff check --no-cache .
 node --check static/js/anthill.js
 node --check static/js/app.js
 node --check static/js/graph.js
 node --check static/js/simulation.js
+node --check playwright.config.mjs
+node --check tests/browser/anthill-phase1.spec.mjs
+npm run test:browser
 ```
+
+On Linux or CI, use `npx playwright install --with-deps chromium`. The browser
+suite owns `127.0.0.1:8878` and an ignored ledger under `output/playwright/`; it
+does not reuse or modify a developer's `8765` service.
+
+Browser fixtures must be synthetic, public, or explicitly licensed/approved.
+Failure traces, screenshots, and HTML reports can retain DOM, page, and request
+data, so never run the committed suite against a private real trace.
 
 ## Pull-request expectations
 

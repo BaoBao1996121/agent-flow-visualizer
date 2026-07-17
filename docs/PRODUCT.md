@@ -81,7 +81,7 @@ Long traces must collapse by semantic stage before they become graph hairballs.
 
 ## Current scope
 
-The current implementation proves the event kernel, Python, OTLP/OpenInference, AG-UI JSON/NDJSON, and LangGraph StreamPart v2 offline paths, local ledger, snapshot-accelerated deterministic projection under reducer `0.2.0`, time travel, comparison, explicit causal slicing, cursor-specific instrumentation visibility, and the first pixel observatory. LangGraph `1.1.0` and `1.2.9` passed isolated real-runtime probes. The latest-code local manual Chromium rerun covered LangGraph JSON import; NDJSON, AG-UI, Demo, historical seek, Fork, and Compare are earlier same-day manual evidence, and hosted browser automation remains pending. It does not yet prove:
+The current implementation proves the event kernel, Python, OTLP/OpenInference, AG-UI JSON/NDJSON, and LangGraph StreamPart v2 offline paths, local ledger, snapshot-accelerated deterministic projection under reducer `0.2.0`, time travel, comparison, explicit causal slicing, cursor-specific instrumentation visibility, and the first pixel observatory. LangGraph `1.1.0` and `1.2.9` passed isolated real-runtime probes. Local Chromium observatory contract automation is in place, while the configured hosted browser job has not run; dated commands and results live in [the verification record](VERIFICATION.md). The latest-code manual Chromium rerun covered LangGraph JSON import; NDJSON, AG-UI, Demo, historical seek, Fork, and Compare are earlier same-day manual evidence. It does not yet prove:
 
 - arbitrary repository import;
 - production multi-process ingestion;

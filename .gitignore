@@ -32,5 +32,8 @@ Thumbs.db
 # Local browser automation
 chrome-*-profile/
 ui-capture-*.png
+node_modules/
+playwright-report/
+test-results/
 .playwright-cli/
 output/playwright/

@@ -48,9 +48,9 @@
                 <a class="view-button" href="/graph">SOURCE X-RAY</a>
             </nav>
 
-            <div class="live-state" id="live-state" data-state="offline">
-                <span class="live-dot"></span>
-                <span id="live-label">LEDGER OFFLINE</span>
+            <div class="connection-state" id="connection-state" data-state="offline">
+                <span class="connection-dot"></span>
+                <span id="connection-label">LEDGER OFFLINE</span>
             </div>
         </header>
 
@@ -90,20 +90,20 @@
             </section>
 
             <section class="rail-section cognition-section">
-                <div class="section-title"><span>COGNITION</span><span class="section-code">LIVE STATE</span></div>
+                <div class="section-title"><span>COGNITION</span><span class="section-code">AT CURSOR</span></div>
                 <div class="context-meter">
                     <div class="meter-label"><span>CONTEXT</span><strong id="context-label">—</strong></div>
                     <div class="meter-track"><b id="context-fill"></b><i id="context-limit"></i></div>
                 </div>
                 <div class="memory-grid">
-                    <div><span>WORKING</span><strong id="memory-working">0</strong></div>
-                    <div><span>EPISODIC</span><strong id="memory-episodic">0</strong></div>
-                    <div><span>SEMANTIC</span><strong id="memory-semantic">0</strong></div>
+                    <div><span>WORKING</span><strong id="memory-working">NOT OBSERVED</strong></div>
+                    <div><span>EPISODIC</span><strong id="memory-episodic">NOT OBSERVED</strong></div>
+                    <div><span>SEMANTIC</span><strong id="memory-semantic">NOT OBSERVED</strong></div>
                 </div>
                 <div class="compact-readout">
                     <span>COMPACTION</span>
-                    <strong id="compact-status">IDLE</strong>
-                    <small id="compact-delta">没有压缩记录</small>
+                    <strong id="compact-status">NOT OBSERVED</strong>
+                    <small id="compact-delta">未观测到压缩遥测</small>
                 </div>
             </section>
 
@@ -142,7 +142,7 @@
             </section>
 
             <div class="world-headup">
-                <div class="coordinates"><span id="world-mode">HEAD / LIVE</span><b id="world-clock">T+00:00.000</b></div>
+                <div class="coordinates"><span id="world-mode">NO CURSOR</span><b id="world-clock">T+00:00.000</b></div>
                 <div class="truth-legend" aria-label="证据图例">
                     <span class="truth-observed">实线 观测</span>
                     <span class="truth-declared">双线 声明</span>
@@ -191,19 +191,19 @@
                     </select>
                 </label>
                 <button class="fork-button" id="fork-run" type="button" title="从当前事件创建不执行副作用的物化分支">⑂ FORK HERE</button>
-                <button class="follow-button active" id="follow-live" type="button"><i></i> FOLLOW LIVE</button>
+                <button class="follow-button active" id="follow-live" type="button"><i></i> FOLLOW HEAD</button>
             </section>
         </main>
 
         <aside class="inspector" aria-label="证据检查器">
-            <div class="inspector-tabs" role="tablist">
-                <button class="active" data-tab="state" type="button">STATE</button>
-                <button data-tab="coverage" type="button">COVERAGE</button>
-                <button data-tab="event" type="button">EVENT</button>
-                <button data-tab="causal" type="button">CAUSAL</button>
+            <div class="inspector-tabs" role="tablist" aria-label="证据检查器分区">
+                <button class="active" id="inspector-tab-state" data-tab="state" type="button" role="tab" aria-selected="true" aria-controls="state-panel" tabindex="0">STATE</button>
+                <button id="inspector-tab-coverage" data-tab="coverage" type="button" role="tab" aria-selected="false" aria-controls="coverage-panel" tabindex="-1">COVERAGE</button>
+                <button id="inspector-tab-event" data-tab="event" type="button" role="tab" aria-selected="false" aria-controls="event-panel" tabindex="-1">EVENT</button>
+                <button id="inspector-tab-causal" data-tab="causal" type="button" role="tab" aria-selected="false" aria-controls="causal-panel" tabindex="-1">CAUSAL</button>
             </div>
 
-            <div class="inspector-panel active" id="state-panel">
+            <div class="inspector-panel active" id="state-panel" role="tabpanel" aria-labelledby="inspector-tab-state">
                 <div class="inspector-heading">
                     <span class="section-kicker">CURRENT PROJECTION</span>
                     <h2 id="state-heading">等待 run</h2>
@@ -216,7 +216,7 @@
                 </section>
             </div>
 
-            <div class="inspector-panel" id="coverage-panel">
+            <div class="inspector-panel" id="coverage-panel" role="tabpanel" aria-labelledby="inspector-tab-coverage" hidden>
                 <div class="inspector-heading">
                     <span class="section-kicker">INSTRUMENTATION VISIBILITY</span>
                     <h2 id="coverage-heading">等待能力契约</h2>
@@ -225,7 +225,7 @@
                 <div id="coverage-content" class="coverage-content empty-detail">选择 run 后显示适配器能力与盲区。</div>
             </div>
 
-            <div class="inspector-panel" id="event-panel">
+            <div class="inspector-panel" id="event-panel" role="tabpanel" aria-labelledby="inspector-tab-event" hidden>
                 <div class="inspector-heading">
                     <span class="section-kicker">RAW EVIDENCE</span>
                     <h2 id="event-heading">未选择事件</h2>
@@ -234,7 +234,7 @@
                 <div id="event-detail" class="event-detail empty-detail">没有事件</div>
             </div>
 
-            <div class="inspector-panel" id="causal-panel">
+            <div class="inspector-panel" id="causal-panel" role="tabpanel" aria-labelledby="inspector-tab-causal" hidden>
                 <div class="inspector-heading">
                     <span class="section-kicker">EXPLICIT CAUSALITY</span>
                     <h2 id="causal-heading">因果切片</h2>

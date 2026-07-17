@@ -84,7 +84,7 @@ Open <http://127.0.0.1:8765> and click **一键展品**. The fixture is marked `
 
 For a real local Python trace, open <http://127.0.0.1:8765/graph>, analyze `samples`, select an entry point, and run **实时运行**. The trace endpoint persists a metadata-only Anthill run by default.
 
-To inspect a captured LangGraph run, open the Anthill import menu and select **LANGGRAPH v2**. The latest-code local manual Chromium rerun on 2026-07-17 covered JSON import; an earlier same-day manual check covered NDJSON. Exact scope and limitations are recorded in [verification](docs/VERIFICATION.md), and hosted browser automation remains pending. This imports an existing capture; it does not subscribe to a running graph.
+To inspect a captured LangGraph run, open the Anthill import menu and select **LANGGRAPH v2**. The latest-code local manual Chromium rerun on 2026-07-17 covered JSON import; an earlier same-day manual check covered NDJSON. Exact scope and limitations are recorded in [verification](docs/VERIFICATION.md). Local Chromium automation now covers the implemented Phase -1 observatory truth contracts, and its GitHub Actions job is configured; the first hosted result remains pending. This imports an existing capture; it does not subscribe to a running graph.
 
 Or run the hardened local container profile:
 
@@ -201,13 +201,28 @@ Compare mode synchronizes two ledgers by normalized progress and reports mechani
 
 ```bash
 python -m pip install -r requirements-dev.txt
+npm ci
+npx playwright install chromium
 python -m pytest -q
 python -m ruff check --no-cache .
 node --check static/js/anthill.js
 node --check static/js/app.js
 node --check static/js/graph.js
 node --check static/js/simulation.js
+node --check playwright.config.mjs
+node --check tests/browser/anthill-phase1.spec.mjs
+npm run test:browser
 ```
+
+The browser contract starts its own loopback server at `127.0.0.1:8878`, refuses
+to reuse an existing process, and writes to an isolated ignored ledger under
+`output/playwright/`. It does not connect to or modify the user-facing `8765`
+service. Linux and CI should install the browser plus system dependencies with
+`npx playwright install --with-deps chromium`.
+
+Playwright HTML reports, traces, and screenshots can contain page and request
+data. Browser fixtures must therefore be synthetic, public, or explicitly
+licensed/approved; do not point the suite at a private real trace.
 
 The dependency-free Chrome DevTools helper can capture the UI for visual review with Node.js 22+:
 
@@ -223,7 +238,7 @@ The renderer migration is governed by the [visual-system decision](docs/VISUAL_S
 
 Near-term, in order:
 
-1. Phase -1 visual-truth cleanup: remove decorative states that lack evidence, freeze the visual truth grammar, and capture the current Canvas baseline.
+1. Finish Phase -1 visual-truth cleanup: complete per-field observation provenance, keyboard/DOM mirrors, reduced-motion coverage, and reproducible visual baselines.
 2. Introduce a renderer-independent `VisualModel` and deterministic animation-intent contract; build the bounded PixiJS 8 vertical slice and same-scene Phaser 4.2.1 benchmark before choosing a migration path.
 3. Add OTLP protobuf/live collection plus AG-UI and LangGraph live stream bridges with bounded ingestion and backpressure.
 4. Add native Claude Code and Codex hook providers with published capability contracts.

@@ -13,12 +13,44 @@ must be linked from the repository's current Actions page after publication.
 | World projection contract | API, snapshot, and reducer regression assertions | Reducer `0.2.0`; cached snapshots remain isolated by reducer version |
 | Python lint | `python -m ruff check --no-cache .` | PASS |
 | Changed Python formatting | `python -m ruff format --check` over every Python file changed for `0.6.0` | PASS; unrelated baseline files remain outside this release diff |
-| Frontend syntax | `node --check` over `anthill.js`, `app.js`, `graph.js`, and `simulation.js` | PASS for all four files |
+| Frontend syntax | `node --check` over application modules, Playwright config/spec, and the three bounded spike scripts | PASS |
+| Chromium observatory contract | `npm run test:browser` | 13 passed in 34.3s at the explicit `1600x1000` viewport |
+| Browser order isolation | `npx playwright test --repeat-each=2` | 26 passed in 1.2m; the empty-state fixture does not depend on suite ledger order |
 | Structured fixtures/config | Python JSON parsing for both LangGraph and canonical-ingest fixtures; PyYAML parse for `.github/workflows/ci.yml` | PASS |
 | Patch hygiene | `git diff --check` | PASS |
 
 The optional runtime test is not counted among the 204 passes. Its two
 supported runtime executions are recorded separately below.
+
+## Automated Chromium observatory contract
+
+The local Windows run used Node.js `22.14.0`, npm `10.9.2`,
+`@playwright/test 1.61.1`, and Chromium `149.0.7827.55`. The contract verifies:
+
+1. deterministic synthetic empty state with no browser console/page errors;
+2. an explicit `1600x1000` desktop viewport for reproducible visual evidence;
+3. ledger head, follow/pause, and transport connection are not labelled `LIVE`;
+4. terminal unresolved chamber work is static and labelled `UNRESOLVED`;
+5. `interrupted` is treated as terminal and leaves no Canvas ticker running;
+6. terminal context overflow keeps a static warning without an infinite pulse;
+7. absent cognition telemetry remains `NOT OBSERVED`, never `0` or `IDLE`;
+8. completed-run Canvas pixels and animation-frame count remain stable;
+9. the timeline cursor event is the default explicit-causality root;
+10. an already-open Causal panel follows timeline seek;
+11. a stale causal-direction response cannot overwrite the latest request;
+12. a delayed world response cannot overwrite a newly selected run; and
+13. Inspector tabs expose tab/tabpanel semantics and roving arrow-key navigation.
+
+The harness owns `127.0.0.1:8878`, sets an isolated ignored
+`ANTHILL_DATA_DIR`, and uses `reuseExistingServer: false`; it neither connects
+to nor modifies the user-facing `8765` process. The GitHub Actions Chromium job
+is configured with strict focused/flaky-test failure and seven-day diagnostics,
+but no hosted Actions execution exists yet. This is Chromium coverage, not
+cross-browser or real assistive-technology evidence.
+
+Only synthetic fixtures were used. HTML reports, traces, and screenshots may
+retain page/request data; introducing real traces requires a fresh artifact
+privacy review.
 
 ## LangGraph StreamPart v2 compatibility
 
@@ -44,7 +76,7 @@ duplicate task IDs, explicit `null` for required arrays, invalid Unicode,
 non-finite numbers, conflicting run/thread/namespace identities, oversized or
 malformed NDJSON values, and malformed runtime objects have regression coverage.
 
-## Manual browser evidence
+## Earlier manual browser evidence
 
 Latest-code local manual smoke (not hosted CI):
 
@@ -64,15 +96,16 @@ Latest-code local manual smoke (not hosted CI):
 
 Earlier manual checks on 2026-07-17 exercised LangGraph NDJSON, AG-UI import,
 Demo, historical seek, Fork, and Compare. The final current-code rerun above was
-specifically the LangGraph JSON import and projection path. Browser automation is
-not yet part of hosted CI, so these results are labelled manual rather than
-continuous evidence.
+specifically the LangGraph JSON import and projection path. These remain manual
+historical checks; the current Chromium contract is automated locally and wired
+into the workflow, while its first hosted run remains pending.
 
 ## Explicitly pending
 
 - The local workstation has no Docker CLI. Compose validation, image build,
   non-root identity, read-only root, health, and ledger-write smoke are configured
   in CI but remain pending a hosted Actions result.
+- The configured Chromium browser job remains pending its first hosted Actions result.
 - Automated cross-browser and assistive-technology CI is not implemented.
 - OTLP protobuf/live collection, AG-UI live subscription, and a LangGraph live
   capture bridge are not implemented.

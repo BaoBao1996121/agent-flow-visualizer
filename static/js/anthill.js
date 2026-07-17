@@ -3,6 +3,7 @@
 
     const API = '/api/anthill';
     const STATIC_CAPTURE = new URLSearchParams(window.location.search).has('static');
+    const TERMINAL_RUN_STATUSES = new Set(['completed', 'failed', 'interrupted', 'cancelled']);
     const W = 1120;
     const H = 660;
     const TRUTH_COLORS = {
@@ -78,12 +79,17 @@
             this.hovered = null;
             this.selectedEventId = null;
             this.lastFrame = performance.now();
-            this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            this.frameRequest = null;
+            this.motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+            this.reducedMotion = this.motionPreference.matches;
+            this.motionPreference.addEventListener('change', event => {
+                this.reducedMotion = event.matches;
+                this.syncAnimation();
+            });
             this.canvas.addEventListener('mousemove', event => this.onPointerMove(event));
             this.canvas.addEventListener('mouseleave', () => this.clearHover());
             this.canvas.addEventListener('click', event => this.onClick(event));
-            if (STATIC_CAPTURE) this.draw(performance.now(), 1);
-            else requestAnimationFrame(time => this.frame(time));
+            this.syncAnimation();
         }
 
         setWorld(world) {
@@ -110,18 +116,53 @@
                 sprite.targetY = targetY;
                 this.entities.set(entity.id, sprite);
             }
-            if (STATIC_CAPTURE) this.draw(performance.now(), 1);
+            this.syncAnimation();
         }
 
         setSelected(eventId) {
             this.selectedEventId = eventId;
+            this.requestDraw();
+        }
+
+        isTerminalWorld() {
+            return TERMINAL_RUN_STATUSES.has(this.world?.run_status);
+        }
+
+        shouldAnimate() {
+            return !STATIC_CAPTURE && !this.reducedMotion && this.world != null && !this.isTerminalWorld();
+        }
+
+        redraw() {
+            this.draw(0, 1);
+        }
+
+        requestDraw() {
+            if (this.frameRequest == null) this.redraw();
+        }
+
+        syncAnimation() {
+            if (!this.shouldAnimate()) {
+                if (this.frameRequest != null) cancelAnimationFrame(this.frameRequest);
+                this.frameRequest = null;
+                this.redraw();
+                return;
+            }
+            if (this.frameRequest == null) {
+                this.lastFrame = performance.now();
+                this.frameRequest = requestAnimationFrame(time => this.frame(time));
+            }
         }
 
         frame(time) {
+            this.frameRequest = null;
+            if (!this.shouldAnimate()) {
+                this.redraw();
+                return;
+            }
             const delta = Math.min((time - this.lastFrame) / 16.67, 3);
             this.lastFrame = time;
             this.draw(time, delta);
-            requestAnimationFrame(next => this.frame(next));
+            this.frameRequest = requestAnimationFrame(next => this.frame(next));
         }
 
         draw(time, delta) {
@@ -364,7 +405,7 @@
                 const toZone = ZONE_MAP[edge.to.zone] || ZONE_MAP.unknown_fog;
                 const from = this.center(fromZone);
                 const to = this.center(toZone);
-                const phase = this.reducedMotion ? .55 : ((time / 1150) + index * .17) % 1;
+                const phase = this.shouldAnimate() ? ((time / 1150) + index * .17) % 1 : .55;
                 const point = this.elbowPoint(from, to, phase);
                 const level = edge.to.truth?.level || 'inferred';
                 const color = truthColor(level);
@@ -380,10 +421,10 @@
         drawEntities(ctx, time, delta) {
             const sprites = [...this.entities.values()].sort((a, b) => this.entityPriority(a.entity) - this.entityPriority(b.entity)).slice(0, 28);
             for (const sprite of sprites) {
-                const smoothing = this.reducedMotion ? 1 : 1 - Math.pow(.84, delta);
+                const smoothing = this.shouldAnimate() ? 1 - Math.pow(.84, delta) : 1;
                 sprite.x += (sprite.targetX - sprite.x) * smoothing;
                 sprite.y += (sprite.targetY - sprite.y) * smoothing;
-                const bob = this.reducedMotion ? 0 : Math.round(Math.sin(time / 210 + sprite.bob));
+                const bob = this.shouldAnimate() ? Math.round(Math.sin(time / 210 + sprite.bob)) : 0;
                 const entity = sprite.entity;
                 const color = truthColor(entity.truth?.level);
                 const selected = entity.last_event_id === this.selectedEventId;
@@ -522,12 +563,14 @@
             const top = clamp(event.clientY - rect.top + 14, 8, rect.height - 70);
             tooltip.style.left = `${left}px`;
             tooltip.style.top = `${top}px`;
+            this.requestDraw();
         }
 
         clearHover() {
             this.hovered = null;
             $('canvas-tooltip').hidden = true;
             this.canvas.style.cursor = 'crosshair';
+            this.requestDraw();
         }
 
         onClick(event) {
@@ -554,7 +597,12 @@
             this.eventSource = null;
             this.worldRequest = null;
             this.selectedEventId = null;
+            this.cursorEventId = null;
             this.causalDirection = 'ancestors';
+            this.causalRequestId = 0;
+            this.runRequestEpoch = 0;
+            this.worldRequestId = 0;
+            this.headRefreshTimer = null;
             this.currentView = 'world';
             this.compareRunId = null;
             this.compareProgress = 1;
@@ -598,7 +646,19 @@
             });
             $('truth-help').addEventListener('click', () => $('truth-dialog').showModal());
 
-            document.querySelectorAll('.inspector-tabs button').forEach(button => button.addEventListener('click', () => this.switchTab(button.dataset.tab)));
+            const inspectorTabs = [...document.querySelectorAll('.inspector-tabs button')];
+            inspectorTabs.forEach((button, index) => {
+                button.addEventListener('click', () => this.switchTab(button.dataset.tab));
+                button.addEventListener('keydown', event => {
+                    if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const offset = event.key === 'ArrowRight' ? 1 : -1;
+                    const next = inspectorTabs[(index + offset + inspectorTabs.length) % inspectorTabs.length];
+                    this.switchTab(next.dataset.tab);
+                    next.focus();
+                });
+            });
             document.querySelectorAll('.view-button[data-view]').forEach(button => button.addEventListener('click', () => this.switchView(button.dataset.view)));
             document.querySelectorAll('.causal-controls button').forEach(button => button.addEventListener('click', () => {
                 this.causalDirection = button.dataset.direction;
@@ -771,20 +831,32 @@
 
         async selectRun(runId) {
             if (!runId) return;
+            const runRequestEpoch = ++this.runRequestEpoch;
             this.closeStream();
             this.stopPlayback();
+            clearTimeout(this.refreshTimer);
+            this.refreshTimer = null;
+            clearTimeout(this.headRefreshTimer);
+            this.headRefreshTimer = null;
+            if (this.worldRequest) this.worldRequest.abort();
+            this.worldRequest = null;
+            this.worldRequestId += 1;
             this.runId = runId;
+            this.selectedEventId = null;
+            this.cursorEventId = null;
+            this.causalRequestId += 1;
+            this.canvas.setSelected(null);
             this.manifest = this.runs.find(run => run.run_id === runId) || null;
             $('run-select').value = runId;
             this.showEmpty(false);
-            this.setConnection('history', 'LOADING LEDGER');
+            this.setConnection('loading', 'LOADING LEDGER');
             try {
                 const [world, eventPage, integrity] = await Promise.all([
                     this.fetchJson(`${API}/runs/${encodeURIComponent(runId)}/world`),
                     this.fetchJson(`${API}/runs/${encodeURIComponent(runId)}/events?limit=5000`),
                     this.fetchJson(`${API}/runs/${encodeURIComponent(runId)}/integrity`),
                 ]);
-                if (this.runId !== runId) return;
+                if (this.runId !== runId || this.runRequestEpoch !== runRequestEpoch) return;
                 this.events = eventPage.items || [];
                 this.eventsById = new Map(this.events.map(event => [event.event_id, event]));
                 this.headSeq = Number(world.head_seq ?? -1);
@@ -800,6 +872,7 @@
                     await this.loadComparison(this.compareProgress);
                 }
             } catch (error) {
+                if (this.runId !== runId || this.runRequestEpoch !== runRequestEpoch) return;
                 this.setConnection('error', 'RUN LOAD FAILED');
                 this.flashError(error.message);
             }
@@ -807,16 +880,30 @@
 
         async gotoSeq(seq) {
             if (!this.runId || this.headSeq < 0) return;
+            const runId = this.runId;
             const target = clamp(Math.round(seq), 0, this.headSeq);
             if (target !== this.headSeq) this.setFollow(false);
             if (this.worldRequest) this.worldRequest.abort();
-            this.worldRequest = new AbortController();
+            const controller = new AbortController();
+            const requestId = ++this.worldRequestId;
+            this.worldRequest = controller;
             try {
                 const suffix = target === this.headSeq && this.followLive ? '' : `?at_seq=${target}`;
-                const world = await this.fetchJson(`${API}/runs/${encodeURIComponent(this.runId)}/world${suffix}`, { signal: this.worldRequest.signal });
+                const world = await this.fetchJson(`${API}/runs/${encodeURIComponent(runId)}/world${suffix}`, { signal: controller.signal });
+                if (
+                    controller.signal.aborted
+                    || this.runId !== runId
+                    || this.worldRequestId !== requestId
+                ) return;
                 this.applyWorld(world);
             } catch (error) {
-                if (error.name !== 'AbortError') this.flashError(error.message);
+                if (
+                    error.name !== 'AbortError'
+                    && this.runId === runId
+                    && this.worldRequestId === requestId
+                ) this.flashError(error.message);
+            } finally {
+                if (this.worldRequestId === requestId) this.worldRequest = null;
             }
         }
 
@@ -836,9 +923,17 @@
         applyWorld(response) {
             this.worldResponse = response;
             this.world = response.state;
+            document.body.dataset.runTerminal = String(TERMINAL_RUN_STATUSES.has(this.world?.run_status));
+            const previousCursorEventId = this.cursorEventId;
+            const cursorEventId = this.world.cursor_event_id || null;
             this.cursorSeq = Number(response.projected_seq ?? this.world.cursor_seq ?? -1);
             this.headSeq = Math.max(this.headSeq, Number(response.head_seq ?? -1));
+            if (!this.selectedEventId || this.selectedEventId === previousCursorEventId) {
+                this.selectedEventId = cursorEventId;
+            }
+            this.cursorEventId = cursorEventId;
             this.canvas.setWorld(this.world);
+            this.canvas.setSelected(this.selectedEventId);
             this.renderRunSummary();
             this.renderTruthMix();
             this.renderCognition();
@@ -847,9 +942,14 @@
             this.renderCoveragePanel();
             this.renderEventFeed();
             this.renderTimeline();
+            if (!$('causal-panel').hidden && this.selectedEventId) {
+                this.loadCausality(this.selectedEventId);
+            }
             const isHead = this.cursorSeq === this.headSeq;
-            this.setConnection(isHead ? 'live' : 'history', isHead ? 'LEDGER CONNECTED' : 'HISTORICAL VIEW');
-            $('world-mode').textContent = isHead ? 'HEAD / LIVE' : `TIME TRAVEL / SEQ ${this.cursorSeq}`;
+            this.setConnection('connected', 'LEDGER CONNECTED');
+            $('world-mode').textContent = isHead
+                ? (this.followLive ? 'AT HEAD · FOLLOWING' : 'AT HEAD · PAUSED')
+                : `HISTORY · SEQ ${this.cursorSeq}`;
         }
 
         renderRunSummary() {
@@ -885,17 +985,31 @@
             const context = this.world.context || {};
             const used = context.used_tokens;
             const budget = context.budget_tokens;
-            const ratio = budget ? used / budget : 0;
-            $('context-label').textContent = budget ? `${humanNumber(used)} / ${humanNumber(budget)}` : 'NO TELEMETRY';
+            const eventTypes = Object.keys(this.world.event_type_counts || {});
+            const hasFamily = prefix => eventTypes.some(eventType => eventType.startsWith(prefix));
+            const contextObserved = hasFamily('context.');
+            const memoryObserved = hasFamily('memory.');
+            const compactionObserved = hasFamily('compaction.');
+            const ratio = budget != null && budget > 0 ? used / budget : 0;
+            $('context-label').textContent = budget != null
+                ? `${humanNumber(used)} / ${humanNumber(budget)}`
+                : contextObserved
+                    ? 'CONTEXT OBSERVED · BUDGET NOT OBSERVED'
+                    : 'NOT OBSERVED';
             const fill = $('context-fill');
             fill.style.width = `${clamp(ratio * 100, 0, 100)}%`;
             fill.className = context.overflow ? 'overflow' : ratio >= .85 ? 'warning' : '';
-            $('memory-working').textContent = this.world.memory?.working || 0;
-            $('memory-episodic').textContent = this.world.memory?.episodic || 0;
-            $('memory-semantic').textContent = this.world.memory?.semantic || 0;
+            const memoryValue = key => memoryObserved ? (this.world.memory?.[key] ?? 0) : 'NOT OBSERVED';
+            $('memory-working').textContent = memoryValue('working');
+            $('memory-episodic').textContent = memoryValue('episodic');
+            $('memory-semantic').textContent = memoryValue('semantic');
             const jobs = Object.values(this.world.compactions || {});
             const job = jobs[jobs.length - 1];
-            $('compact-status').textContent = job ? String(job.status).toUpperCase() : 'IDLE';
+            $('compact-status').textContent = job
+                ? String(job.status).toUpperCase()
+                : compactionObserved
+                    ? 'OBSERVED · NO JOB STATE'
+                    : 'NOT OBSERVED';
             $('compact-delta').textContent = job?.tokens_removed != null
                 ? `${humanNumber(job.tokens_before)} → ${humanNumber(job.tokens_after)} · removed ${humanNumber(job.tokens_removed)} tokens`
                 : '没有压缩记录';
@@ -905,14 +1019,18 @@
             const container = $('chamber-list');
             const state = this.world;
             container.innerHTML = '';
+            const terminalRun = TERMINAL_RUN_STATUSES.has(state?.run_status);
+            const activityLabel = terminalRun ? 'UNRESOLVED' : 'OPEN';
             for (const zone of ZONES) {
                 const activity = state?.zone_activity?.[zone.key] || 0;
                 const count = (state?.recent_events || []).filter(event => event.zone === zone.key).length;
                 const button = document.createElement('button');
                 button.type = 'button';
-                button.className = `chamber-item ${activity > 0 ? 'active' : ''}`;
+                const activityClass = activity > 0
+                    ? (terminalRun ? 'unresolved' : 'active') : '';
+                button.className = `chamber-item ${activityClass}`;
                 button.style.setProperty('--chamber-color', zone.color);
-                button.innerHTML = `<i></i><span>${esc(zone.label)}</span><b>${activity ? `${activity} LIVE` : count ? `${count} EVT` : '—'}</b>`;
+                button.innerHTML = `<i></i><span>${esc(zone.label)}</span><b>${activity ? `${activity} ${activityLabel}` : count ? `${count} EVT` : '—'}</b>`;
                 button.addEventListener('click', () => this.selectZone(zone.key));
                 container.append(button);
             }
@@ -1173,13 +1291,22 @@
 
         async loadCausality(eventId) {
             if (!eventId || !this.runId) return;
+            const requestId = ++this.causalRequestId;
+            const runId = this.runId;
+            const direction = this.causalDirection;
             $('causal-graph').className = 'causal-graph empty-detail';
             $('causal-graph').textContent = '正在构建显式因果切片…';
             try {
-                const graph = await this.fetchJson(`${API}/runs/${encodeURIComponent(this.runId)}/causal/${encodeURIComponent(eventId)}?direction=${this.causalDirection}&max_depth=20`);
-                if (this.selectedEventId !== eventId) return;
+                const graph = await this.fetchJson(`${API}/runs/${encodeURIComponent(runId)}/causal/${encodeURIComponent(eventId)}?direction=${direction}&max_depth=20`);
+                if (
+                    requestId !== this.causalRequestId
+                    || this.runId !== runId
+                    || this.selectedEventId !== eventId
+                    || this.causalDirection !== direction
+                ) return;
                 this.renderCausalGraph(graph);
             } catch (error) {
+                if (requestId !== this.causalRequestId) return;
                 this.flashError(error.message);
             }
         }
@@ -1213,8 +1340,17 @@
         }
 
         switchTab(tab) {
-            document.querySelectorAll('.inspector-tabs button').forEach(button => button.classList.toggle('active', button.dataset.tab === tab));
-            document.querySelectorAll('.inspector-panel').forEach(panel => panel.classList.toggle('active', panel.id === `${tab}-panel`));
+            document.querySelectorAll('.inspector-tabs button').forEach(button => {
+                const selected = button.dataset.tab === tab;
+                button.classList.toggle('active', selected);
+                button.setAttribute('aria-selected', String(selected));
+                button.tabIndex = selected ? 0 : -1;
+            });
+            document.querySelectorAll('.inspector-panel').forEach(panel => {
+                const active = panel.id === `${tab}-panel`;
+                panel.classList.toggle('active', active);
+                panel.hidden = !active;
+            });
             if (tab === 'causal' && this.selectedEventId) this.loadCausality(this.selectedEventId);
             this.openInspectorOnMobile();
         }
@@ -1424,7 +1560,7 @@
                 }
             });
             this.eventSource.addEventListener('gap', () => this.reloadCurrentRun());
-            this.eventSource.onopen = () => this.setConnection(this.cursorSeq === this.headSeq ? 'live' : 'history', 'LEDGER CONNECTED');
+            this.eventSource.onopen = () => this.setConnection('connected', 'LEDGER CONNECTED');
             this.eventSource.onerror = () => this.setConnection('error', 'STREAM RETRYING');
         }
 
@@ -1432,11 +1568,32 @@
             clearTimeout(this.headRefreshTimer);
             this.headRefreshTimer = setTimeout(async () => {
                 if (!this.followLive || !this.runId) return;
+                const runId = this.runId;
+                if (this.worldRequest) this.worldRequest.abort();
+                const controller = new AbortController();
+                const requestId = ++this.worldRequestId;
+                this.worldRequest = controller;
                 try {
-                    const world = await this.fetchJson(`${API}/runs/${encodeURIComponent(this.runId)}/world`);
+                    const world = await this.fetchJson(
+                        `${API}/runs/${encodeURIComponent(runId)}/world`,
+                        { signal: controller.signal },
+                    );
+                    if (
+                        controller.signal.aborted
+                        || this.runId !== runId
+                        || this.worldRequestId !== requestId
+                    ) return;
                     this.applyWorld(world);
                     this.renderTimelineTicks();
-                } catch (error) { console.warn(error); }
+                } catch (error) {
+                    if (
+                        error.name !== 'AbortError'
+                        && this.runId === runId
+                        && this.worldRequestId === requestId
+                    ) console.warn(error);
+                } finally {
+                    if (this.worldRequestId === requestId) this.worldRequest = null;
+                }
             }, 90);
         }
 
@@ -1450,8 +1607,8 @@
         }
 
         setConnection(state, label) {
-            $('live-state').dataset.state = state;
-            $('live-label').textContent = label;
+            $('connection-state').dataset.state = state;
+            $('connection-label').textContent = label;
         }
 
         showEmpty(value, message = null) {

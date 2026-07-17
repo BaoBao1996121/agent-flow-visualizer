@@ -60,3 +60,21 @@ tuples rather than silently mis-mapping them. This proves the tested runtime
 boundary, not every future `1.x` release. The optional compatibility matrix is
 configured to keep that claim executable, but no hosted matrix result exists
 yet.
+
+## 2026-07-17 — Phase -1 inspector tab accessibility
+
+Three bounded spikes gate the tab ARIA and keyboard slice before further changes to the already-large frontend bundle.
+
+| Assumption | Validation | Result |
+|---|---|---|
+| Every inspector tab has one stable panel target. | Parsed `static/anthill.html` and compared the four `data-tab` values with the four `*-panel` IDs. | PASS after correcting the spike's first over-specific assumption that panels were `<section>` elements; the actual element tag is not part of the contract. |
+| A tab-local arrow-key handler can avoid the page-level timeline shortcut. | Dispatched `ArrowRight` in real Chromium with a bubbling window listener and a tab listener that calls `stopPropagation()`. | PASS. The window listener received zero events. |
+| Native `hidden` provides both visual and accessibility hiding for inactive panels. | Rendered one visible and one hidden `role="tabpanel"` in real Chromium and checked `isHidden()` plus the default role locator. | PASS. The hidden panel was not exposed by the role query. |
+
+Executable evidence:
+
+- `node scripts/spikes/phase1_tab_map.mjs`
+- `node scripts/spikes/phase1_tab_stop_propagation.mjs`
+- `node scripts/spikes/phase1_hidden_panel.mjs`
+
+All three spike files are 14 lines or fewer. These results validate the browser primitives and current tab/panel topology, not the completed application behavior; Playwright still supplies the RED/GREEN acceptance proof.
