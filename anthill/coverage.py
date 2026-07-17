@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from .projections.world import WorldState
 
 
-COVERAGE_CONTRACT_VERSION = "0.1.0"
+COVERAGE_CONTRACT_VERSION = "0.2.0"
 
 DOMAIN_ORDER = (
     "run",
@@ -42,6 +42,7 @@ DOMAIN_ORDER = (
     "telemetry",
     "manifest",
     "agui",
+    "langgraph",
     "extension",
 )
 
@@ -59,9 +60,24 @@ ADAPTER_CONTRACTS = {
         label="Synthetic full-chamber exhibit",
         kind="synthetic",
         can_observe=(
-            "run", "agent", "task", "decision", "policy", "model", "tool",
-            "retrieval", "memory", "context", "compaction", "handoff",
-            "checkpoint", "artifact", "error", "usage", "cost", "budget",
+            "run",
+            "agent",
+            "task",
+            "decision",
+            "policy",
+            "model",
+            "tool",
+            "retrieval",
+            "memory",
+            "context",
+            "compaction",
+            "handoff",
+            "checkpoint",
+            "artifact",
+            "error",
+            "usage",
+            "cost",
+            "budget",
             "manifest",
         ),
         blind_spots=(
@@ -91,9 +107,19 @@ ADAPTER_CONTRACTS = {
         label="OTLP JSON / OpenInference adapter",
         kind="mapped",
         can_observe=(
-            "run", "agent", "model", "tool", "retrieval", "embedding",
-            "guardrail", "evaluation", "context", "telemetry", "error",
-            "usage", "cost",
+            "run",
+            "agent",
+            "model",
+            "tool",
+            "retrieval",
+            "embedding",
+            "guardrail",
+            "evaluation",
+            "context",
+            "telemetry",
+            "error",
+            "usage",
+            "cost",
         ),
         blind_spots=(
             "Only exported spans and attributes are visible; missing spans are not absence proof.",
@@ -107,6 +133,27 @@ ADAPTER_CONTRACTS = {
         blind_spots=(
             "Standard AG-UI events do not identify model, retrieval, memory, or compaction internals.",
             "Metadata-only import preserves state structure but not private values.",
+        ),
+    ),
+    "anthill.langgraph-v2": AdapterCoverageContract(
+        label="LangGraph StreamPart v2 adapter",
+        kind="mapped",
+        can_observe=(
+            "run",
+            "agent",
+            "model",
+            "context",
+            "checkpoint",
+            "human",
+            "error",
+            "usage",
+            "langgraph",
+        ),
+        blind_spots=(
+            "Only requested StreamPart modes are visible; an omitted mode is not absence proof.",
+            "Standard task parts identify graph nodes, not whether a node is specifically a tool, retrieval, or memory operation.",
+            "State, message, task, checkpoint, and custom values remain metadata-only unless plaintext capture is explicitly enabled.",
+            "Run completion is recorded only when the importer is explicitly told the captured stream is complete.",
         ),
     ),
     "anthill.branch.materializer": AdapterCoverageContract(

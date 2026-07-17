@@ -1,0 +1,27 @@
+{
+  "events": [
+    {
+      "schema_version": "0.1.0",
+      "event_id": "evt-tool-start",
+      "event_type": "tool.execution.started",
+      "run_id": "example",
+      "source": {
+        "adapter": "my-runtime",
+        "adapter_version": "0.1.0",
+        "framework": "my-framework",
+        "fidelity": "native"
+      },
+      "evidence": {
+        "level": "observed",
+        "confidence": 1.0
+      },
+      "subject": {
+        "kind": "tool.call",
+        "id": "call-7",
+        "name": "web_search"
+      },
+      "privacy": {"content": "metadata_only"},
+      "payload": {"tool": "web_search"}
+    }
+  ]
+}

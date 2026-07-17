@@ -21,6 +21,8 @@ These are product hypotheses until repeated user studies publish the evidence.
 
 Every animation must answer a real question. If a visual state has no event or declaration, it must be shown as unknown. A beautiful false state is a bug.
 
+The renderer decision, deterministic animation contract, LOD, accessibility, asset provenance, benchmark, cost, and rollback gates are specified in [VISUAL_SYSTEM.md](VISUAL_SYSTEM.md). Its performance targets remain initial gates until measured evidence is published.
+
 ### 2. Metaphor must be reversible
 
 The user can move from chamber → entity → event → causal parent/span → source reference/raw artifact. The metaphor can compress information but cannot erase provenance.
@@ -56,6 +58,8 @@ Fixed commit + fixed task + fixed trace + guided chapters. Users pause, predict 
 
 Native hooks, canonical events, or telemetry adapters update the same world reducer. Instrumentation coverage and gaps are part of the UI.
 
+The current LangGraph integration imports captured StreamPart v2 files. File import is an inspection workflow, not a live framework connection; a capture bridge remains future work.
+
 ### Compare
 
 Two Agents receive the same task/tool fixture and replay in synchronized time. The product highlights genuine differences in state ownership, context, checkpoints, cost, and outcomes.
@@ -77,11 +81,12 @@ Long traces must collapse by semantic stage before they become graph hairballs.
 
 ## Current scope
 
-The current implementation proves the event kernel, Python, OTLP/OpenInference, and AG-UI JSON/NDJSON paths, local ledger, snapshot-accelerated deterministic projection, time travel, comparison, explicit causal slicing, cursor-specific instrumentation visibility, and the first pixel observatory. It does not yet prove:
+The current implementation proves the event kernel, Python, OTLP/OpenInference, AG-UI JSON/NDJSON, and LangGraph StreamPart v2 offline paths, local ledger, snapshot-accelerated deterministic projection under reducer `0.2.0`, time travel, comparison, explicit causal slicing, cursor-specific instrumentation visibility, and the first pixel observatory. LangGraph `1.1.0` and `1.2.9` passed isolated real-runtime probes. The latest-code local manual Chromium rerun covered LangGraph JSON import; NDJSON, AG-UI, Demo, historical seek, Fork, and Compare are earlier same-day manual evidence, and hosted browser automation remains pending. It does not yet prove:
 
 - arbitrary repository import;
 - production multi-process ingestion;
 - complete framework coverage;
+- framework-native LangGraph live capture;
 - deterministic real-model rerun;
 - counterfactual causality;
 - multi-tenant authorization or hosted trace storage.

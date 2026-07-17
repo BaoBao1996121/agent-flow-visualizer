@@ -20,7 +20,7 @@ from anthill.adapters import flow_graph_to_events, trace_result_to_events
 from anthill.store import DuplicateEventError, JsonlEventStore
 
 
-app = FastAPI(title="Agent Anthill", version="0.5.0")
+app = FastAPI(title="Agent Anthill", version="0.6.0")
 
 # Local-first canonical event ledger. Set ANTHILL_DATA_DIR to keep recordings
 # elsewhere; event content defaults to metadata-only when runtime traces are
@@ -100,8 +100,10 @@ async def browse_folder():
         )
         proc = subprocess.run(
             [sys.executable, "-c", script],
-            capture_output=True, text=True, timeout=120,
-            creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
         )
         return proc.stdout.strip()
 
@@ -186,12 +188,25 @@ def _get_project_mtime(project_dir: str) -> float:
     latest = 0.0
     for root, dirs, files in os.walk(project_dir):
         # Skip common non-source directories
-        dirs[:] = [d for d in dirs if d not in {
-            '__pycache__', '.git', 'node_modules', '.venv', 'venv',
-            '.tox', '.mypy_cache', 'dist', 'build', '.eggs',
-        }]
+        dirs[:] = [
+            d
+            for d in dirs
+            if d
+            not in {
+                "__pycache__",
+                ".git",
+                "node_modules",
+                ".venv",
+                "venv",
+                ".tox",
+                ".mypy_cache",
+                "dist",
+                "build",
+                ".eggs",
+            }
+        ]
         for f in files:
-            if f.endswith('.py'):
+            if f.endswith(".py"):
                 try:
                     mt = os.path.getmtime(os.path.join(root, f))
                     if mt > latest:
@@ -264,11 +279,13 @@ async def simulate_flow(req: SimulateRequest):
         for target in targets:
             if target not in visited:
                 edge_info = edge_map.get((node_id, target), {})
-                step_info["edges_taken"].append({
-                    "target": target,
-                    "edge_type": edge_info.get("type", "call"),
-                    "condition": edge_info.get("label", ""),
-                })
+                step_info["edges_taken"].append(
+                    {
+                        "target": target,
+                        "edge_type": edge_info.get("type", "call"),
+                        "condition": edge_info.get("label", ""),
+                    }
+                )
                 queue.append((target, step + 1, step_info["output_data"]))
 
         trace_steps.append(step_info)
@@ -365,4 +382,5 @@ async def trace_execution(req: TraceRequest):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="127.0.0.1", port=8765)

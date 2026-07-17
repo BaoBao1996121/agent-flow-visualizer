@@ -1,0 +1,111 @@
+{
+  "streamVersion": "v2",
+  "frameworkVersion": "1.1.0",
+  "runId": "langgraph-run",
+  "threadId": "langgraph-thread",
+  "complete": true,
+  "parts": [
+    {
+      "type": "tasks",
+      "ns": [],
+      "data": {
+        "id": "task-plan",
+        "name": "planner",
+        "input": {"question": "SECRET_TASK_INPUT"},
+        "triggers": ["start:planner"]
+      }
+    },
+    {
+      "type": "messages",
+      "ns": [],
+      "data": [
+        {
+          "id": "message-plan",
+          "type": "AIMessageChunk",
+          "content": "SECRET_MODEL_TOKEN",
+          "usage_metadata": {"input_tokens": 31, "output_tokens": 7, "total_tokens": 38}
+        },
+        {
+          "langgraph_step": 0,
+          "langgraph_node": "planner",
+          "langgraph_triggers": ["start:planner"],
+          "ls_provider": "example",
+          "ls_model_name": "fixture-model",
+          "tags": ["SECRET_TAG"]
+        }
+      ]
+    },
+    {
+      "type": "updates",
+      "ns": [],
+      "data": {"planner": {"plan": "SECRET_PLAN"}}
+    },
+    {
+      "type": "tasks",
+      "ns": [],
+      "data": {
+        "id": "task-plan",
+        "name": "planner",
+        "error": null,
+        "interrupts": [],
+        "result": {"plan": "SECRET_PLAN_RESULT"}
+      }
+    },
+    {
+      "type": "tasks",
+      "ns": [],
+      "data": {
+        "id": "task-tools",
+        "name": "tools",
+        "input": {"query": "SECRET_TOOL_INPUT"},
+        "triggers": ["branch:to:tools"]
+      }
+    },
+    {
+      "type": "custom",
+      "ns": ["tools:task-tools"],
+      "data": {"progress": "SECRET_CUSTOM_PROGRESS", "percent": 50}
+    },
+    {
+      "type": "tasks",
+      "ns": [],
+      "data": {
+        "id": "task-tools",
+        "name": "tools",
+        "error": null,
+        "interrupts": [],
+        "result": {"answer": "SECRET_TOOL_RESULT"}
+      }
+    },
+    {
+      "type": "checkpoints",
+      "ns": [],
+      "data": {
+        "config": {"configurable": {"thread_id": "langgraph-thread", "checkpoint_id": "checkpoint-1", "checkpoint_ns": ""}},
+        "metadata": {"step": 0, "source": "loop", "writes": {"planner": "SECRET_WRITE"}},
+        "values": {"plan": "SECRET_CHECKPOINT_STATE"},
+        "next": ["tools"],
+        "parent_config": null,
+        "tasks": []
+      }
+    },
+    {
+      "type": "checkpoints",
+      "ns": [],
+      "data": {
+        "config": {"configurable": {"thread_id": "langgraph-thread", "checkpoint_id": "checkpoint-2", "checkpoint_ns": ""}},
+        "metadata": {"step": 1, "source": "loop", "writes": {"tools": "SECRET_WRITE"}},
+        "values": {"answer": "SECRET_FINAL_STATE"},
+        "next": [],
+        "parent_config": {"configurable": {"thread_id": "langgraph-thread", "checkpoint_id": "checkpoint-1", "checkpoint_ns": ""}},
+        "tasks": []
+      }
+    },
+    {
+      "type": "values",
+      "ns": [],
+      "data": {"answer": "SECRET_FINAL_STATE"},
+      "interrupts": []
+    }
+  ]
+}

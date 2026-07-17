@@ -33,10 +33,12 @@
                         <span class="import-menu-note">METADATA-ONLY BY DEFAULT</span>
                         <button id="otlp-button" type="button"><strong>OTLP / OPENINFERENCE</strong><span>JSON trace export</span></button>
                         <button id="agui-button" type="button"><strong>AG-UI</strong><span>JSON / NDJSON events</span></button>
+                        <button id="langgraph-button" type="button"><strong>LANGGRAPH v2</strong><span>StreamPart JSON / NDJSON</span></button>
                     </div>
                 </details>
                 <input id="otlp-file" type="file" accept="application/json,.json" hidden />
                 <input id="agui-file" type="file" accept="application/json,application/x-ndjson,.json,.ndjson,.jsonl" hidden />
+                <input id="langgraph-file" type="file" accept="application/json,application/x-ndjson,.json,.ndjson,.jsonl" hidden />
             </div>
 
             <nav class="view-switch" aria-label="视图">
@@ -157,6 +159,7 @@
                     <button class="primary-action" id="empty-demo-button" type="button">启动一键展品</button>
                     <button class="secondary-action" id="empty-otlp-button" type="button">导入 OTLP JSON</button>
                     <button class="secondary-action" id="empty-agui-button" type="button">导入 AG-UI 事件</button>
+                    <button class="secondary-action" id="empty-langgraph-button" type="button">导入 LangGraph v2</button>
                     <a class="secondary-action" href="/graph">打开源码追踪器</a>
                 </div>
             </div>

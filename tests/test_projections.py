@@ -1,4 +1,5 @@
 from anthill.projections import build_causal_slice, project_world, reduce_world
+from anthill.adapters.langgraph import langgraph_v2_to_events
 from anthill.schema import (
     AgentRuntimeEvent,
     EntityRef,
@@ -20,11 +21,7 @@ def event(
     level=EvidenceLevel.OBSERVED,
     confidence=1.0,
 ):
-    fidelity = (
-        SourceFidelity.INFERRED
-        if level == EvidenceLevel.INFERRED
-        else SourceFidelity.NATIVE
-    )
+    fidelity = SourceFidelity.INFERRED if level == EvidenceLevel.INFERRED else SourceFidelity.NATIVE
     return AgentRuntimeEvent(
         event_id=event_id,
         event_type=event_type,
@@ -186,3 +183,110 @@ def test_causal_slice_uses_explicit_links_not_temporal_adjacency():
     assert node_ids == {"e0", "e3", "e7", "e8"}
     assert "e6" not in node_ids
     assert all(edge["relation"] == "caused_by" for edge in graph["edges"])
+
+
+def test_checkpoint_error_snapshot_is_historical_evidence_not_an_open_incident():
+    parts = [
+        {
+            "type": "checkpoints",
+            "ns": [],
+            "data": {
+                "config": None,
+                "metadata": {},
+                "values": {},
+                "next": [],
+                "parent_config": None,
+                "tasks": [
+                    {
+                        "id": "failed-task",
+                        "name": "worker",
+                        "state": None,
+                        "error": "historical failure",
+                    }
+                ],
+            },
+        }
+    ]
+    events = stamp(langgraph_v2_to_events(parts, run_id="historical-error"))
+
+    world = project_world(events, run_id="historical-error")
+
+    snapshot = next(item for item in world.errors if item.event_type == "error.task_snapshot")
+    assert snapshot.status == "snapshot"
+    assert sum(item.status == "open" for item in world.errors) == 0
+
+
+def test_interrupt_reobservation_preserves_waiting_entity_and_inspection_zone():
+    interrupt = {"id": "approval-1", "value": "review"}
+    parts = [
+        {"type": "updates", "ns": ["review"], "data": {"__interrupt__": [interrupt]}},
+        {"type": "values", "ns": ["review"], "data": {}, "interrupts": [interrupt]},
+        {
+            "type": "tasks",
+            "ns": ["review"],
+            "data": {
+                "id": "task-1",
+                "name": "review",
+                "error": None,
+                "result": {},
+                "interrupts": [interrupt],
+            },
+        },
+    ]
+    events = stamp(langgraph_v2_to_events(parts, run_id="interrupt-reobservation"))
+    primary = next(event for event in events if event.event_type == "human.interrupt")
+
+    world = project_world(events, run_id="interrupt-reobservation")
+    entity = world.entities[primary.subject.id]
+
+    assert entity.kind == "human.interrupt"
+    assert entity.zone == "inspection_gate"
+    assert entity.status == "waiting"
+    assert "langgraph.interrupt.reobserved" not in world.unknown_event_types
+
+
+def test_checkpoint_snapshot_does_not_downgrade_live_waiting_interrupt():
+    interrupt = {"id": "approval-1", "value": "review"}
+    parts = [
+        {
+            "type": "tasks",
+            "ns": ["review"],
+            "data": {
+                "id": "task-1",
+                "name": "review",
+                "error": None,
+                "result": {},
+                "interrupts": [interrupt],
+            },
+        },
+        {
+            "type": "checkpoints",
+            "ns": ["review"],
+            "data": {
+                "config": None,
+                "metadata": {},
+                "values": {},
+                "next": [],
+                "parent_config": None,
+                "tasks": [
+                    {
+                        "id": "task-1",
+                        "name": "review",
+                        "state": None,
+                        "interrupts": [interrupt],
+                    }
+                ],
+            },
+        },
+    ]
+    events = stamp(langgraph_v2_to_events(parts, run_id="live-then-snapshot"))
+    primary = next(event for event in events if event.event_type == "human.interrupt")
+
+    assert any(event.event_type == "human.interrupt.snapshot" for event in events)
+
+    world = project_world(events, run_id="live-then-snapshot")
+    entity = world.entities[primary.subject.id]
+
+    assert entity.kind == "human.interrupt"
+    assert entity.zone == "inspection_gate"
+    assert entity.status == "waiting"

@@ -67,16 +67,14 @@ def test_corrupt_snapshot_is_ignored_and_ledger_is_replayed(tmp_path):
 
 def test_snapshot_api_is_versioned_and_inspectable(tmp_path):
     app = FastAPI()
-    app.include_router(
-        create_anthill_router(JsonlEventStore(tmp_path), EventBroker())
-    )
+    app.include_router(create_anthill_router(JsonlEventStore(tmp_path), EventBroker()))
     client = TestClient(app)
     run_id = client.post("/api/anthill/demo").json()["run_id"]
 
     created = client.post(f"/api/anthill/runs/{run_id}/snapshots")
     assert created.status_code == 201
     assert created.json()["seq"] == 43
-    assert created.json()["reducer_version"] == "0.1.0"
+    assert created.json()["reducer_version"] == "0.2.0"
 
     listing = client.get(f"/api/anthill/runs/{run_id}/snapshots")
     assert listing.status_code == 200

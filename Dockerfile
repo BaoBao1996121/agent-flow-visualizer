@@ -3,7 +3,7 @@
 ARG PYTHON_IMAGE=python:3.12-slim-bookworm
 FROM ${PYTHON_IMAGE}
 
-ARG APP_VERSION=0.5.0
+ARG APP_VERSION=0.6.0
 LABEL org.opencontainers.image.title="Agent Anthill" \
     org.opencontainers.image.description="Evidence-linked runtime observability for agent systems" \
     org.opencontainers.image.version="${APP_VERSION}" \

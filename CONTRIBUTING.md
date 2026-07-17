@@ -16,11 +16,35 @@ For significant protocol, projector, storage, or visual-language changes, open a
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements-dev.txt
-pytest -q
-ruff check --no-cache anthill analyzer tracer tests server.py
+```
+
+Activate with one shell-appropriate command:
+
+```powershell
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+```
+
+```bat
+:: Windows Command Prompt
+.venv\Scripts\activate.bat
+```
+
+```bash
+# macOS, Linux, or Git Bash
+source .venv/bin/activate
+```
+
+Run the complete local gates:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+python -m ruff check --no-cache .
 node --check static/js/anthill.js
+node --check static/js/app.js
+node --check static/js/graph.js
+node --check static/js/simulation.js
 ```
 
 ## Pull-request expectations

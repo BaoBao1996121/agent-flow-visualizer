@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ..schema import AgentRuntimeEvent, EvidenceLevel
 
 
-REDUCER_VERSION = "0.1.0"
+REDUCER_VERSION = "0.2.0"
 MAX_RECENT_EVENTS = 80
 MAX_ERRORS = 100
 
@@ -195,19 +195,17 @@ def reduce_world(state: WorldState, event: AgentRuntimeEvent) -> WorldState:
     """
 
     if state.run_id != event.run_id:
-        raise ValueError(
-            f"cannot project event for run {event.run_id!r} into {state.run_id!r}"
-        )
+        raise ValueError(f"cannot project event for run {event.run_id!r} into {state.run_id!r}")
     seq = event.clock.ingest_seq
     if seq is None:
         raise ValueError("world projection requires store-stamped ingest_seq")
     if seq <= state.cursor_seq:
-        raise ValueError(
-            f"event sequence {seq} is not after current cursor {state.cursor_seq}"
-        )
+        raise ValueError(f"event sequence {seq} is not after current cursor {state.cursor_seq}")
 
     next_state = state.model_copy(deep=True)
     zone = _zone_for(event.event_type)
+    if event.subject and event.subject.kind == "human.interrupt":
+        zone = "inspection_gate"
     family, _, action = event.event_type.partition(".")
 
     next_state.cursor_seq = seq
@@ -217,9 +215,7 @@ def reduce_world(state: WorldState, event: AgentRuntimeEvent) -> WorldState:
         next_state.event_type_counts.get(event.event_type, 0) + 1
     )
     evidence_key = event.evidence.level.value
-    next_state.evidence_counts[evidence_key] = (
-        next_state.evidence_counts.get(evidence_key, 0) + 1
-    )
+    next_state.evidence_counts[evidence_key] = next_state.evidence_counts.get(evidence_key, 0) + 1
     next_state.source_adapters[event.source.adapter] = (
         next_state.source_adapters.get(event.source.adapter, 0) + 1
     )
@@ -299,9 +295,7 @@ def _entity_identity(event: AgentRuntimeEvent) -> tuple[str, str, str] | None:
     return None
 
 
-def _entity_identities(
-    state: WorldState, event: AgentRuntimeEvent
-) -> list[tuple[str, str, str]]:
+def _entity_identities(state: WorldState, event: AgentRuntimeEvent) -> list[tuple[str, str, str]]:
     identities: list[tuple[str, str, str]] = []
     primary = _entity_identity(event)
     if primary is not None:
@@ -345,6 +339,8 @@ def _status_for(event_type: str, payload: dict[str, Any]) -> tuple[str, bool]:
         ".triggered",
         ".proposed",
     )
+    if event_type == "human.interrupt":
+        return str(payload.get("status", "waiting")), False
     if event_type == "agent.state.changed" or event_type == "task.state.changed":
         return str(payload.get("state", payload.get("status", "changed"))), False
     if event_type.endswith(terminal_error):
@@ -356,9 +352,7 @@ def _status_for(event_type: str, payload: dict[str, Any]) -> tuple[str, bool]:
     return event_type.rsplit(".", 1)[-1], False
 
 
-def _update_entity(
-    state: WorldState, event: AgentRuntimeEvent, zone: str, action: str
-) -> None:
+def _update_entity(state: WorldState, event: AgentRuntimeEvent, zone: str, action: str) -> None:
     identities = _entity_identities(state, event)
     if not identities:
         return
@@ -393,6 +387,14 @@ def _update_entity(
             )
             state.entities[entity_id] = entity
         else:
+            if (
+                entity.kind == "human.interrupt"
+                and entity.status == "waiting"
+                and event.event_type
+                in {"langgraph.interrupt.reobserved", "human.interrupt.snapshot"}
+            ):
+                status = entity.status
+                active = entity.active
             entity.zone = zone
             entity.status = status
             entity.active = active
@@ -417,9 +419,7 @@ def _update_entity(
         ]
 
 
-def _update_zone_activity(
-    state: WorldState, event: AgentRuntimeEvent, zone: str
-) -> None:
+def _update_zone_activity(state: WorldState, event: AgentRuntimeEvent, zone: str) -> None:
     # Activity is a projection of currently active entities, not a counter of
     # start-like event names. Recomputing prevents a request/stream/response
     # sequence from leaving phantom workers behind after completion.
@@ -534,7 +534,9 @@ def _update_memory(state: WorldState, event: AgentRuntimeEvent) -> None:
 def _compaction_id(event: AgentRuntimeEvent) -> str:
     if event.subject:
         return event.subject.id
-    return str(event.payload.get("compaction_id") or event.span_id or event.correlation_id or "current")
+    return str(
+        event.payload.get("compaction_id") or event.span_id or event.correlation_id or "current"
+    )
 
 
 def _update_compaction(state: WorldState, event: AgentRuntimeEvent) -> None:
@@ -566,7 +568,9 @@ def _update_compaction(state: WorldState, event: AgentRuntimeEvent) -> None:
     job.policy = str(payload["policy"]) if payload.get("policy") is not None else job.policy
     job.tokens_before = _number(payload, "tokens_before", "before_tokens") or job.tokens_before
     job.tokens_after = _number(payload, "tokens_after", "after_tokens") or job.tokens_after
-    job.summary_hash = str(payload["summary_hash"]) if payload.get("summary_hash") else job.summary_hash
+    job.summary_hash = (
+        str(payload["summary_hash"]) if payload.get("summary_hash") else job.summary_hash
+    )
     if isinstance(payload.get("lossy"), bool):
         job.lossy = payload["lossy"]
     if isinstance(payload.get("kept_refs"), list):
@@ -595,7 +599,12 @@ def _update_errors(state: WorldState, event: AgentRuntimeEvent) -> None:
             elif subject_id and record.subject_id == subject_id:
                 record.status = "recovered"
         return
-    status = "open"
+    payload_status = str(event.payload.get("status", ""))
+    is_snapshot = event.event_type.endswith((".snapshot", "_snapshot")) or payload_status in {
+        "snapshot",
+        "failed_in_checkpoint_snapshot",
+    }
+    status = "snapshot" if is_snapshot else "open"
     record = ErrorRecord(
         event_id=event.event_id,
         seq=event.clock.ingest_seq or 0,
@@ -630,9 +639,7 @@ def _update_totals(state: WorldState, event: AgentRuntimeEvent) -> None:
             state.totals[f"{key}_sum"] = state.totals.get(f"{key}_sum", 0) + value
 
 
-def _append_recent(
-    state: WorldState, event: AgentRuntimeEvent, zone: str
-) -> None:
+def _append_recent(state: WorldState, event: AgentRuntimeEvent, zone: str) -> None:
     state.recent_events.append(
         RecentEvent(
             event_id=event.event_id,

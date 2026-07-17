@@ -11,12 +11,14 @@ flowchart TB
         HOOK[Native framework hooks]
         OTEL[OTLP / OpenInference]
         AGUI[AG-UI stream]
+        LG[LangGraph StreamPart v2 capture]
     end
 
     PY --> ADAPTER
     HOOK --> ADAPTER[Versioned adapters]
     OTEL --> ADAPTER
     AGUI --> ADAPTER
+    LG --> ADAPTER
     ADAPTER --> VALIDATE[Schema / privacy / dedupe / ordering]
     VALIDATE --> LEDGER[(Append-only ledger)]
     LEDGER --> VERIFY[Hash-chain verifier]
@@ -39,13 +41,17 @@ Converts a source-specific event into `AgentRuntimeEvent`. It must record framew
 
 Adapters do not draw pixels. They do not silently promote inferred semantics to observed facts.
 
-Implemented inputs are Python AST, Python `sys.settrace`, canonical HTTP events, OTLP JSON/OpenInference import, and AG-UI JSON/NDJSON import. OTLP protobuf, a standard live `/v1/traces` collector endpoint, and an AG-UI HTTP/SSE subscriber are not implemented yet.
+Implemented inputs are Python AST, Python `sys.settrace`, canonical HTTP events, OTLP JSON/OpenInference import, AG-UI JSON/NDJSON import, and LangGraph 1.x StreamPart v2 JSON/NDJSON import with a tested `1.1.0` floor.
+
+The LangGraph adapter maps an already captured, JSON-compatible v2 stream. It does not import LangGraph at runtime, instrument a graph automatically, or subscribe to a running graph. OTLP protobuf, a standard live `/v1/traces` collector endpoint, an AG-UI HTTP/SSE subscriber, and a LangGraph live capture bridge are not implemented yet.
 
 ### 2. Validation and privacy
 
 Pydantic validates the stable envelope. Inferred evidence cannot claim confidence `1.0`. Timestamps must be timezone-aware. Event types are open, lowercase namespaces so framework extensions can survive before the core understands them.
 
 Content capture defaults to `metadata_only`. An adapter may hash or store large content as an artifact reference; it should not put an entire prompt into the envelope by default.
+
+Metadata-only is a content policy, not an anonymity guarantee. Run/thread/task/message/checkpoint IDs, namespaces, node and field names, patch paths, model metadata, and source references can remain visible because they are needed to correlate evidence. Oversized external LangGraph interrupt IDs are replaced by stable hashes while their original character count is retained.
 
 ### 3. Event ledger
 
@@ -129,10 +135,12 @@ The current UI queries at most 5,000 events per page. Large-run pagination, serv
 
 ## Container boundary
 
-The repository includes a local hardened container profile: non-root UID/GID `10001`, read-only root filesystem, dropped Linux capabilities, `no-new-privileges`, bounded PIDs/logs, loopback-only host binding, and a dedicated writable ledger volume. CI builds that image and proves the health endpoint, process UID, and a real ledger write.
+The repository includes a local hardened container profile: non-root UID/GID `10001`, read-only root filesystem, dropped Linux capabilities, `no-new-privileges`, bounded PIDs/logs, loopback-only host binding, and a dedicated writable ledger volume. The CI workflow is configured to validate the Compose model, build that image, and check the health endpoint, process UID, and a real ledger write; hosted execution remains pending. Current execution evidence and any pending environment checks are recorded in [the dated verification record](VERIFICATION.md) and [environment checklist](ENVIRONMENT_CHECKLIST.md).
 
 This reduces accidental host exposure; it does not add authentication, tenant isolation, TLS, or a sandbox around Python trace execution. The container is therefore a reproducible local deployment, not evidence of hosted-service readiness.
 
 ## Compatibility strategy
 
 OpenTelemetry GenAI semantic conventions, OpenInference, and AG-UI are valuable inputs but still evolve. Agent Anthill aligns through versioned adapters and stores the input convention/version; none of them is the immutable internal contract.
+
+LangGraph StreamPart v2 uses the same strategy. The adapter requires the discriminated `{type, ns, data}` boundary introduced in LangGraph `1.1`; legacy mode tuples are rejected rather than guessed. Real runtime probes cover LangGraph `1.1.0` and `1.2.9`, and the configured supported lane is `>=1.2,<2`; no hosted compatibility run exists yet. Visual projection and renderer evolution follow [VISUAL_SYSTEM.md](VISUAL_SYSTEM.md); no unmeasured performance claim is part of this architecture.

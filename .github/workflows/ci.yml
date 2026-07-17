@@ -10,6 +10,7 @@ permissions:
 jobs:
   python:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -24,8 +25,37 @@ jobs:
       - run: ruff check --no-cache .
       - run: pytest -q
 
+  langgraph-compat:
+    name: LangGraph StreamPart v2 (${{ matrix.label }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: "1.1.0 floor"
+            requirement: "langgraph==1.1.0"
+          - label: "supported 1.x"
+            requirement: "langgraph>=1.2,<2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install core tests and optional LangGraph runtime
+        run: python -m pip install -r requirements-dev.txt "${{ matrix.requirement }}"
+      - name: Show resolved LangGraph version
+        run: python -c "from importlib.metadata import version; print(version('langgraph'))"
+      - name: Exercise real StreamPart v2 boundary and canonical mapper
+        run: >-
+          pytest -q
+          tests/test_langgraph_runtime_compat.py
+          tests/test_langgraph_adapter.py
+
   frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,8 +68,11 @@ jobs:
 
   container:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Validate Compose model
+        run: docker compose config --quiet
       - name: Build hardened image
         run: docker build --tag agent-anthill:ci .
       - name: Start non-root read-only container

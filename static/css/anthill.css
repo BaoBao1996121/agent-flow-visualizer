@@ -443,7 +443,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .empty-glyph i:nth-child(3) { right: 5px; height: 21px; }
 .world-empty h1 { margin: 0; color: var(--text); font: 600 22px/1.1 var(--sans); }
 .world-empty p { max-width: 380px; margin: 11px auto 20px; color: var(--muted); line-height: 1.6; }
-.empty-actions { display: flex; justify-content: center; gap: 9px; }
+.empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; }
 .primary-action, .secondary-action { display: inline-flex; align-items: center; height: 36px; }
 .primary-action { border-color: #6f9036; background: #18281c; color: var(--acid); }
 

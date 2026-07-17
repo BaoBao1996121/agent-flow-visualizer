@@ -49,6 +49,13 @@
     const truthColor = level => TRUTH_COLORS[level] || '#789489';
     const shortId = value => value ? (value.length > 19 ? `${value.slice(0, 8)}…${value.slice(-7)}` : value) : '—';
     const eventFamily = type => String(type || '').split('.')[0];
+    const importRunId = prefix => {
+        const uuid = globalThis.crypto?.randomUUID?.();
+        const token = uuid
+            ? uuid.replaceAll('-', '')
+            : `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+        return `${prefix}_${token}`;
+    };
 
     function hashString(value) {
         let hash = 2166136261;
@@ -579,6 +586,12 @@
             });
             $('empty-agui-button').addEventListener('click', () => $('agui-file').click());
             $('agui-file').addEventListener('change', event => this.importAguiFile(event.target.files?.[0]));
+            $('langgraph-button').addEventListener('click', () => {
+                $('import-menu').open = false;
+                $('langgraph-file').click();
+            });
+            $('empty-langgraph-button').addEventListener('click', () => $('langgraph-file').click());
+            $('langgraph-file').addEventListener('change', event => this.importLangGraphFile(event.target.files?.[0]));
             $('compare-run-select').addEventListener('change', event => {
                 this.compareRunId = event.target.value;
                 this.loadComparison(this.compareProgress);
@@ -712,6 +725,47 @@
                 button.disabled = false;
                 summary.textContent = original;
                 $('agui-file').value = '';
+            }
+        }
+
+        async importLangGraphFile(file) {
+            if (!file) return;
+            const button = $('langgraph-button');
+            const summary = $('import-menu').querySelector('summary');
+            const original = summary.textContent;
+            button.disabled = true;
+            summary.textContent = 'IMPORTING…';
+            try {
+                const text = await file.text();
+                const ndjson = /\.(ndjson|jsonl)$/i.test(file.name)
+                    || file.type === 'application/x-ndjson';
+                const payload = ndjson ? text : JSON.parse(text);
+                const request = { payload, format: ndjson ? 'ndjson' : 'json' };
+                const hasEnvelopeRunId = !ndjson
+                    && payload
+                    && !Array.isArray(payload)
+                    && Array.isArray(payload.parts)
+                    && typeof payload.runId === 'string'
+                    && payload.runId.trim();
+                if (!hasEnvelopeRunId) {
+                    const runId = importRunId('langgraph');
+                    Object.assign(request, { run_id: runId });
+                }
+                if (ndjson) {
+                    Object.assign(request, { stream_complete: false });
+                }
+                const result = await this.fetchJson(`${API}/import/langgraph`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(request),
+                });
+                await this.loadRuns(result.run_id);
+            } catch (error) {
+                this.flashError(`LangGraph import failed: ${error.message}`);
+            } finally {
+                button.disabled = false;
+                summary.textContent = original;
+                $('langgraph-file').value = '';
             }
         }
 

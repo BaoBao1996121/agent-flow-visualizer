@@ -107,6 +107,47 @@ The mapping follows the current official [AG-UI event reference](https://docs.ag
 
 Current limit: this is offline JSON/NDJSON import. It is not yet an AG-UI HTTP/SSE client, and metadata-only state deltas preserve RFC 6902 operation/path structure rather than reconstructing private state values.
 
+### LangGraph StreamPart v2
+
+`anthill/adapters/langgraph.py` accepts the unified StreamPart v2 boundary introduced in LangGraph `1.1`. Runtime evidence is bounded to LangGraph 1.x: `1.1.0` is the tested floor and the configured supported lane is `>=1.2,<2`. The importer accepts one JSON-compatible `{type, ns, data}` object, an array, an Anthill capture envelope containing `parts`, or NDJSON with one part per non-empty line. NDJSON requires a caller-supplied `run_id`.
+
+| Stream mode | Canonical projection |
+|---|---|
+| `tasks` start | `agent.step.started` |
+| `tasks` successful result | `agent.step.completed` |
+| `tasks` error | `error.raised` |
+| `tasks` interrupt result | Base lifecycle event `agent.step.interrupted`, plus explicit interrupt observations described below |
+| `messages` | `model.response.chunk` |
+| `updates` | `agent.state.changed` or `langgraph.stream.observed` for control-only updates |
+| `values` | `context.shared_state.snapshot` |
+| `checkpoints` | `checkpoint.created`, plus separate task-error or interrupt snapshot observations carried by the checkpoint |
+| `custom` | `langgraph.custom` |
+
+Task completion links only to an earlier start with the same explicit task ID. A result that appears before its start remains unlinked. Checkpoint `parent_config.configurable.checkpoint_id` becomes `derived_from` only when it names an earlier, distinct checkpoint. Temporal adjacency never becomes causality.
+
+Interrupts have two deliberately separate layers:
+
+1. a task result with interrupts keeps the task lifecycle truth as `agent.step.interrupted`;
+2. the first explicit interrupt ID inside one LangGraph namespace becomes `human.interrupt`;
+3. the same ID observed again in that namespace through another requested stream mode becomes `langgraph.interrupt.reobserved` and links back to the first observation;
+4. checkpoint-carried task interrupts are historical snapshot facts emitted as `human.interrupt.snapshot`, not deduplicated into live observations.
+
+Interrupt identity is scoped by namespace. Oversized external interrupt IDs are replaced with deterministic hashes in both the base task lifecycle event and its supplemental interrupt observation, so canonical identifier limits cannot cause a server error or leave an unbounded duplicate behind; `interrupt_id_hashed` and `interrupt_id_chars` retain the transformation fact without persisting the oversized source value.
+
+The importer emits an observed manifest and an inferred `run.started`, because StreamPart v2 has no native run-start part. It emits `run.completed` only when the caller or envelope explicitly declares that the captured stream is complete. `complete=true` proves capture termination, not outcome: without explicit `runStatus`/`run_status`, status is `completed`. Only an explicit status declares `success`, `failed`, `interrupted`, or `cancelled`.
+
+State, message, task input/result, checkpoint state, custom payload, error text, and interrupt values are metadata-only by default. Structural keys, counts, IDs, namespaces, node names, checkpoint lineage, model metadata, and source references may remain visible and can themselves be sensitive. Metadata-only is not anonymous.
+
+Legacy mode tuples are rejected. Unknown future discriminated modes survive as `langgraph.stream.observed` instead of being silently discarded.
+
+Runtime objects with a failing `model_dump()` or cyclic conversion are rejected as controlled `LangGraphImportError` values. They never fall through as raw runtime or recursion exceptions.
+
+The strict boundary validator follows the official task start/result, checkpoint-task, message, debug-wrapper, interrupt, values, and usage-metadata shapes. It rejects contradictory result branches, duplicate task IDs, missing interrupt fields, conflicting run/thread/namespace identities, non-finite or oversized malformed NDJSON numbers, and invalid runtime-object conversions as controlled import errors rather than guessing.
+
+Real `StateGraph` probes exercised `tasks`, `messages`, `updates`, `values`, `checkpoints`, and `custom` under LangGraph `1.1.0` and `1.2.9`. The base application intentionally does not depend on LangGraph. A hosted compatibility matrix is configured; the current execution evidence is the two isolated local probes.
+
+Current limits: this is offline JSON/NDJSON normalization, not a LangGraph callback, live subscriber, or automatic capture bridge. The local alpha also has no application-level cardinality budget for parts, namespace segments, tasks, interrupts, or emitted events; a hosted deployment must add benchmark-derived body, structure, and output quotas plus backpressure before accepting untrusted captures.
+
 ### Native framework hooks
 
 Native hooks are required to make context item selection, memory consolidation, compaction, checkpoint, or ownership transitions observable when generic spans cannot see them.

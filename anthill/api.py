@@ -9,13 +9,20 @@ from typing import AsyncIterator, Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from fastapi.responses import StreamingResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.routing import APIRoute
 from pydantic import BaseModel, ConfigDict, Field
 
 from .adapters.agui import (
     AguiImportError,
     agui_json_to_events,
     agui_ndjson_to_events,
+)
+from .adapters.langgraph import (
+    LangGraphImportError,
+    langgraph_ndjson_to_events,
+    langgraph_v2_to_events,
 )
 from .adapters.otlp import OtlpImportError, otlp_json_to_events
 from .branching import materialize_fork_events
@@ -48,6 +55,37 @@ class ApiModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class PrivacySafeValidationRoute(APIRoute):
+    """Return useful 422s without reflecting rejected request values."""
+
+    def get_route_handler(self):
+        original_route_handler = super().get_route_handler()
+
+        async def privacy_safe_route_handler(request: Request):
+            try:
+                return await original_route_handler(request)
+            except RequestValidationError as exc:
+                details = []
+                for error in exc.errors():
+                    location = error.get("loc", ())
+                    scope = location[0] if location else "request"
+                    if scope not in {"body", "query", "path", "header", "cookie"}:
+                        scope = "request"
+                    error_type = error.get("type", "value_error")
+                    if not isinstance(error_type, str) or not error_type.isascii():
+                        error_type = "value_error"
+                    details.append(
+                        {
+                            "type": error_type[:128],
+                            "loc": [scope],
+                            "msg": "Request validation failed",
+                        }
+                    )
+                return JSONResponse(status_code=422, content={"detail": details})
+
+        return privacy_safe_route_handler
+
+
 class IngestEventsRequest(ApiModel):
     events: list[AgentRuntimeEvent] = Field(min_length=1, max_length=10_000)
 
@@ -64,6 +102,17 @@ class AguiImportRequest(ApiModel):
     format: Literal["json", "ndjson"] = "json"
     run_id: str | None = Field(default=None, min_length=1, max_length=256)
     protocol_version: str | None = Field(default=None, max_length=64)
+    capture_content: bool = False
+
+
+class LangGraphImportRequest(ApiModel):
+    payload: dict | list[dict] | str
+    format: Literal["json", "ndjson"] = "json"
+    run_id: str | None = Field(default=None, min_length=1, max_length=256)
+    thread_id: str | None = Field(default=None, min_length=1, max_length=256)
+    framework_version: str | None = Field(default=None, max_length=64)
+    stream_complete: bool | None = None
+    run_status: Literal["completed", "success", "failed", "interrupted", "cancelled"] | None = None
     capture_content: bool = False
 
 
@@ -121,7 +170,11 @@ def create_anthill_router(
     store: JsonlEventStore,
     broker: EventBroker,
 ) -> APIRouter:
-    router = APIRouter(prefix="/api/anthill", tags=["Agent Anthill"])
+    router = APIRouter(
+        prefix="/api/anthill",
+        tags=["Agent Anthill"],
+        route_class=PrivacySafeValidationRoute,
+    )
     snapshot_store = JsonWorldSnapshotStore(store.root / "_snapshots")
     projection_service = WorldProjectionService(store, snapshot_store)
 
@@ -168,9 +221,7 @@ def create_anthill_router(
         left = list(store.read_run(left_run_id))
         right = list(store.read_run(right_run_id))
         missing = [
-            run_id
-            for run_id, events in ((left_run_id, left), (right_run_id, right))
-            if not events
+            run_id for run_id, events in ((left_run_id, left), (right_run_id, right)) if not events
         ]
         if missing:
             raise HTTPException(
@@ -217,9 +268,7 @@ def create_anthill_router(
             "run_id": run_id,
             "event_count": len(stored),
             "span_count": max((len(stored) - 3) // 2, 0),
-            "content_capture": (
-                "plaintext_opt_in" if body.capture_content else "metadata_only"
-            ),
+            "content_capture": ("plaintext_opt_in" if body.capture_content else "metadata_only"),
             "world_url": f"/api/anthill/runs/{run_id}/world",
         }
 
@@ -256,9 +305,60 @@ def create_anthill_router(
             "event_count": len(stored),
             "source_format": body.format,
             "protocol_version": canonical[0].source.semantic_convention_version,
-            "content_capture": (
-                "plaintext_opt_in" if body.capture_content else "metadata_only"
-            ),
+            "content_capture": ("plaintext_opt_in" if body.capture_content else "metadata_only"),
+            "world_url": f"/api/anthill/runs/{effective_run_id}/world",
+        }
+
+    @router.post("/import/langgraph", status_code=201)
+    async def import_langgraph(body: LangGraphImportRequest):
+        try:
+            if body.format == "ndjson":
+                if not isinstance(body.payload, str):
+                    raise LangGraphImportError("NDJSON import payload must be a string")
+                if body.run_id is None:
+                    raise LangGraphImportError("run_id is required for NDJSON import")
+                canonical = langgraph_ndjson_to_events(
+                    body.payload,
+                    run_id=body.run_id,
+                    thread_id=body.thread_id,
+                    framework_version=body.framework_version,
+                    stream_complete=bool(body.stream_complete),
+                    run_status=body.run_status,
+                    capture_content=body.capture_content,
+                )
+            else:
+                if not isinstance(body.payload, (dict, list)):
+                    raise LangGraphImportError(
+                        "JSON import payload must be a StreamPart object, array, or envelope"
+                    )
+                canonical = langgraph_v2_to_events(
+                    body.payload,
+                    run_id=body.run_id,
+                    thread_id=body.thread_id,
+                    framework_version=body.framework_version,
+                    stream_complete=body.stream_complete,
+                    run_status=body.run_status,
+                    capture_content=body.capture_content,
+                )
+            stored = store.append_many(canonical)
+        except LangGraphImportError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except DuplicateEventError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        effective_run_id = canonical[0].run_id
+        terminal_event = next(
+            (event for event in reversed(stored) if event.event_type == "run.completed"),
+            None,
+        )
+        await broker.publish_many(stored)
+        return {
+            "run_id": effective_run_id,
+            "event_count": len(stored),
+            "source_format": body.format,
+            "stream_version": canonical[0].source.semantic_convention_version,
+            "stream_complete": terminal_event is not None,
+            "run_status": (terminal_event.payload.get("status") if terminal_event else None),
+            "content_capture": ("plaintext_opt_in" if body.capture_content else "metadata_only"),
             "world_url": f"/api/anthill/runs/{effective_run_id}/world",
         }
 
@@ -296,9 +396,7 @@ def create_anthill_router(
             raise HTTPException(status_code=422, detail="new_run_id must differ from parent")
         if _run_exists(store, new_run_id):
             raise HTTPException(status_code=409, detail=f"run already exists: {new_run_id}")
-        parent_events = list(
-            store.read_run(run_id, to_seq=projection.target_seq)
-        )
+        parent_events = list(store.read_run(run_id, to_seq=projection.target_seq))
         canonical = materialize_fork_events(
             parent_events,
             parent_run_id=run_id,
@@ -349,9 +447,7 @@ def create_anthill_router(
             "to_seq": to_seq,
             "count": len(items),
             "has_more": has_more,
-            "next_seq": (
-                (items[-1].clock.ingest_seq or 0) + 1 if items and has_more else None
-            ),
+            "next_seq": ((items[-1].clock.ingest_seq or 0) + 1 if items and has_more else None),
             "items": [item.model_dump(mode="json") for item in items],
         }
 
@@ -444,9 +540,7 @@ def create_anthill_router(
             "to_seq": to_seq,
             "truncated": truncated,
             "next_seq": (
-                (selected[-1].clock.ingest_seq or 0) + 1
-                if truncated and selected
-                else None
+                (selected[-1].clock.ingest_seq or 0) + 1 if truncated and selected else None
             ),
             "initial_state": initial.model_dump(mode="json"),
             "events": [event.model_dump(mode="json") for event in selected],
@@ -549,8 +643,4 @@ def _run_exists(store: JsonlEventStore, run_id: str) -> bool:
 
 def _sse_event(event: AgentRuntimeEvent) -> str:
     seq = event.clock.ingest_seq
-    return (
-        f"id: {seq}\n"
-        f"event: runtime-event\n"
-        f"data: {event.model_dump_json()}\n\n"
-    )
+    return f"id: {seq}\nevent: runtime-event\ndata: {event.model_dump_json()}\n\n"

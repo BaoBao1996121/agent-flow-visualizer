@@ -33,15 +33,16 @@ Agent telemetry commonly contains:
 - Canonical runtime persistence is `metadata_only` unless explicitly changed.
 - The Python adapter stores argument names/counts but not values by default.
 - Return values and exception messages require `capture_content=true`.
-- OTLP and AG-UI importers remove prompt/message/state/tool/result/error content by default while retaining structural counts, field names, and patch operation paths.
+- OTLP, AG-UI, and LangGraph importers remove prompt/message/state/tool/task/checkpoint/custom/result/error/interrupt values by default while retaining structural counts, field names, lineage, and correlation metadata.
 - AG-UI encrypted reasoning values are treated as content and are never persisted by the default import path.
+- LangGraph run/thread/task/message/checkpoint IDs, namespaces, node names, state keys, model metadata, and source references may remain visible. Oversized external interrupt IDs are hashed deterministically and their original length is recorded.
 - The synthetic exhibit is labelled in manifest, payload, source adapter, and UI.
 - The UI escapes event content before inserting it into HTML.
 - Private chain-of-thought is outside the schema; use observable plans or reasoning summaries.
 
 The legacy Source X-Ray endpoint still returns its raw trace response to the local browser. Metadata-only controls canonical persistence, not what trusted local code may display in that legacy panel.
 
-Metadata-only does not mean anonymous. Tool names, step names, run/thread IDs, JSON field names, patch paths, model/provider names, and source references can still reveal business or personal context. Treat ledger files as sensitive telemetry even when content capture is disabled.
+Metadata-only does not mean anonymous. Tool names, step/node names, run/thread/task/message/checkpoint IDs, namespaces, JSON field names, patch paths, model/provider names, and source references can still reveal business or personal context. `privacy.contains_sensitive_data=true` is a handling warning; it does not mean the importer encrypted or anonymized the record. Treat ledger files as sensitive telemetry even when content capture is disabled.
 
 ## Hash chain limitations
 
