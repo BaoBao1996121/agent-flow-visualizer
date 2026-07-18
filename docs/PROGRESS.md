@@ -20,7 +20,7 @@ Published `v0.7.0` / protected-`main` verified baseline:
 
 ## Next milestones
 
-1. Complete the [staged-validation contract](VALIDATION_STAGES.md) tracked in [issue #12](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/12): measure the shadow S1/aggregate jobs, prove fail-closed Draft-to-Ready transitions, add a deterministic S0 runner and impact manifest, replay known regressions, then migrate protection without a gap.
+1. Complete the [staged-validation contract](VALIDATION_STAGES.md) tracked in [issue #12](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/12): finish the Phase B Draft child-skip canary, prove all remaining fail-closed transitions, add a deterministic S0 runner and impact manifest, replay known regressions, then simplify protection only after an observation window.
 2. Execute the [Phase 0 visual evidence plan](PHASE0_VISUAL_EVIDENCE_PLAN.md) tracked in [issue #10](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/10); then build the renderer-independent `VisualModel`, deterministic animation contract, PixiJS 8 vertical slice, and same-scene Phaser 4.2.1 benchmark. Publish measurements before selecting the migration path.
 3. Add standard live OTLP collection plus AG-UI and LangGraph stream bridges with bounded ingestion/backpressure.
 4. Add native Claude Code and Codex hooks with published capability contracts.
@@ -115,11 +115,11 @@ Published `v0.7.0` / protected-`main` verified baseline:
 ### 2026-07-18 — staged-validation shadow implementation
 
 - Added [issue #12](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/12) and the normative [S0–S4 validation contract](VALIDATION_STAGES.md), making exploration feedback time, runner cost, PR-candidate plus resulting-main evidence, and explicit rollback first-class project goals.
-- Added an unconditional, non-matrix `Exploration fast gate` with Ruff, five focused Python contract files, and four primary JavaScript syntax checks. It is a conservative shadow S1, not yet an impact-selected required gate.
+- Added an unconditional, non-matrix `Exploration fast gate` with Ruff, five focused Python contract files, and four primary JavaScript syntax checks. It began as a conservative shadow S1 and is now enforced transitively by the required aggregate; it is not yet an impact-selected gate.
 - Added explicit Draft/Ready workflow activities plus an `always()` aggregate that fails Draft pull requests and accepts only `success` from S1 and every existing S2 dependency. Semantic PyYAML contract tests were developed RED→GREEN.
 - Design review: 5/5 passed for verified external dependencies, source-labelled performance observations, failure/rollback paths, provisional thresholds, and unchanged Phase 0/product boundaries.
 - Working-branch local gates passed: `387 passed, 1 skipped` in 19.68 seconds, full-repository Ruff, four primary JavaScript syntax checks, semantic workflow parsing, and `git diff --check`.
-- Kept all nine strict, administrator-enforced required contexts and their every-PR execution unchanged. The new jobs are not protected contexts until real hosted Draft-to-Ready and failure-path evidence passes.
+- Kept all nine strict, administrator-enforced required contexts and their every-PR execution unchanged during Phase A. After hosted Draft-to-Ready and protected-main evidence passed, the aggregate was added as a tenth required context without removing any original context.
 - S0 commands/manifests, impact-map replay, Draft suppression of S2, S3, and S4 remain pending. No staged-validation completion or CI speedup is claimed from local contract tests alone.
 
 ### 2026-07-18 — staged-validation aggregate promotion and Draft optimization

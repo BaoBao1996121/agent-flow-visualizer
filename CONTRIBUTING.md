@@ -37,8 +37,9 @@ source .venv/bin/activate
 
 Validation depth is staged so exploration stays fast without weakening protected
 `main`. During S0 exploration, run the narrow test file and syntax check for the
-module being changed. Before publishing, use the shadow `Exploration fast gate`;
-before merge, the complete S2 matrix remains mandatory. The canonical runner,
+module being changed. Opening or updating a pull request runs the current
+fixed-subset `Exploration fast gate`; before merge, the complete S2 matrix remains
+mandatory. The canonical runner,
 change-impact map, and manifests are still under development, so unknown-impact,
 workflow, dependency, container, browser-harness, and visual-golden changes must
 wait for hosted S2; run the broad local preflight below before publishing. See

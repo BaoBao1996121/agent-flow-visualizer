@@ -7,7 +7,7 @@ Published release reference: [GitHub Actions run 29639913312](https://github.com
 | Dependency / boundary | Required | Local current evidence | Hosted evidence / status |
 |---|---:|---|---|
 | Python | 3.11–3.13 | Local `Python 3.13.1`; `387 passed, 1 skipped` in 19.68s | Run 29639913312: 3.11, 3.12, and 3.13 PASS. |
-| PyYAML test parser | `>=6.0.3,<7` | Local `6.0.3`; semantic staged-workflow contract tests pass | PyPI lists 6.0.3 wheels/classifiers for Python 3.11–3.13; hosted install and staged jobs are pending publication. |
+| PyYAML test parser | `>=6.0.3,<7` | Local `6.0.3`; semantic staged-workflow contract tests pass | PyPI lists 6.0.3 wheels/classifiers for Python 3.11–3.13; protected-main run [29645305313](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29645305313) installed `requirements-dev.txt` and passed the semantic contract. |
 | FastAPI | `>=0.115,<1` | Imported locally as `0.136.0`; the 387-test suite and browser suite pass | Run 29639913312: Python, browser, visual regression, and container jobs PASS. |
 | Pydantic | `>=2.8,<3` | Imported locally as `2.12.5`; schema/API suite passes | Run 29639913312: Python matrix PASS. |
 | Uvicorn | `>=0.30,<1` | Imported locally as `0.38.0`; isolated loopback browser server passes | Run 29639913312: browser, visual regression, and container jobs PASS. |
@@ -25,7 +25,7 @@ Published release reference: [GitHub Actions run 29639913312](https://github.com
 | JSONL reference store | Single process | Content-digest reuse, full changed-content validation, truncation anchors, and event-loop offload regressions pass | Run 29639913312: Python, browser, visual regression, and container jobs PASS. Not a production throughput or multi-process claim. |
 | Docker / Compose | Optional local deployment | Docker CLI unavailable on this workstation | Run 29639913312: Compose, build, non-root/read-only, health, and ledger write PASS. |
 | External network/model | Not required after install for core demo/replay/tests | Synthetic exhibit, projection, Compare, Fork, and browser tests use no model/network calls | First package/browser installation still requires package-source access. |
-| Staged validation runner | Python 3.12 and Node 22 for S1 | Exact shadow command passed once in 5.50s on the warm Windows environment; focused CI contract `2 passed`; no canonical S0 runner or machine-readable stage manifest exists yet | Fast gate PASS: 13s Draft, 18s Ready, 18s protected-main. Three runs are observations, not a p95. Draft child-skip timing remains pending. |
+| Staged validation runner | Python 3.12 and Node 22 for S1 | Exact fixed-subset command passed once in 5.50s on the warm Windows environment; focused semantic CI contracts pass; no canonical S0 runner or machine-readable stage manifest exists yet | Fast gate PASS: 13s Draft, 18s Ready, 18s protected-main. Three runs are observations, not a p95. Draft child-skip timing remains pending. |
 | GitHub validation control plane | Strict status checks, admin enforcement, GitHub Actions app contexts | Personal-account repository; no ruleset/merge queue | Live API readback after run 29645305313: strict/admin enabled; original nine plus aggregate required; all ten bound to app `15368`; unrelated protection fields unchanged. |
 
 Runtime caveats:

@@ -34,7 +34,8 @@ or satisfied without its expected evidence.
 
 ## Current decision
 
-The migration uses a shadow-first path. This is deliberately incremental because
+The migration started shadow-first and has promoted the aggregate as a tenth required
+context. This remains deliberately incremental because
 GitHub accepts `success`, `skipped`, and `neutral` as successful required-check
 conclusions. A required workflow skipped by workflow-level filters can instead
 remain pending. The aggregate therefore starts on every relevant workflow run,
@@ -44,8 +45,8 @@ and [job-condition documentation](https://docs.github.com/en/actions/how-tos/wri
 
 | Approach | Benefit | Cost / failure mode | Decision |
 |---|---|---|---|
-| Shadow fast gate while all existing jobs run | Safest way to measure signal quality | Temporarily adds runner work | Implement first |
-| Draft runs S1; Ready runs S2 behind one aggregate | Fast repeated exploration without weakening merge evidence | Requires proven event transitions and aggregate semantics | Target after shadow proof |
+| Shadow fast gate while all existing jobs run | Safest way to measure signal quality | Temporarily adds runner work | Phase A complete |
+| Draft runs S1; Ready runs S2 behind one aggregate | Fast repeated exploration without weakening merge evidence | Requires proven event transitions and aggregate semantics | Phase B in progress; hosted child-skip canary pending |
 | Separate integration branch | Batches full regression | Adds drift, merge risk, and contributor complexity | Rejected for the current repository |
 
 Merge queue is not the current mechanism. The repository is owned by a personal
@@ -61,16 +62,17 @@ account; organization ownership should be reconsidered before adopting that path
 | S3 — deep | Scheduled/manual breadth and repetition | Repeat/order isolation, long-run and burst cases, optional browser/device/security matrices, owned quarantines | Does not block ordinary edits; failures block affected promotion until classified | Planned |
 | S4 — release | Exact release candidate/tag | Complete S2 plus provenance, asset, compatibility, benchmark, and reproducibility checks | Blocks release | Planned; no stale nightly may substitute |
 
-The shadow S1 deliberately runs Ruff over the repository, five focused Python
-contract files, and syntax checks for the four primary frontend modules. It is a
-measurement probe, not yet the final change-impact runner.
+The current fixed-subset S1 runs Ruff over the repository, five focused Python
+contract files, and syntax checks for the four primary frontend modules. It is
+enforced transitively by the required aggregate, but is not yet the final
+change-impact runner.
 
 ## Draft-to-Ready state machine
 
 ```mermaid
 stateDiagram-v2
     [*] --> Draft: opened as Draft
-    Draft --> Draft: synchronize / S1 shadow
+    Draft --> Draft: synchronize / fixed-subset S1
     Draft --> ReadyValidation: ready_for_review
     ReadyValidation --> ReadyValidation: synchronize / rerun S1 + S2
     ReadyValidation --> Mergeable: all dependencies succeed
