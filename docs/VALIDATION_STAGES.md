@@ -30,9 +30,10 @@ adapters, projections, frontend behavior, or documentation.
 
 **Done for the first migration:** a fixed-subset S1 loop, an enforced aggregate
 gate, both Draft/Ready transition directions, and protected-main S2 are proven.
-A deterministic S0 runner plus two historical mutation replays now pass locally
-as an advisory candidate. Hosted candidate evidence, dependency/matrix canaries,
-the observation window, and the rollback drill remain explicitly pending.
+A deterministic advisory S0 runner, two historical mutation replays, an exact
+browser attachment, Draft/Ready routing, and resulting protected-main S2 are now
+proven. Dependency/matrix canaries, the observation window, and the rollback
+drill remain explicitly pending.
 
 **Rollback:** pause merging whenever a required context can be skipped, duplicated,
 or satisfied without its expected evidence.
@@ -61,16 +62,17 @@ account; organization ownership should be reconsidered before adopting that path
 
 | Stage | Trigger and purpose | Required evidence | Blocking boundary | Status on 2026-07-19 |
 |---|---|---|---|---|
-| S0 — exploration | Local/on-demand loop while shaping one idea | Syntax/schema plus changed-module tests and one deterministic vertical smoke | Developer feedback only | Advisory branch candidate implemented: versioned impact map, atomic run manifest, bounded vertical domains, and `@s0` browser path; hosted promotion evidence pending |
-| S1 — PR fast | Every PR commit; reject obvious cross-layer regressions quickly | Integrity/version contracts, affected contracts, bounded observatory smoke, stage manifest | Enforced transitively by the required aggregate | The former five-file subset observed 13–20s across eight hosted runs; the expanded eight-file candidate and local impact runner need new hosted timing |
+| S0 — exploration | Local/on-demand loop while shaping one idea | Syntax/schema plus changed-module tests and one deterministic vertical smoke | Developer feedback only | Advisory runner is live on protected main with a versioned impact map, atomic manifest, bounded domains, and exact `@s0` browser evidence; observation-window and failure-canary evidence remain pending |
+| S1 — PR fast | Every PR commit; reject obvious cross-layer regressions quickly | Integrity/version contracts, affected contracts, bounded observatory smoke, stage manifest | Enforced transitively by the required aggregate | The expanded eight-file gate passed five Phase C hosted samples in 15–28s; the impact runner remains local/on-demand and advisory |
 | S2 — protected merge | Ready PR and protected-main candidate | Python 3.11–3.13, LangGraph floor/supported, frontend, full Chromium, pinned visual compare, container, S1 | Must pass on the current PR candidate against the latest protected base; the resulting main commit reruns S2 | Aggregate is the tenth required context; two Draft skips, two Ready restores, and resulting-main S2 passed; original nine remain required |
 | S3 — deep | Scheduled/manual breadth and repetition | Repeat/order isolation, long-run and burst cases, optional browser/device/security matrices, owned quarantines | Does not block ordinary edits; failures block affected promotion until classified | Planned |
 | S4 — release | Exact release candidate/tag | Complete S2 plus provenance, asset, compatibility, benchmark, and reproducibility checks | Blocks release | Planned; no stale nightly may substitute |
 
-The current S0 implementation candidate adds a deterministic local runner,
-versioned impact map, atomic manifest, and one real browser vertical smoke. It
-remains advisory until hosted replay evidence is attached; the stage table's
-protected-main status is not upgraded by branch-local results.
+The protected-main S0 implementation adds a deterministic local runner, versioned
+impact map, atomic manifest, and one real browser vertical smoke. Hosted
+Draft/Ready/main evidence proves that implementation and attachment path, but the
+runner remains advisory while observation-window and failure-canary evidence is
+collected; it cannot downgrade protected checks.
 
 The current fixed-subset S1 runs Ruff over the repository, eight focused Python
 contract files, and syntax checks for the four primary frontend modules. It is
@@ -109,10 +111,11 @@ cannot inherit stale state.
 2. Draft is an explicit aggregate failure, never a skipped or neutral merge gate.
 3. CI/workflow, dependency, lock, container, browser-harness, golden-image, and
    unknown-impact changes escalate to S2 even after Draft optimization lands.
-4. The candidate stage manifest records commit/base input identity, selected rules,
+4. The stage manifest records commit/base input identity, selected rules,
    commands, durations, attempts, results, deferred checks, and explicit failure
-   states. It remains advisory until hosted replay and protected-base policy
-   authority are proven; its existence alone cannot claim impact-map completeness.
+   states. Hosted replay and protected-base digest binding are proven, but it
+   remains advisory: its existence alone cannot claim impact-map completeness,
+   and promotion still requires the observation window and failure canaries.
 5. A retry appends evidence; it does not replace or hide the first result.
 6. Quarantine requires a linked issue, owner, reason, expiry, and visible
    non-blocking status.
@@ -163,8 +166,9 @@ demand approximately 44% less wall time and 65% less executor time than the
 Historical replay uses run `29570924390` (deep-NDJSON error classification) and
 run `29638437349` (visual job host/container pip-cache path mismatch). The first
 is assigned to Python/adapter S1 and the second to S2. Both current selectors
-killed an injected former fault locally; the hosted candidate run remains the
-cross-platform authority.
+killed an injected former fault locally. Protected-main run `29653577169` is
+cross-platform authority for the selected contract suite, not a hosted mutation
+replay.
 
 ## Migration and rollback
 
@@ -211,6 +215,6 @@ remove the aggregate. This prevents a protection gap between old and new gates.
   of 81s wall and 4.33 runner-min. This is strong directional evidence, not a p95
   or long-window cost claim.
 - The workstation has no Docker CLI, so local execution cannot claim complete S2.
-- Eight hosted fast-gate samples and the current local S0 timings are insufficient
-  for p95/flake claims. Hosted impact-runner evidence, dependency/matrix canaries,
-  nightly breadth, and release-specific S4 remain pending.
+- Five successful Phase C hosted fast-gate samples and the candidate-local S0
+  timings are insufficient for p95/flake claims. Dependency/matrix canaries,
+  the observation window, nightly breadth, and release-specific S4 remain pending.

@@ -18,15 +18,15 @@ Published `v0.7.0` / protected-`main` verified baseline:
 - latest-code manual Chromium verification of LangGraph JSON import; NDJSON, AG-UI, Demo, sequence-20 seek, Fork, and Compare remain earlier same-day manual evidence;
 - real LangGraph `1.1.0` and `1.2.9` runtime probes across `tasks`, `messages`, `updates`, `values`, `checkpoints`, and `custom`.
 
-The current Phase C branch adds an advisory S0 impact runner and chronological
-[stage log](STAGE_LOG.md). Its local preflight is `455 passed, 1 skipped`, Ruff,
-seven fixed Node syntax checks, and one 8.9-second screenshot-attaching Chromium
-vertical. Draft routing and complete Ready S2 passed on PR #16; these remain
-candidate facts until the resulting protected-main commit repeats them.
+Protected `main` now includes the Phase C advisory S0 impact runner and chronological
+[stage log](STAGE_LOG.md). Its candidate-local preflight was `455 passed, 1 skipped`,
+Ruff, seven fixed Node syntax checks, and one 8.9-second screenshot-attaching
+Chromium vertical. PR #16 proved Draft/Ready routing; protected-main run 29653577169
+then passed all 11 jobs on `6b36444` in 91 seconds.
 
 ## Next milestones
 
-1. Promote the advisory S0 runner through Draft, Ready, and protected-main evidence; then continue the [staged-validation contract](VALIDATION_STAGES.md) tracked in [issue #12](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/12) with the observation window plus remaining failure/skip/cancel and matrix-member canaries. Simplify protection only after that evidence window.
+1. Continue the [staged-validation contract](VALIDATION_STAGES.md) tracked in [issue #12](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/12): collect the observation window, failure/skip/cancel and matrix-member canaries, manual-dispatch sample, S3 breadth, and rollback evidence. Keep the runner advisory and all ten protected contexts intact until those data justify change.
 2. Execute the [Phase 0 visual evidence plan](PHASE0_VISUAL_EVIDENCE_PLAN.md) tracked in [issue #10](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/10); then build the renderer-independent `VisualModel`, deterministic animation contract, PixiJS 8 vertical slice, and same-scene Phaser 4.2.1 benchmark. Publish measurements before selecting the migration path.
 3. Add standard live OTLP collection plus AG-UI and LangGraph stream bridges with bounded ingestion/backpressure.
 4. Add native Claude Code and Codex hooks with published capability contracts.
@@ -151,4 +151,4 @@ candidate facts until the resulting protected-main commit repeats them.
 - Rejected “full pytest fits 30 seconds” after a 30.043-second timeout. Bounded LangGraph, storage, schema, projections, analysis, and API verticals instead measured 5.683–17.072 seconds of local command time; the complete suite remains S1/S2.
 - Replayed the deep-NDJSON and visual pip-cache incidents against versioned selectors. Each current set passed, and each injected former fault produced the expected RED. Hosted cross-platform evidence still governs promotion.
 - Local candidate re-freeze passed 93/93 focused contracts in 33.44 seconds, `455 passed, 1 skipped` in 46.86 seconds, Ruff, seven fixed Node syntax checks, and `@s0` in 8.9 seconds. It includes loaded-policy digest attestation, skipped-browser rejection, and HTTP 5xx capture. A concurrent Windows launch produced Git DLL initialization exits; the unchanged focused command passed when isolated, so local Git-heavy tests remain serialized.
-- Added the append-only [stage breakthrough log](STAGE_LOG.md): every bounded gain records time, action, measured effect, and evidence/limit; frontend stages also require the exercised screenshot. PR #16 proved the Draft fast-only state and Ready run 29653151908 passed all 11 jobs in 100 seconds; protected-main replay remains pending.
+- Added the append-only [stage breakthrough log](STAGE_LOG.md): every bounded gain records time, action, measured effect, and evidence/limit; frontend stages also require the exercised screenshot. PR #16 proved the Draft fast-only state; final Ready run 29653471568 passed all 11 jobs in 93 seconds; squash commit `6b36444` repeated all 11 on protected main in 91 seconds and uploaded the exact browser attachment.
