@@ -4,23 +4,23 @@
 
 Agent Anthill `0.7.0` is a runnable local alpha with event protocol `0.2.0`, a tamper-evident JSONL reference ledger, deterministic projection/snapshots under reducer `0.4.0`, explicit causal inspection, historical playback, no-side-effect materialized forks, normalized run comparison, Python/OTLP/OpenInference/AG-UI/LangGraph v2 inputs, cursor-specific instrumentation visibility, and a Canvas + semantic-DOM observatory UI.
 
-Current working-branch verified baseline:
+Published `v0.7.0` / protected-`main` verified baseline:
 
 - Python, OTLP/OpenInference, AG-UI JSON/NDJSON, and LangGraph StreamPart v2 JSON/NDJSON adapters;
 - metadata-only default with explicit truth/fidelity levels;
 - 12 semantic chambers plus Source Archive, Quality Gate, and Unknown Fog;
 - live SSE, gap recovery, time travel, compare, snapshot fallback, branch provenance, and hash verification;
-- Apache-2.0 community files, multi-version CI configuration, and a hardened Docker/Compose definition; Phase -1 release-gate [run 29639244683](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639244683) at commit `6a96011` passed all nine jobs, including the 49-contract Chromium lane and required pinned-Linux visual comparison;
+- Apache-2.0 community files, multi-version CI configuration, and a hardened Docker/Compose definition; the protected-main [run 29639913312](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639913312) at release commit `6b503a6` passed all nine jobs, including the 49-contract Chromium lane and required pinned-Linux visual comparison;
 - 385 tests passed locally in 20.28 seconds; one optional real-LangGraph runtime test was skipped because the ambient environment exposes the unsupported pre-1.1 tuple boundary, while isolated LangGraph `1.1.0` and `1.2.9` probes passed separately;
 - 49/49 local Chromium observatory contracts passed in 2.0 minutes, with all 98/98 executions passing in 4.4 minutes under a two-repeat order-isolation run;
 - full-repository Ruff, nine JavaScript syntax checks, and `git diff --check` passed;
-- the deterministic visual fixture/contract tests passed 7/7, all four scenes reached their screenshot boundary with `--ignore-snapshots`, and run 29639244683 compared the four reviewed Linux goldens with updates disabled; strict, administrator-enforced `main` protection requires that visual check;
+- the deterministic visual fixture/contract tests passed 7/7, all four scenes reached their screenshot boundary with `--ignore-snapshots`, and run 29639913312 compared the four reviewed Linux goldens with updates disabled; strict, administrator-enforced `main` protection requires that visual check;
 - latest-code manual Chromium verification of LangGraph JSON import; NDJSON, AG-UI, Demo, sequence-20 seek, Fork, and Compare remain earlier same-day manual evidence;
 - real LangGraph `1.1.0` and `1.2.9` runtime probes across `tasks`, `messages`, `updates`, `values`, `checkpoints`, and `custom`.
 
 ## Next milestones
 
-1. Measure Phase 0 comprehension, density, recognition, accessibility, and art-direction candidates; then build the renderer-independent `VisualModel`, deterministic animation contract, PixiJS 8 vertical slice, and same-scene Phaser 4.2.1 benchmark. Publish measurements before selecting the migration path.
+1. Execute the [Phase 0 visual evidence plan](PHASE0_VISUAL_EVIDENCE_PLAN.md) tracked in [issue #10](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/10); then build the renderer-independent `VisualModel`, deterministic animation contract, PixiJS 8 vertical slice, and same-scene Phaser 4.2.1 benchmark. Publish measurements before selecting the migration path.
 2. Add standard live OTLP collection plus AG-UI and LangGraph stream bridges with bounded ingestion/backpressure.
 3. Add native Claude Code and Codex hooks with published capability contracts.
 4. Add queryable monitoring exports, very-long-run pagination, and reference-based parent snapshot + tail DAG storage.
@@ -99,3 +99,14 @@ Current working-branch verified baseline:
 - Current local evidence: Python `385 passed, 1 skipped` in 20.28 seconds; ordinary Chromium `49/49` in 2.0 minutes; repeated Chromium `98/98` in 4.4 minutes; full-repository Ruff, nine JavaScript syntax checks, and `git diff --check` passed. Visual fixture/contract tests passed `7/7`, and four scenes passed functionally with `--ignore-snapshots`. Candidate-stage run 29638608292 passed all nine then-configured jobs before required comparison was enabled.
 - Switched the pinned visual lane to required compare mode, disabled baseline updates, and added failure-only diagnostics. Run 29639244683 passed all nine jobs without rewriting the reviewed goldens; `main` protection now requires that ninth check with strict and administrator enforcement. This completes the Phase -1 visual truth release gate. Measured user comprehension and real assistive-technology validation remain Phase 0 evidence gates.
 - Bumped the application release to `0.7.0` and added a synchronization contract across the Python package, FastAPI metadata, frontend package/lock, container label default, README, and progress record.
+
+### 2026-07-18 — v0.7.0 release and Phase 0 evidence kickoff
+
+- Squash-merged [PR #9](https://github.com/BaoBao1996121/agent-flow-visualizer/pull/9) to protected `main` at `6b503a6`; issue #2 closed against its complete acceptance contract.
+- Protected-main run 29639913312 passed all nine required jobs. Published [Agent Anthill 0.7.0 — Visual Truth Foundation](https://github.com/BaoBao1996121/agent-flow-visualizer/releases/tag/v0.7.0) from that exact commit.
+- Closed the now-complete `v0.7 - Visual truth foundation` milestone and resequenced the public roadmap to `v0.8 - Visual evidence lab`, `v0.9 - Live observability`, and `v0.10 - Production path`.
+- Created issue #10 and preregistered [Phase 0 plan v2.2](PHASE0_VISUAL_EVIDENCE_PLAN.md) before recruitment: the 44-event control obligations, atomic eight-question/W1–W8 rubric, staged planned-target/operable-route manifest, two pilots, eight Canvas/A/B/C static screeners with W/X/Y/Z rotation, balanced 12-person Canvas-versus-two-candidate study, three formal isomorphic fixtures, operational accessibility/density tasks, failure/no-response rules, asset spike, engine boundary, and fixed stratum-specific decision order.
+- Verified the official npm registry resolves `pixi.js@8.19.0` and `phaser@4.2.1` with integrity metadata. The workstation's configured npm mirror returns 404 for Phaser 4.2.1; future benchmark installs must use an explicit isolated registry without changing global configuration.
+- Official public documentation retrieved 2026-07-18 shows that [Langfuse already offers Agent Graphs](https://langfuse.com/docs/observability/features/agent-graphs), [Phoenix organizes Agent work around traces and spans](https://arize.com/docs/phoenix/tracing/concepts-tracing/what-are-traces), and [AgentOps exposes session waterfall views](https://docs.agentops.ai/v2/usage/dashboard-info). Therefore the maintained product-position inference is that generic trace graphs are not a moat; Anthill differentiates through causal proof, epistemic truth, capture blind spots, mechanism-level Compare, and evidence routes.
+- Reforecast Phase 0 after independent preregistration audit from 5–8 to 8–14 engineer-days, plus 4–7 artist/UX-days and 5–8 separate research/facilitation-days. Participant compensation, equipment, venue, and recruitment lead time remain unpriced until approved before recruitment.
+- Attempted built-in image generation for Phase 0 concept material twice. Both attempts failed at the service network layer and produced no artifact; no API-key CLI fallback or unreviewed asset entered the repository.

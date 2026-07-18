@@ -6,7 +6,9 @@ The first four pinned-Linux goldens are reviewed, committed, and protected by a
 required compare job with update mode disabled. The first required comparison
 passed without rewriting them in
 [run 29639244683](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639244683).
-The same check is required by `main` branch protection. Windows output remains
+Protected-main [run 29639913312](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639913312)
+repeated the comparison at release commit `6b503a6`. The same check is required
+by `main` branch protection. Windows output remains
 diagnostic only and must not be promoted as the Linux baseline.
 
 ## Reproducibility contract
@@ -85,7 +87,8 @@ promoted. At commit `6a96011`, run 29639244683 passed all nine jobs; its
 `Pinned Chromium visual regression` lane compared the committed files with
 `ANTHILL_UPDATE_VISUALS=0`. Repository protection was then verified with
 `strict=true`, administrator enforcement enabled, and that check registered as
-the ninth required context.
+the ninth required context. The post-merge release run 29639913312 repeated all
+nine jobs against the same committed goldens.
 
 ## Intentional baseline updates
 

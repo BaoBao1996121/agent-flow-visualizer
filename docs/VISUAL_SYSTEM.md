@@ -1,17 +1,19 @@
 # Visual system architecture and renderer decision
 
-Status: proposed staged migration
-Decision date: 2026-07-17
+Status: Phase -1 released; Phase 0 evidence plan preregistered v2.2
+Decision date: 2026-07-17; reviewed 2026-07-18
 Decision owner: Agent Anthill maintainers
 Primary recommendation: **PixiJS 8 with the WebGL renderer**
 Required benchmark peer: **Phaser 4.2.1**
 
-Evidence freshness: official product, license, and pricing sources were retrieved
-on 2026-07-17. Unless a threshold is explicitly required by an external standard,
+Evidence freshness: renderer/package sources were rechecked on 2026-07-18;
+license and pricing sources were retrieved on 2026-07-17. Unless a threshold is
+explicitly required by an external standard,
 every numeric threshold in this proposal is an initial configurable governance or
-engineering gate, not a measured truth. Phase 0 must calibrate product and
-performance gates; Phase 3 must calibrate renderer-comparison gates. Every change
-to a gate must be recorded in the benchmark decision log before it is applied.
+engineering gate, not a measured truth. Phase 0 calibrates only the gates named
+in its versioned evidence plan; Phases 2/4/5 own renderer performance and release
+gates, while Phase 3 calibrates renderer-comparison gates. Every change to a gate
+must be recorded in the benchmark decision log before it is applied.
 
 ## Product position
 
@@ -25,8 +27,9 @@ The visual system exists to reduce **Time to Correct Mental Model**:
   unknown information;
 - make context, memory, compaction, checkpoints, tools, collaboration, errors,
   usage, and explicit causality inspectable at several levels of detail;
-- preserve a reversible path from every semantic visual object to its canonical
-  event, source reference, evidence level, and ledger hash;
+- preserve a reversible path from every semantic visual object to a typed event,
+  event set, declaration, derived projection, or Coverage/Unknown explanation,
+  with its available source reference, evidence level, and ledger hash;
 - make a live run and a historical replay visually equivalent at the same
   reducer version and timeline cursor.
 
@@ -105,7 +108,7 @@ Implementation status (2026-07-18):
 | 3. Prioritize signal over wallpaper | Complete | Inactive/no-signal chambers recede through explicit `NO SIGNAL AT CURSOR` treatment. A deterministic Canvas cap retains selected, failed, and unknown entities before ordinary activity, and Meter shows only safe signal. This is an implementation contract, not measured comprehension evidence. |
 | 4. Make causality one action away | Complete | Timeline selection is the default causal root and an open panel follows seek. |
 | 5. Separate color vocabularies | Complete | Event evidence is printed as text and reinforced by outline/pattern; Compare prints `ON` only for explicit `true`, `OFF` only for explicit `false`, and `NOT OBSERVED` for `null`; causal direction exposes `aria-pressed`; Compare availability/comparability is textual. Unsafe measurement identities neutralize control and bidi characters before display. Browser contracts do not rely on color alone. |
-| 6. Repair accessible interaction | Complete | Main Canvas chamber labels are 12 px; tested core DOM labels are at least 12 CSS px and tested normal-text pairs meet 4.5:1. Tabs, bounded status announcements, keyboard evidence routes, and a complete per-cursor semantic object mirror have browser regressions. Canvas micro-labels at 8–11 px are supporting glyphs with 12 px DOM equivalents, not a claim that every decorative Canvas glyph is 12 px. Real assistive-technology and user testing remain pending. |
+| 6. Repair accessible interaction | Complete for the v0.7 world-entity scope | Main Canvas chamber labels are 12 px; tested core DOM labels are at least 12 CSS px and tested normal-text pairs meet 4.5:1. Tabs, bounded status announcements, keyboard evidence routes, and a per-cursor mirror of every `world.entities` item have browser regressions; selected Meter/Memory routes are sampled. This is not yet a complete manifest of every Canvas zone, packet, aggregate, tunnel, or semantic glyph. Canvas micro-labels at 8–11 px are supporting glyphs with 12 px DOM equivalents. Real assistive-technology and user testing remain pending. |
 | 7. Implement complete reduced motion | Complete | OS preference, application `system`/`reduce`/`full` override, terminal worlds, and static capture all stop Canvas RAF work and CSS ambience; changing the application override takes effect without reload. |
 | 8. Disambiguate run identity | Complete | Run and Compare selectors share title, first-event `SRC`, ledger-HEAD status, first-event UTC `INGEST`, collision-aware ID, and explicit synthetic `[DEMO]`. |
 
@@ -120,10 +123,13 @@ visual hierarchy improves comprehension for real users, that every assistive
 technology works, or that a future renderer preserves the same semantics; those
 remain measured Phase 0 and renderer-parity obligations.
 
-Phase -1 is release-complete as a visual truth gate. Run 29638608292 generated
-four pinned-Linux candidates; each image was reviewed and accepted. Required-mode
-run 29639244683 then compared the committed PNGs with updates disabled and passed
-all nine jobs. Strict, administrator-enforced `main` protection requires that
+Phase -1 is release-complete as a visual truth gate and shipped in
+[v0.7.0](https://github.com/BaoBao1996121/agent-flow-visualizer/releases/tag/v0.7.0).
+Run 29638608292 generated four pinned-Linux candidates; each image was reviewed
+and accepted. Required-mode run 29639244683 then compared the committed PNGs with
+updates disabled and passed all nine jobs. Protected-main run 29639913312 repeated
+all nine checks at release commit `6b503a6`. Strict, administrator-enforced
+`main` protection requires that
 visual check. See [VISUAL_BASELINES.md](VISUAL_BASELINES.md). The 49 ordinary
 browser contracts and their two-repeat run protect semantic behavior alongside
 pixel regression. Neither layer proves user comprehension, real assistive-
@@ -132,25 +138,34 @@ Phase 0 and renderer-parity evidence gates.
 
 ## Phase 0 art-direction spike and Phase 2 representative slice
 
+The versioned execution protocol, exact fixture hash, eight mechanism questions,
+wrong-inference taxonomy, candidate information obligations, carryover control,
+participant boundary, and required artifacts are frozen in
+[PHASE0_VISUAL_EVIDENCE_PLAN.md](PHASE0_VISUAL_EVIDENCE_PLAN.md) v2.2 and tracked in
+[issue #10](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/10).
+
 Renderer choice alone cannot make the product beautiful or comprehensible. Before
-Phase 2 implementation, Phase 0 must compare two or three representative visual
-directions using the same canonical fixture and information obligations. Each
-direction must contain production-representative rather than decorative content:
+Phase 2 implementation, Phase 0 compares three representative visual directions:
+an orthographic cutaway technical anthill (the recommended hypothesis), a 2.5D
+isometric factory, and a dense engineering-schematic control. They use the same
+information obligations: static screening balances W/X/Y/Z packet variants
+against the current Canvas, while formal comparison balances full X/Y/Z
+fixtures. Each static direction contains the four frozen packet scenes,
+answer-bearing labels, object manifest, and normal/monochrome-pattern/
+forced-contrast reviewer variants enumerated in the plan. The separate P0-5
+asset spike covers one Agent, one machine, and five to seven semantic actions;
+it does not silently expand every static direction into a production atlas.
 
-- one real chamber at realistic information density;
-- one readable Agent character with at least idle, inspect, tool-use, and explicit
-  error poses or frames;
-- one explicit tool request/response flow and one persistent incident state;
-- the proposed camera or orthographic grid, spatial hierarchy, typography,
-  palette, lighting, outline, icon, and texture rules;
-- four screenshot sets: normal, high-contrast, color-vision-safe, and reduced-motion
-  static presentation.
+Across the balanced W/X/Y/Z allocation, every direction receives the same
+obligation and variant distribution and maps each variant's semantic objects to
+its frozen canonical planned Evidence targets. Canvas O and the two directions
+promoted to interactive V1/V2 additionally expose equivalent typed, operable
+Evidence routes and keyboard/DOM paths before formal comparison. AI material
+remains subject to the asset rules below and cannot enter this slice as an
+unreviewed production asset.
 
-All directions consume the same recorded events and expose the same evidence route.
-AI material remains subject to the asset rules below and cannot enter this slice as
-an unreviewed production asset.
-
-Phase 0 must preregister and baseline three art-direction gates:
+The versioned Phase 0 protocol preregisters and baselines three art-direction
+gate families:
 
 1. **Comprehension:** timed Time to Correct Mental Model tasks plus wrong-inference
    count for observed, inferred, unknown, failed, and disconnected states.
@@ -160,12 +175,14 @@ Phase 0 must preregister and baseline three art-direction gates:
 3. **Recognition:** accuracy for Agent identity, chamber, lifecycle state, truth
    class, selected causality, and transport health without relying on color alone.
 
-Numeric acceptance values are not invented in this document. Phase 0 measures the
-current Canvas baseline, records the fixture and protocol, then freezes initial
-configurable gates in the decision log. Screenshot preference alone cannot select a
-direction. A candidate must preserve semantic, keyboard, high-contrast, and
-reduced-motion parity and must meet the frozen comprehension, density, and
-recognition gates.
+Exact formative thresholds, denominators, static-versus-interactive scope, and
+decision order are frozen in the Phase 0 evidence plan rather than duplicated
+here. Phase 0 measures the current Canvas baseline and reports every threshold
+as an initial gate, not a population claim. Screenshot preference alone cannot
+select a direction. Static A/B/C must pass the frozen information, truth,
+readability, and planned-target gates; promoted V1/V2 must additionally preserve
+full semantic, keyboard, high-contrast, reduced-motion, and operable Evidence
+parity before they enter formal comparison.
 
 Phase 2 must use the selected direction and a production-representative atlas for
 its PixiJS slice. The same atlas, typography, viewport, and fixture are mandatory in
@@ -197,7 +214,13 @@ and WebGPU as still subject to browser inconsistencies. WebGPU may be an
 experimental preference after feature-parity and browser-matrix tests pass.
 
 Pin an exact tested PixiJS `8.x` version in the lockfile. “PixiJS 8” is the
-compatibility family, not permission for unreviewed floating upgrades.
+compatibility family, not permission for unreviewed floating upgrades. The
+2026-07-18 dependency preflight verified `pixi.js@8.19.0` through the official
+npm registry; that is the Phase 0 candidate, not a compatibility claim before
+the slice is tested. PixiJS's official 8.16.0 release calls its Canvas renderer
+experimental while the current renderer guide still marks Canvas as coming
+soon. Anthill therefore retains its independent Canvas and semantic-DOM
+fallback instead of relying on that inconsistent experimental boundary.
 
 ### Required benchmark: Phaser 4.2.1
 
@@ -222,7 +245,10 @@ The benchmark must install exactly `phaser@4.2.1` with no caret, tilde, tag, or
 floating range. Its committed lockfile and benchmark manifest must record the
 resolved package URL and package-manager integrity digest. A different resolved
 artifact is a different benchmark and requires a new decision-log entry before its
-results may be compared.
+results may be compared. The maintainer workstation's configured npm mirror
+returned 404 for this exact version on 2026-07-18 while an explicit
+official-registry query succeeded. Benchmark setup must isolate that registry
+override and must not silently change global npm configuration.
 
 The Phaser project is mature, but its version 4 renderer is not: Phaser 4.0.0 was
 released on 2026-04-10 and 4.2.1 on 2026-07-09. The older ecosystem does not prove
@@ -276,6 +302,32 @@ Additional invariants:
 - Decorative ambience must not compete with active evidence, alerts, selected
   causality, or focus indicators.
 
+### Visual-object evidence contract
+
+For runtime and interactive renderers, every emitted visual object declares
+`information_role=decorative|semantic`. P0-2 still directions use the linked
+plan's equivalent `planned_evidence_target` manifest until a direction advances
+to V1/V2; they do not claim an operable DOM or Evidence route.
+`answer_bearing=true` is a semantic subset and carries one or more frozen
+`answer_obligation_ids`.
+
+- Decorative objects carry no run identity, state, truth, lifecycle,
+  measurement, topology, relationship, or alert meaning; they are not
+  interactive and are hidden from assistive technology.
+- Semantic objects have a stable ID, equivalent DOM object, and typed
+  `evidence_route` to an `event`, `event_set`, `declaration`,
+  `derived_projection`, or `coverage_unknown` target.
+- Answer-bearing objects additionally preserve equal information across
+  renderers and expose a bounded keyboard route to their exact Evidence target.
+
+The route resolver verifies run and cursor, source events, derivation version,
+LOD aggregate membership, and the explicit reason for unknown/not-observed
+state. Structural reachability is 100% across all discoverable semantic objects,
+including offscreen and aggregated objects. The separate 95% product hypothesis
+measures whether people can complete preregistered route tasks; it never permits
+an unreachable semantic object. A broken route degrades the claim to a labelled
+diagnostic/unknown state rather than retaining unsupported pixels.
+
 ## Layered architecture
 
 ```mermaid
@@ -302,7 +354,8 @@ flowchart TB
 2. **World projector:** pure reducer that reconstructs semantic state for one
    reducer version and cursor.
 3. **VisualModel:** renderer-independent entities, zones, lanes, semantic edges,
-   selection, visibility, truth grammar, and LOD eligibility.
+   selection, visibility, truth grammar, LOD eligibility, `information_role`,
+   `answer_obligation_ids`, and typed `evidence_route`.
 4. **Animation mapper:** converts a canonical transition into one or more
    versioned animation intents. It cannot inspect unrelated future events.
 5. **Animation FSM and clock:** computes exact presentation state for a logical
@@ -342,10 +395,11 @@ such; they may say `GPU MEMORY PRESSURE` without qualification only when the
 browser/tooling supplies a direct supported signal.
 
 Retry count, backoff, timeout, restoration window, and crash circuit-breaker values
-are initial configurable operational gates. Phase 0 must freeze them from failure
-injection results and record later changes in the decision log. Retries are bounded;
-exhaustion always produces an explicit stable fallback rather than an infinite loop
-or silent blank canvas.
+are initial configurable operational gates. Phase 2 must freeze them from
+representative-slice failure injection before the new renderer becomes a
+default; record later changes in the decision log. Retries are bounded;
+exhaustion always produces an explicit stable fallback rather than an infinite
+loop or silent blank canvas.
 
 Every degradation path emits privacy-safe renderer/capture diagnostics with run ID,
 cursor, renderer and schema versions, asset IDs or hashes where relevant, fallback,
@@ -444,10 +498,12 @@ LOD is information selection, not merely sprite scaling.
 | L0 — World | Where is activity, pressure, failure, or uncertainty? | Chambers, aggregate flows, run status, alert markers, unknown fog | Fit-to-world or zoom `<0.55` |
 | L1 — Stage | Which Agent stage or subsystem is active? | Agent lanes, grouped steps, model/tool/context/memory/checkpoint summaries | Zoom `0.55–1.19` |
 | L2 — Operation | What exact operation and lifecycle occurred? | Individual tasks, calls, state changes, explicit causal edges, measurements | Zoom `1.20–2.39` or selected stage |
-| L3 — Evidence | What proves this object? | Canonical event, payload structure, evidence, source/span/artifact/hash links | Zoom `>=2.40` or explicit inspect action |
+| L3 — Evidence | What proves this object, or why is it still unknown? | Typed event/event set, declaration, derived projection, or Coverage/Unknown target, plus available payload/source/span/artifact/hash links | Zoom `>=2.40` or explicit inspect action |
 
 These zoom thresholds are initial configurable values, not measured truths.
-Phase 0 must tune them through comprehension and performance tests.
+Phase 2 must tune them with the interactive representative slice; Phase 4 must
+recheck them against long-run LOD and performance evidence. The Phase 0 static
+and formative study does not validate zoom breakpoints.
 
 LOD rules:
 
@@ -463,8 +519,8 @@ LOD rules:
 - token/message chunks are windowed or aggregated before rendering;
 - an initial configurable guard of more than 5,000 candidate visible objects
   triggers semantic clustering or a server-provided stage summary rather than
-  unrestricted sprite creation; Phase 0 must tune this guard from comprehension,
-  memory, and frame-time data;
+  unrestricted sprite creation; Phase 4 must tune this guard from long-run
+  memory, frame-time, and semantic-density data;
 - DOM evidence remains queryable even when its canvas representation is
   aggregated.
 
@@ -545,7 +601,9 @@ Pixelorama is the recommended MIT-licensed offline tool for:
 - spritesheet, PNG, animated PNG, or GIF export;
 - optional command-line bulk export using a project-owned, version-pinned CLI
   and export recipe. Pixelorama does not guarantee byte-identical or pixel-identical
-  output; export determinism remains pending verification in Phase 0.
+  output. P0-5 records the tool version, recipe, and reviewed output hash for its
+  bounded spike but makes no determinism claim; export reproducibility remains
+  a Phase 5 asset-hardening check.
 
 Pixelorama project files are authoring sources. Runtime assets must be exported
 to documented open formats and registered by hash.
@@ -639,11 +697,13 @@ Initial access-tier values are:
 - `legal_restricted`: only the named legal/provenance reviewers may read it.
 
 `source_archive_retention` and `provider_terms_snapshot_retention` identify a
-versioned retention policy and minimum retention date or event. Phase 0 must define
-the policies, authorized roles, backup location, deletion approval, and audit
-frequency. A referenced record cannot expire while a distributed asset still
-depends on it unless maintainers complete a new rights review and replace the
-distribution basis.
+versioned retention policy and minimum retention date or event. Phase 5 must
+define the production policies, authorized roles, backup location, deletion
+approval, and audit frequency before reviewed assets ship. P0-5 outputs remain
+non-shipping concepts and record the source/tool/review/distribution/hash fields
+required by its plan; it does not freeze production retention. A referenced
+record cannot expire while a distributed asset still depends on it unless
+maintainers complete a new rights review and replace the distribution basis.
 
 CI always validates manifest schema, approval-state consistency, and the shipped
 asset's on-disk hash. CI may recompute a source or provider-terms snapshot hash only
@@ -669,6 +729,11 @@ normal-text contrast requirement is an external-standard floor. Product calibrat
 or user testing may increase contrast, size, spacing, or stroke weight but cannot
 approve a value below that floor.
 
+Phase 0 browser contracts and formative tasks cover DOM/ARIA structure,
+keyboard, zoom, contrast, and reduced motion only. They are not NVDA,
+VoiceOver, screen-reader-support, or WCAG-conformance evidence; those claims
+remain blocked on the manual matrix below.
+
 Minimum blocking assistive-technology matrix:
 
 | Platform | Browser / assistive technology | Required coverage |
@@ -687,18 +752,21 @@ the semantic DOM or another equivalent path must continue to work.
 Required behavior:
 
 - maintain a searchable, virtualized semantic DOM tree or list covering every
-  discoverable `VisualModel` object, including routine and currently offscreen
-  objects;
+  discoverable semantic `VisualModel` object, including routine, aggregated,
+  and currently offscreen objects; decorative objects stay out of the
+  assistive-technology tree;
 - let keyboard and assistive-technology users discover, focus, select, inspect,
   and navigate any mirrored object without first using a canvas hit target;
 - keep timeline, inspector, filters, compare controls, and evidence navigation
   operable without pointer input;
-- use PixiJS accessibility overlays only for canvas-local interactive objects;
-  use ordinary DOM controls where possible;
+- assign each semantic object exactly one authoritative assistive-technology
+  owner. Prefer ordinary DOM controls; when the DOM mirror owns world semantics,
+  hide the canvas from assistive technology. Use a PixiJS accessibility overlay
+  only when no duplicate DOM owner exists;
 - preserve visible focus and a deterministic keyboard order independent of
   sprite draw order;
 - provide text alternatives containing entity, state, truth class, evidence
-  count, and timeline cursor;
+  count, timeline cursor, and the Evidence target or explicit Unknown reason;
 - never encode truth, failure, ownership, or causality by color alone;
 - provide high-contrast and color-vision-safe palettes;
 - provide Pause/Resume for automatic playback and live visual updates;
@@ -732,11 +800,14 @@ operating-system default for this application only.
 
 ## Performance acceptance matrix
 
-All budgets and stress counts below are initial configurable engineering gates
-and must be calibrated in Phase 0, then replaced by published measurements.
-Renderer-comparison percentages are calibrated in Phase 3. A threshold change
-requires the fixture, raw results, rationale, approver, and date in the decision
-log; an undocumented threshold change cannot make a release pass.
+Phase 0 runs only the preregistered reference-desktop O/V1/V2 matrix at 12, 28,
+64, and 128 input semantic objects, with three seeds and its frozen p95/p99
+budgets. The broader budgets and stress counts below are future renderer-release
+gates: Phase 2 measures the representative slice, Phase 3 calibrates engine
+comparison, Phase 4 owns long-run scale and memory, and Phase 5 owns the release
+cross-browser/accessibility matrix. A threshold change requires the owning
+fixture, raw results, rationale, approver, and date in the decision log; an
+undocumented threshold change cannot make a release pass.
 
 “Visible objects” means renderer objects after semantic LOD and culling, not total
 ledger events.
@@ -753,10 +824,10 @@ ledger events.
 Additional gates:
 
 - the initial stress sequence is 100 run switches and 200 full timeline seeks;
-  Phase 0 must tune the sequence length and fixture from measured allocation and
+  Phase 4 must tune the sequence length and fixture from measured allocation and
   lifecycle behavior;
 - no renderer-object, texture, listener, ticker, or accessibility-overlay leak
-  under the Phase 0 memory protocol described below;
+  under the Phase 4 memory protocol described below;
 - time-travel seek must produce the same visual snapshot hash for the same
   reducer, visual schema, cursor, viewport, and accessibility settings;
 - live-event bursts may coalesce presentation frames but may not drop ledger
@@ -767,7 +838,7 @@ Additional gates:
 - screenshot comparisons must test truth grammar at every LOD, not demand
   byte-identical antialiasing across GPU vendors.
 
-Phase 0 must freeze the memory leak measurement protocol before any memory gate
+Phase 4 must freeze the memory leak measurement protocol before any memory gate
 becomes release-blocking. The protocol must specify: fixture and exact dependency,
 browser, OS, and hardware versions; allocation/texture instrumentation; warm-up and
 quiescence periods; forced-GC procedure where the browser exposes one and a timed
@@ -806,13 +877,12 @@ artifacts. A single developer-machine FPS number is insufficient.
 
 Phase 0 through Phase 4 is the renderer migration. Phase 5 and Phase 6 are part of
 the complete product roadmap and must not be hidden inside the migration subtotal.
-Phase -1 names blocking corrections rather than an uncosted extra phase: implementing
-and browser-testing all eight Phase -1 corrections is explicitly included in the
-Phase 0 range below.
+Phase -1 names the blocking corrections released in v0.7.0. It is historical
+completed work and is excluded from the remaining post-v0.7 planning ranges below.
 
 | Phase | Deliverable | Estimated effort | Exit gate |
 |---|---|---:|---|
-| 0 — Truth repair, baseline, and art direction | Implement and browser-test every Phase -1 blocking correction; freeze the visual truth contract; instrument the current Canvas renderer; create benchmark fixtures and screenshot/accessibility baselines; compare two or three representative directions; inventory production assets | 4–7 engineer-days, including Phase -1 implementation/tests, plus an early art/UX slice drawn from the separate provisional allowance | Phase -1 browser regressions pass; a completed run cannot be mistaken for live execution; current-renderer measurements repeat; the direction, production-representative atlas, semantic snapshots, comprehension/density/recognition gates, and bottom-up asset reforecast are approved |
+| 0 — Evidence baseline and art direction | Pilot the v0.7 instrumentation; screen Canvas/A/B/C with W/X/Y/Z packet rotation; compare Canvas and two renderer-neutral finalists with three balanced formal fixture variants; measure comprehension, wrong inference, density, recognition, keyboard/contrast/reduced-motion parity; inventory representative assets | 8–14 remaining engineer-days plus 4–7 artist/UX-days and 5–8 research/facilitation-days, all planning estimates pending measured throughput | Atomic scoring, object/evidence manifest, balanced study, direction, representative atlas, semantic snapshots, comprehension/density/recognition gates, and bottom-up reforecast are published |
 | 1 — Renderer-independent core | `VisualModel`, animation-intent schema, deterministic clock, FSM tests, asset registry interface | 7–12 engineer-days | Headless replay produces stable visual-state snapshots |
 | 2 — PixiJS representative slice | Implement the selected real chamber, Agent character, tool flow, incident, Control Nest, Model Engine, Tool Workshop, Unknown Fog, timeline seek, inspector selection, and L0–L3 with the representative atlas | 10–16 engineer-days | Truth, keyboard, WCAG matrix, reduced-motion, comprehension/density/recognition, and reference/low-end gates pass |
 | 3 — Phaser 4.2.1 benchmark | Implement the same bounded slice and exact representative atlas without Phaser-specific product semantics; pin `phaser@4.2.1`, resolved URL, integrity digest, and lockfile | 4–7 engineer-days | Comparable raw report, dependency evidence, and renderer decision |
@@ -830,10 +900,11 @@ These are planning ranges, not quotes.
 
 | Cost dimension | Initial estimate | Main driver / limit |
 |---|---:|---|
-| Renderer migration, Phase 0–4 | 40–67 engineer-days | Exact sum of the Phase 0–4 planning ranges; Phase -1 truth corrections and browser regressions are included once inside Phase 0, followed by the deterministic visual core, two renderer slices, LOD, testing, and migration |
-| Complete roadmap, Phase 0–6 | 56–97 engineer-days | Exact sum of all Phase 0–6 engineering ranges, including Phase 5 accessibility hardening and Phase 6 teaching/monitoring polish |
+| Remaining renderer migration, Phase 0–4 | 44–74 engineer-days | Exact sum of the post-v0.7 Phase 0–4 planning ranges after the Phase 0 protocol reforecast: evidence/art direction, deterministic visual core, two renderer slices, LOD, testing, and migration |
+| Remaining complete roadmap, Phase 0–6 | 60–104 engineer-days | Exact sum of the post-v0.7 Phase 0–6 engineering ranges, including Phase 5 accessibility hardening and Phase 6 teaching/monitoring polish |
+| Phase 0 study operations | 5–8 research/facilitation-days outside the engineering subtotal | Two pilots, eight screeners, 12 formal participants, scheduling, anonymization, double scoring, and adjudication; participant cash costs remain separately quoted |
 | Accessibility and visual QA | Included in the Phase 5 engineering range when performed by the same team; otherwise 8–15 separately contracted specialist-days | Keyboard, screen reader, contrast, motion, cross-browser review; report staffing to prevent double counting |
-| Pixel asset direction, cleanup, and export | Provisional 8–15 artist/UX-days in addition to engineering until the Phase 0 inventory replaces it | Early art-direction slice, Blender rig/render setup where used, silhouette consistency, atlas work, LOD/accessibility variants, provenance |
+| Pixel asset direction, cleanup, and export | Provisional 8–15 artist/UX-days in addition to engineering until the Phase 0 inventory replaces it; 4–7 of those days are the current Phase 0 representative-direction allowance | Early art-direction slice, Blender rig/render setup where used, silhouette consistency, atlas work, LOD/accessibility variants, provenance |
 | Phaser benchmark | Included above: 4–7 engineer-days | Must stay bounded to the shared vertical slice |
 | AI concept generation | Optional hard cap: US$50 per milestone | Concepts only; provider pricing and terms must be verified at purchase time |
 | Optional Rive authoring | Price observed 2026-07-17: Cadet US$17/seat/month or US$108/seat/year | Runtime libraries are MIT, but the current plan lists runtime export under the paid Cadet tier; re-verify before purchase |
@@ -855,8 +926,9 @@ Phase 0 art-direction work is counted once inside the revised art/UX forecast, n
 added again in Phase 5. If the forecast changes, the roadmap and cost table change
 with it; the engineering subtotals remain separate from artist/UX-days.
 
-Artist/UX-days and separately contracted accessibility specialist-days are not
-included in the 56–97 engineer-day complete-roadmap subtotal.
+Artist/UX-days, Phase 0 research/facilitation-days, participant cash costs, and
+separately contracted accessibility specialist-days are not included in the
+60–104 engineer-day remaining complete-roadmap subtotal.
 
 The economically dominant cost is engineering and human visual review, not API
 tokens. A technically impressive pipeline that requires continual manual
@@ -866,9 +938,11 @@ animation repair or unbounded asset review is economically unsuccessful.
 
 Every numeric trigger below—25%, 20%, 30%, 15%, ten assets, and 30% roadmap
 share—is an initial configurable governance threshold rather than empirical fact.
-Phase 0 calibrates product and resource thresholds; the same-scene Phase 3 report
-calibrates PixiJS-versus-Phaser thresholds. The decision log must preserve the
-original value, measured evidence, and approval for any revision.
+Phase 0 calibrates only the comprehension, recognition, accessibility, and
+12/28/64/128 density gates enumerated in its versioned plan. Phase 2/4/5 own the
+renderer resource, scale, and release-quality thresholds; the same-scene Phase 3
+report calibrates PixiJS-versus-Phaser thresholds. The decision log must preserve
+the original value, measured evidence, and approval for any revision.
 
 ### Stop or roll back the PixiJS migration when
 
@@ -945,12 +1019,16 @@ Performance figures without these artifacts are estimates and must be labelled
 
 ## Official sources
 
-All sources below were retrieved on 2026-07-17. Product versions, prices, hosted
-documentation, and license terms must be re-verified before adoption or purchase.
+Renderer and package sources below were rechecked on 2026-07-18. Pricing and
+remaining license sources were retrieved on 2026-07-17. Product versions, prices,
+hosted documentation, and license terms must be re-verified before adoption or
+purchase.
 
 ### PixiJS
 
+- [PixiJS npm package and current versions](https://www.npmjs.com/package/pixi.js?activeTab=versions)
 - [PixiJS 8 renderer guidance](https://pixijs.com/8.x/guides/components/renderers)
+- [PixiJS 8.16.0 experimental Canvas release](https://pixijs.com/blog/8.16.0)
 - [PixiJS scene graph](https://pixijs.com/8.x/guides/concepts/scene-graph)
 - [PixiJS render loop](https://pixijs.com/8.x/guides/concepts/render-loop)
 - [PixiJS render layers](https://pixijs.com/8.x/guides/concepts/render-layers)

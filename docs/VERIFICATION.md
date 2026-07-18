@@ -17,7 +17,7 @@ must be linked from the repository's current Actions page after publication.
 | Browser order isolation | `npx playwright test --repeat-each=2` | 98/98 passed in 4.4m; the two complete executions are independent of prior test order |
 | Visual fixture and contract | Targeted visual fixture/contract Pytest files | 7/7 passed |
 | Visual scene functionality | `npx playwright test --config=playwright.visual.config.mjs --ignore-snapshots` | 4/4 passed; every scene reached its screenshot boundary, but snapshots were deliberately ignored and this is not golden comparison |
-| Pinned-Linux visual regression | Required `Pinned Chromium visual regression` job | Run 29639244683 PASS against all four reviewed committed goldens with update mode disabled; the context is required by `main` protection |
+| Pinned-Linux visual regression | Required `Pinned Chromium visual regression` job | Protected-main run 29639913312 PASS against all four reviewed committed goldens with update mode disabled; the context is required by `main` protection |
 | Structured fixtures/config | Python JSON parsing for LangGraph, canonical-ingest, and deterministic visual fixtures; PyYAML parse for `.github/workflows/ci.yml` | PASS |
 | Patch hygiene | `git diff --check` | PASS |
 
@@ -85,7 +85,7 @@ to nor modifies the user-facing `8765` process. The workflow rejects focused or
 flaky tests and retains seven-day diagnostics. Feature branches run through the
 pull-request trigger instead of a duplicate push trigger, while superseded runs
 in the same concurrency group are cancelled. The latest hosted ordinary browser
-job covered all 49 contracts in run 29639244683. This is Chromium coverage, not
+job covered all 49 contracts in protected-main run 29639913312. This is Chromium coverage, not
 cross-browser or real assistive-technology evidence.
 
 Only synthetic fixtures were used. HTML reports, traces, and screenshots may
@@ -128,6 +128,12 @@ with `strict=true`, administrator enforcement enabled, and
 context. This completes the Phase -1 visual truth release gate. It does not prove
 cross-browser rendering, real assistive-technology behavior, or user
 comprehension.
+
+[Run 29639913312](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639913312)
+repeated all nine required jobs after PR #9 was squash-merged to protected
+`main` at `6b503a6`. Release `v0.7.0` points to that exact commit. This is the
+published release verification; run 29639244683 remains the earlier promotion
+and branch-protection evidence.
 
 ## Measurement truth and projection regressions
 
@@ -204,9 +210,11 @@ statement, not a throughput benchmark.
 | [29638437349](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29638437349), `ce6511f…` | First current-contract run with the non-blocking pinned-Linux candidate lane | Eight required jobs PASS. The tolerated candidate lane failed before screenshot generation because `setup-python` tried to spawn the container-only `/__t/.../pip` path while initializing its optional pip cache. |
 | [29638608292](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29638608292), `a3b2a7e…` | Candidate-stage reducer/measurement/coverage contracts; 49 browser contracts; deterministic pinned-Linux generation | Overall PASS across all nine jobs. The visual lane generated the reviewed artifact; this run predates the switch to required compare mode. |
 | [29639244683](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639244683), `6a96011…` | Reviewed Linux goldens committed; visual job in blocking compare mode with updates disabled | Overall PASS across all nine jobs. The visual comparison passed without rewriting the baselines; the check was subsequently added to strict, administrator-enforced `main` protection. |
+| [29639913312](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639913312), `6b503a6…` | Protected-main post-merge run for release `v0.7.0`; all nine contexts required | Overall PASS across all nine jobs, including pinned-Linux visual comparison with updates disabled. The release tag points to this commit. |
 
-Run 29639244683 is the published Phase -1 release-gate evidence for the product
-contracts, all ordinary CI lanes, and the required visual comparison.
+Run 29639913312 is the published `v0.7.0` release evidence for the product
+contracts, all ordinary CI lanes, and the required visual comparison. Run
+29639244683 records the preceding promotion and protection step.
 
 The workflow currently follows action major tags, not immutable commit-SHA pins.
 SHA pinning plus automated dependency updates remains a supply-chain hardening
@@ -269,7 +277,7 @@ evidence.
   slice, and same-scene Phaser 4.2.1 benchmark are planned work, not current
   product capabilities.
 - The local workstation has no Docker CLI, so local container execution remains
-  unavailable. Release-gate run 29639244683 passed Compose validation, image
+  unavailable. Protected-main run 29639913312 passed Compose validation, image
   build, non-root identity, read-only root, health, and a real ledger write.
 - OTLP protobuf/live collection, AG-UI live subscription, and a LangGraph live
   capture bridge are not implemented.

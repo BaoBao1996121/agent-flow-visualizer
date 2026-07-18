@@ -8,7 +8,11 @@ The target evaluation is not “did users enjoy the animation?” It is:
 
 - after 20 minutes, can a user answer at least 7 of 8 mechanism questions correctly;
 - is that at least 50% faster than README + logs + source alone;
-- can at least 95% of visible semantic objects reach a source event or explicit source declaration;
+- do 100% of emitted semantic objects pass a machine-verified route to an
+  event/event set, declaration, derived projection, or Coverage/Unknown
+  explanation;
+- can users complete at least 95% of preregistered evidence-route tasks inside
+  their time budget;
 - does core semantic classification reach at least 90% precision on human-labelled golden traces;
 - are unknown and inferred areas recognizable without opening a manual;
 - does tracing stay below 5% overhead for supported native adapters under the published benchmark fixture.
@@ -19,13 +23,21 @@ These are product hypotheses until repeated user studies publish the evidence.
 
 ### 1. Truth before theatre
 
-Every animation must answer a real question. If a visual state has no event or declaration, it must be shown as unknown. A beautiful false state is a bug.
+Every semantic animation must answer a real question. If a visual state has no
+event/event set, declaration, or documented derived projection, it must be shown as unknown. A
+beautiful false state is a bug. Decorative motion carries no Agent state, is
+not interactive, is hidden from assistive technology, and never enters an
+Evidence denominator.
 
 The renderer decision, deterministic animation contract, LOD, accessibility, asset provenance, benchmark, cost, and rollback gates are specified in [VISUAL_SYSTEM.md](VISUAL_SYSTEM.md). Its performance targets remain initial gates until measured evidence is published.
 
 ### 2. Metaphor must be reversible
 
-The user can move from chamber → entity → event → causal parent/span → source reference/raw artifact. The metaphor can compress information but cannot erase provenance.
+The user can move from chamber → entity → typed Evidence target. Event-backed
+targets may continue to explicit causal parents/spans, source references, and
+raw artifacts. A Coverage/Unknown target instead explains why evidence is
+absent or outside the capture contract; it never invents a parent, span, or
+source. The metaphor can compress information but cannot erase provenance.
 
 ### 3. Sequence is not causality
 
@@ -72,10 +84,14 @@ Users inspect raw events and explicit causal links. A later sandboxed mode will 
 
 ## Semantic zoom
 
-- **L0 — World:** chambers, actors, bottlenecks, context pressure, incidents.
-- **L1 — Stage:** plan step, model call, tool execution, handoff, compaction job.
-- **L2 — Event:** canonical envelope, state diff, measurement, evidence level.
-- **L3 — Source:** raw telemetry/artifact hash, span, source file and line.
+- **L0 — World:** chambers, aggregate flows, run status, alerts, uncertainty.
+- **L1 — Stage:** Agent lanes and grouped model, tool, context, memory, and
+  checkpoint work.
+- **L2 — Operation:** individual tasks, calls, state changes, measurements, and
+  explicit causal edges.
+- **L3 — Evidence:** the typed event/event set, declaration, derived projection,
+  or Coverage/Unknown target, plus available payload structure, source, span,
+  artifact, and ledger-hash links.
 
 Long traces must collapse by semantic stage before they become graph hairballs.
 
@@ -103,12 +119,12 @@ pass 7/7, and all four scenes reach their screenshot boundary with
 `--ignore-snapshots`; that is local functional scene evidence, not Linux golden
 comparison.
 
-Phase -1 release-gate GitHub Actions
-[run 29639244683](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639244683)
-at commit `6a96011` passed all nine jobs, including the current 49-contract suite,
+Protected-main release GitHub Actions
+[run 29639913312](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639913312)
+at `v0.7.0` commit `6b503a6` passed all nine jobs, including the current 49-contract suite,
 hardened container, and pinned-Linux comparison against the four reviewed
 goldens. It did not update the files, and the check is now required by strict,
-administrator-enforced `main` protection. The earlier failed and candidate-stage
+administrator-enforced `main` protection. The earlier promotion, failed, and candidate-stage
 runs remain recorded for provenance in
 [the verification record](VERIFICATION.md), as do the exact dated commands,
 timings, and limitations.

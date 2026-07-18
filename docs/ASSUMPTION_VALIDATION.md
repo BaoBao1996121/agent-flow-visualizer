@@ -186,3 +186,48 @@ Executable evidence:
 All three spike files are 18 lines or fewer. They validate the required
 primitives, not the production reducer; RED/GREEN projection, snapshot, adapter,
 API, Compare, and browser tests remain the acceptance boundary.
+
+## 2026-07-18 — Phase 0 study-design preflight
+
+| Assumption | Validation | Result |
+|---|---|---|
+| The ownership question has one full-credit path. | Inspected both completed handoffs in `visual_rich_v1.json`: Coordinator → Researcher has `ownership=transferred`; Researcher → Coordinator has `ownership=returned`. Reworded Q1 to require initial, post-transfer, and post-return owners. | PASS. The atom key is Coordinator → Researcher → Coordinator and no longer accepts the ambiguous phrase “after the handoff.” |
+| Static Canvas/A/B/C screening can balance order without repeating the same packet facts. | Enumerated S1–S4 condition and packet Williams orders plus the W/X/Y/Z modular assignment. | PASS. Every condition and packet occupies each position once per stratum; all 12 directed carryover pairs occur once; every condition/packet uses all four variants; no screener repeats one packet's variant facts. |
+| Six schedules balance condition order, position, and fixture pairing inside each participant stratum. | Enumerated the frozen O/V1/V2 × X/Y/Z schedule matrix. | PASS. It contains all six unique condition orders; all nine condition/fixture pairs occur exactly twice; each condition occurs exactly twice in each position. |
+| The frozen control fixture identity is stable. | Recomputed whole-file SHA-256 and event count before publishing preregistration v2.2. | PASS. SHA-256 is `6ae35e714fb6c99d98b8598e0d7f18ccfac8f305c655b294fb67d10d6a360ac2`; event count is 44. |
+
+These checks prove the written allocation and control identity, not equal
+difficulty of fixture variants Y/Z or user comprehension. Y/Z parity review and
+pilot evidence remain blocking before recruitment.
+
+## 2026-07-18 — Phase 0 renderer dependency preflight
+
+| Assumption | Validation | Result |
+|---|---|---|
+| Current production-candidate packages exist with registry integrity metadata. | Queried the official npm registry explicitly for `pixi.js@8.19.0` and `phaser@4.2.1`. | PASS. Both returned exact versions, tarball URLs, and SHA-512 integrity values. No dependency was installed or committed. |
+| The maintainer's configured npm mirror can supply both benchmark packages. | Queried the configured registry for the same exact versions. | REJECTED. PixiJS resolved, but Phaser 4.2.1 returned 404; an explicit official-registry query succeeded. Future benchmark setup must isolate the registry override and commit the resulting lock evidence rather than changing global configuration. |
+| PixiJS's native Canvas renderer is a stable independent fallback. | Compared the current official renderer guide with the official 8.16.0 release note. | REJECTED as a production assumption. The release calls Canvas experimental while the guide still marks it coming soon. Anthill retains its own Canvas and semantic-DOM fallback. |
+
+Exact official-registry evidence captured on 2026-07-18 with npm `10.9.2`:
+
+| Package | Version | Tarball URL | SHA-512 integrity | SHA-1 shasum |
+|---|---:|---|---|---|
+| `pixi.js` | `8.19.0` | `https://registry.npmjs.org/pixi.js/-/pixi.js-8.19.0.tgz` | `sha512-pq1O6emA/GFjjeF+8d3Pb5t7knD8FsnfWGqQcRjYjsqFZ7QdzG1XgjLDUu0DFJRbafjV5+g8iNLFBx0b9649lg==` | `4a0e9056f88ee61293f092723c8cbc2e083c8a7f` |
+| `phaser` | `4.2.1` | `https://registry.npmjs.org/phaser/-/phaser-4.2.1.tgz` | `sha512-WUNwCPJpdjvZiuT6SgCfYVW8Qw/3j0jJ4ws7P2QkhFLFu74sbGuyHJcbFueGkY/AYO4Pi47bNQXn1OCJeLX//w==` | `5512f23d348e6fb5c48ce71a9fbddd200ef919ea` |
+
+Both official metadata and tarball endpoints returned HTTP 200. The configured
+registry remained `https://registry.npmmirror.com/` before and after the
+preflight. Its PixiJS checksums matched the official values; its Phaser query
+returned npm/HTTP E404. No package was installed and no npm configuration was
+changed.
+
+Executable evidence:
+
+- `npm view pixi.js@8.19.0 version dist.tarball dist.integrity dist.shasum --json --registry=https://registry.npmjs.org/`
+- `npm view phaser@4.2.1 version dist.tarball dist.integrity dist.shasum --json --registry=https://registry.npmjs.org/`
+- `npm view pixi.js@8.19.0 version dist.tarball dist.integrity dist.shasum --json`
+- `npm view phaser@4.2.1 version dist.tarball dist.integrity dist.shasum --json`
+
+The resolved versions are dependency preflight only, not performance or
+compatibility evidence. Installation remains blocked on the committed Phase 0
+information contract and the issue #3 `VisualModel` boundary.
