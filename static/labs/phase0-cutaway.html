@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Phase 0 Cutaway Lab · Agent Anthill</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/labs/phase0-cutaway.css">
+</head>
+<body data-motion="full" data-static="false">
+  <a class="skip-link" href="#lab-scene">Skip to the study scene</a>
+
+  <header class="lab-header">
+    <div class="brand-lockup" aria-label="Agent Anthill visual research">
+      <span class="brand-mark" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+      <div>
+        <p class="eyebrow">AGENT ANTHILL / VISUAL RESEARCH</p>
+        <h1>Orthographic Cutaway <span>Study A</span></h1>
+      </div>
+    </div>
+
+    <div class="study-flags">
+      <p class="study-disclaimer" data-testid="study-disclaimer">
+        PHASE 0 · EXPLORATION · NOT PRODUCTION
+      </p>
+      <p class="fixture-badge" data-testid="fixture-badge" data-provenance="pending">PENDING</p>
+    </div>
+
+    <div class="runtime-state" aria-live="polite">
+      <span class="signal-dot" aria-hidden="true"></span>
+      <span>LAB</span>
+      <strong data-testid="lab-status">LOADING</strong>
+    </div>
+  </header>
+
+  <section class="instrument-strip" aria-label="Ledger cursor and scene controls">
+    <div class="run-readout">
+      <span class="readout-label">ADDRESSED RUN</span>
+      <strong id="run-id">NOT PROVIDED</strong>
+      <span id="run-status" class="status-pill">UNKNOWN</span>
+      <span class="status-pill" data-testid="integrity-status">PENDING</span>
+    </div>
+
+    <dl class="cursor-readouts">
+      <div>
+        <dt>EVENT #</dt>
+        <dd data-testid="event-count">—</dd>
+      </div>
+      <div>
+        <dt>INGEST SEQ</dt>
+        <dd data-testid="cursor-seq">— / —</dd>
+      </div>
+      <div class="event-type-readout">
+        <dt>LEDGER FACT AT CURSOR</dt>
+        <dd data-testid="current-event-type">NOT LOADED</dd>
+      </div>
+    </dl>
+
+    <nav class="cursor-presets" aria-label="Named ledger cursors">
+      <button type="button" data-cursor="head" aria-pressed="true">HEAD</button>
+      <button type="button" data-preset="incident" data-cursor="" aria-pressed="false" hidden>INCIDENT</button>
+      <button type="button" data-preset="compaction" data-cursor="" aria-pressed="false" hidden>COMPACTION</button>
+    </nav>
+  </section>
+
+  <main class="lab-shell">
+    <section id="lab-scene" class="scene-card" aria-labelledby="scene-title">
+      <div class="scene-heading">
+        <div>
+          <p class="eyebrow">LEDGER-PROJECTED SYSTEM MAP</p>
+          <h2 id="scene-title">The colony below the interface</h2>
+        </div>
+      <div class="truth-key" aria-label="Truth style legend">
+          <span class="truth-observed" data-truth="observed">● OBSERVED</span>
+          <span class="truth-declared" data-truth="declared">▣ DECLARED</span>
+          <span class="truth-inferred" data-truth="inferred">◇ INFERRED</span>
+          <span class="truth-counterfactual" data-truth="counterfactual_verified">⊕ COUNTERFACTUAL_VERIFIED</span>
+          <span class="truth-unknown" data-truth="unknown">/// UNKNOWN</span>
+      </div>
+      </div>
+
+      <div class="cutaway-frame" aria-label="Orthographic cutaway of twelve system chambers">
+        <svg id="cutaway-svg" viewBox="0 0 1200 700" role="img"
+             aria-label="Twelve chamber orthographic Agent system cutaway"></svg>
+        <div id="entity-plane" class="entity-plane" aria-label="Entities at the selected ledger cursor"></div>
+        <div class="depth-ruler" aria-hidden="true"><span>00</span><span>01</span><span>02</span></div>
+      </div>
+
+      <div class="scene-footer">
+        <p><span class="rail-swatch" aria-hidden="true"></span> Sequence rail shows order, not causality.</p>
+        <p id="scene-note">Waiting for an explicitly addressed run.</p>
+      </div>
+    </section>
+
+    <aside class="evidence-drawer" aria-labelledby="evidence-heading">
+      <div class="drawer-kicker">
+        <span>EVIDENCE DRAWER</span>
+        <span id="drawer-seq">SEQ —</span>
+      </div>
+      <h2 id="evidence-heading" data-testid="evidence-title">Select an entity</h2>
+      <p id="evidence-summary" class="evidence-summary">
+        Keyboard-focus any visible Agent or machine and press Enter to inspect its latest ledger fact.
+      </p>
+
+      <dl class="evidence-grid">
+        <div>
+          <dt>EVENT TYPE</dt>
+          <dd data-testid="evidence-event-type">—</dd>
+        </div>
+        <div>
+          <dt>TRUTH</dt>
+          <dd data-testid="evidence-truth">—</dd>
+        </div>
+        <div>
+          <dt>STATUS</dt>
+          <dd id="evidence-status">—</dd>
+        </div>
+        <div>
+          <dt>SOURCE</dt>
+          <dd id="evidence-source">—</dd>
+        </div>
+      </dl>
+
+      <div class="truth-explanation">
+        <p class="eyebrow">WHY THIS STYLE?</p>
+        <p id="evidence-explanation">No evidence selected.</p>
+      </div>
+
+      <a class="raw-route" data-testid="evidence-route" aria-disabled="true" tabindex="-1">
+        OPEN CANONICAL EVENT
+        <span aria-hidden="true">↗</span>
+      </a>
+      <p class="sr-only" data-testid="evidence-live" aria-live="polite" aria-atomic="true"></p>
+
+      <div class="drawer-guardrail">
+        <strong>TRUTH BEFORE THEATRE</strong>
+        <p>Rooms are metaphor. Status, truth, identity, cursor and evidence route come from the ledger projection.</p>
+      </div>
+    </aside>
+  </main>
+
+  <div id="lab-alert" class="lab-alert" role="alert" hidden>
+    <span id="lab-alert-message"></span>
+    <button id="lab-retry" type="button" hidden>RETRY LOAD</button>
+  </div>
+  <script type="module" src="/static/js/labs/phase0/bootstrap.mjs"></script>
+</body>
+</html>

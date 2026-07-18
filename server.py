@@ -3,6 +3,7 @@
 import os
 import sys
 import subprocess
+import mimetypes
 from pathlib import Path
 from uuid import uuid4
 
@@ -35,6 +36,7 @@ app.include_router(create_anthill_router(event_store, event_broker))
 
 # Serve static files
 STATIC_DIR = Path(__file__).parent / "static"
+mimetypes.add_type("text/javascript", ".mjs")
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Analysis cache contains only pure analysis artifacts. Per-request persistence
@@ -79,6 +81,17 @@ async def anthill_index():
 @app.get("/graph")
 async def graph_index():
     return FileResponse(str(STATIC_DIR / "index.html"))
+
+
+@app.get("/labs/phase0-cutaway")
+async def phase0_cutaway_lab():
+    """Serve the isolated Phase 0 orthographic study candidate.
+
+    The lab consumes an explicitly addressed ledger run in the browser.  This
+    route deliberately has no fixture-creation or other write side effect.
+    """
+
+    return FileResponse(str(STATIC_DIR / "labs" / "phase0-cutaway.html"))
 
 
 @app.get("/api/browse")
