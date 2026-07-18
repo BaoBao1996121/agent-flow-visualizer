@@ -49,6 +49,7 @@ class WorldSnapshot(BaseModel):
         event_hash: str | None,
     ) -> "WorldSnapshot":
         return cls(
+            reducer_version=state.reducer_version,
             run_id=state.run_id,
             seq=state.cursor_seq,
             event_id=state.cursor_event_id,
@@ -83,7 +84,10 @@ class JsonWorldSnapshotStore:
         )
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists():
-            existing = self._load_path(path)
+            existing = self._load_path(
+                path,
+                expected_reducer_version=snapshot.reducer_version,
+            )
             if existing.state_hash != snapshot.state_hash:
                 raise SnapshotError(
                     f"snapshot already exists with different state hash at seq {snapshot.seq}"
@@ -120,7 +124,10 @@ class JsonWorldSnapshotStore:
         if not candidates:
             return None
         _, path = max(candidates, key=lambda item: item[0])
-        return self._load_path(path)
+        return self._load_path(
+            path,
+            expected_reducer_version=reducer_version,
+        )
 
     def list_run(
         self,
@@ -134,7 +141,10 @@ class JsonWorldSnapshotStore:
         result = []
         for path in sorted(directory.glob("*.json")):
             try:
-                snapshot = self._load_path(path)
+                snapshot = self._load_path(
+                    path,
+                    expected_reducer_version=reducer_version,
+                )
                 result.append(
                     {
                         "seq": snapshot.seq,
@@ -157,16 +167,29 @@ class JsonWorldSnapshotStore:
                 )
         return result
 
-    def _load_path(self, path: Path) -> WorldSnapshot:
+    def _load_path(
+        self,
+        path: Path,
+        *,
+        expected_reducer_version: str,
+    ) -> WorldSnapshot:
         try:
             snapshot = WorldSnapshot.model_validate_json(path.read_text(encoding="utf-8"))
         except Exception as exc:
             raise CorruptSnapshotError(f"invalid snapshot {path.name}: {exc}") from exc
         self._verify_model(snapshot)
+        if snapshot.reducer_version != expected_reducer_version:
+            raise CorruptSnapshotError(
+                "snapshot reducer_version does not match requested reducer_version"
+            )
         return snapshot
 
     @staticmethod
     def _verify_model(snapshot: WorldSnapshot) -> None:
+        if snapshot.reducer_version != snapshot.state.reducer_version:
+            raise CorruptSnapshotError(
+                "snapshot reducer_version does not match state"
+            )
         if snapshot.run_id != snapshot.state.run_id:
             raise CorruptSnapshotError("snapshot run_id does not match state")
         if snapshot.seq != snapshot.state.cursor_seq:

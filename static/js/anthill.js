@@ -21,7 +21,7 @@
         { key: 'control', label: 'CONTROL NEST', sub: 'agents / plans / decisions', x: 26, y: 64, w: 242, h: 140, color: '#c8f560' },
         { key: 'context_assembly', label: 'CONTEXT ASSEMBLY', sub: 'prompt manifest / budget', x: 300, y: 64, w: 242, h: 140, color: '#5ce0ce' },
         { key: 'model_engine', label: 'MODEL ENGINE', sub: 'request / stream / usage', x: 574, y: 64, w: 242, h: 140, color: '#74a8ff' },
-        { key: 'meter_room', label: 'METER ROOM', sub: 'tokens / latency / cost', x: 848, y: 64, w: 242, h: 140, color: '#f5d060' },
+        { key: 'meter_room', label: 'METER ROOM', sub: 'tokens / scoped time / cost', x: 848, y: 64, w: 242, h: 140, color: '#f5d060' },
         { key: 'tool_workshop', label: 'TOOL WORKSHOP', sub: 'approval / execute / retry', x: 26, y: 236, w: 242, h: 140, color: '#ff9f57' },
         { key: 'retrieval_depot', label: 'RETRIEVAL DEPOT', sub: 'search / rank / select', x: 300, y: 236, w: 242, h: 140, color: '#66c7ff' },
         { key: 'memory_vault', label: 'MEMORY VAULT', sub: 'working / episodic / semantic', x: 574, y: 236, w: 242, h: 140, color: '#c692ff' },
@@ -50,6 +50,127 @@
         if (Math.abs(number) >= 1_000_000) return `${(number / 1_000_000).toFixed(1)}m`;
         if (Math.abs(number) >= 1_000) return `${(number / 1_000).toFixed(1)}k`;
         return Number.isInteger(number) ? String(number) : number.toFixed(2);
+    };
+    const METER_DEFINITIONS = [
+        { id: 'input', label: 'INPUT', key: 'model_call.input_tokens' },
+        { id: 'output', label: 'OUTPUT', key: 'model_call.output_tokens' },
+        { id: 'total', label: 'CALCULATED TOTAL', key: 'model_call.total_tokens', calculated: true },
+        { id: 'model', label: 'MODEL SPAN TIME', key: 'model_call.duration_ms' },
+        { id: 'run', label: 'RUN ELAPSED', key: 'run.elapsed_ms' },
+        { id: 'cost', label: 'COST', key: 'model_call.cost_usd' },
+    ];
+    const isSafeMeasurementValue = value => (
+        typeof value === 'number' && Number.isFinite(value) && value >= 0
+    );
+    const formatMeasurementNumber = value => {
+        const number = Number(value);
+        if (Number.isInteger(number)) return number.toLocaleString('en-US');
+        return number.toLocaleString('en-US', { maximumFractionDigits: 4 });
+    };
+    const formatDuration = value => {
+        const milliseconds = Number(value);
+        if (milliseconds < 1_000) return `${formatMeasurementNumber(milliseconds)} MS`;
+        if (milliseconds < 60_000) return `${formatMeasurementNumber(milliseconds / 1_000)} S`;
+        return `${formatMeasurementNumber(milliseconds / 60_000)} MIN`;
+    };
+    const formatCost = value => {
+        const cost = Number(value);
+        const maximumFractionDigits = cost > 0 && cost < .01 ? 6 : 4;
+        return `$${cost.toLocaleString('en-US', { maximumFractionDigits })}`;
+    };
+    const formatMeasurementValue = reading => {
+        if (reading.status === 'ambiguous') return 'AMBIGUOUS';
+        if (reading.status !== 'available') return 'NOT OBSERVED';
+        if (reading.unit === 'tokens') return `${formatMeasurementNumber(reading.value)} TOKENS`;
+        if (reading.unit === 'ms') return formatDuration(reading.value);
+        if (reading.unit === 'usd') return formatCost(reading.value);
+        return formatMeasurementNumber(reading.value);
+    };
+    const aggregateEvidenceSummary = aggregate => {
+        const parts = Object.entries(aggregate?.evidence_counts || {})
+            .filter(([, count]) => Number(count) > 0)
+            .sort(([left], [right]) => left.localeCompare(right, 'en-US'))
+            .map(([level, count]) => `${String(level).toUpperCase()} ${count}`);
+        return parts.join(' + ') || 'EVIDENCE LEVEL NOT OBSERVED';
+    };
+    const measurementReading = (world, definition) => {
+        const source = definition.calculated
+            ? world?.calculated_measurements?.[definition.key]
+            : world?.measurement_aggregates?.[definition.key];
+        const status = source?.status === 'ambiguous'
+            ? 'ambiguous'
+            : source?.status === 'available' && isSafeMeasurementValue(source.value)
+                ? 'available'
+                : 'not_observed';
+        const basisValues = Array.isArray(source?.basis_values)
+            ? source.basis_values.filter(value => typeof value === 'string' && value)
+            : [];
+        const estimatedValues = Array.isArray(source?.estimated_values)
+            ? source.estimated_values.filter(value => typeof value === 'boolean')
+            : [];
+        const costKind = definition.id !== 'cost' || status !== 'available'
+            ? ''
+            : estimatedValues.length === 1 && estimatedValues[0] === true
+                ? 'ESTIMATED'
+                : estimatedValues.length === 1 && estimatedValues[0] === false
+                    ? 'MEASURED'
+                    : 'ESTIMATE STATUS MIXED';
+        const evidenceIds = Array.isArray(source?.evidence_event_ids)
+            ? source.evidence_event_ids.filter(value => typeof value === 'string' && value)
+            : [];
+        const eventId = evidenceIds.at(-1) || source?.last_event_id || '';
+        const reading = {
+            ...definition,
+            status,
+            value: status === 'available' ? source.value : null,
+            unit: source?.unit || (definition.id === 'cost' ? 'usd' : definition.id === 'model' || definition.id === 'run' ? 'ms' : 'tokens'),
+            source,
+            eventId,
+            basisValues,
+            costKind,
+            evidenceSummary: definition.calculated
+                ? `${evidenceIds.length} COMPONENT EVENT${evidenceIds.length === 1 ? '' : 'S'}`
+                : aggregateEvidenceSummary(source),
+        };
+        reading.valueText = formatMeasurementValue(reading);
+        const details = [];
+        if (status === 'available') {
+            if (definition.calculated) {
+                details.push(String(source?.calculation || 'INPUT + OUTPUT')
+                    .replaceAll('_', ' ').replaceAll('.', ' ').toUpperCase());
+                details.push(`EXPLICIT ${String(source?.explicit_consistency || 'NOT OBSERVED').replaceAll('_', ' ').toUpperCase()}`);
+            } else {
+                details.push(`${String(source?.scope || 'UNKNOWN SCOPE').replaceAll('_', ' ').toUpperCase()} · ${String(source?.aggregation || 'UNKNOWN AGGREGATION').toUpperCase()}`);
+                details.push(`${Number(source?.sample_count || 0)} SAMPLE${Number(source?.sample_count || 0) === 1 ? '' : 'S'} · ${Number(source?.owner_count || 0)} OWNER${Number(source?.owner_count || 0) === 1 ? '' : 'S'}`);
+            }
+            if (definition.id === 'cost') {
+                details.push(costKind);
+                details.push(`BASIS ${basisValues.join(' + ') || 'NOT OBSERVED'}`);
+            }
+            details.push(reading.evidenceSummary);
+        } else if (status === 'ambiguous') {
+            const conflicts = Array.isArray(source?.conflict_reasons) ? source.conflict_reasons : [];
+            details.push(conflicts.length ? conflicts.join(' · ') : 'SAFE AGGREGATE CONFLICT');
+            details.push(reading.evidenceSummary);
+        } else {
+            details.push('SAFE AGGREGATE NOT OBSERVED AT CURSOR');
+        }
+        reading.detailText = details.filter(Boolean).join(' · ');
+        return reading;
+    };
+    const buildMeterPresentation = world => {
+        const readings = METER_DEFINITIONS.map(definition => measurementReading(world, definition));
+        const evidenceLevels = [...new Set(readings.flatMap(reading => (
+            Object.keys(reading.source?.evidence_counts || {})
+        )))];
+        return {
+            readings,
+            byId: Object.fromEntries(readings.map(reading => [reading.id, reading])),
+            availableCount: readings.filter(reading => reading.status === 'available').length,
+            ambiguousCount: readings.filter(reading => reading.status === 'ambiguous').length,
+            truthLevel: evidenceLevels.length === 1
+                ? evidenceLevels[0] : evidenceLevels.length > 1 ? 'mixed' : 'not_observed',
+        };
     };
     const truthColor = level => TRUTH_COLORS[level] || '#789489';
     const shortId = value => value ? (value.length > 19 ? `${value.slice(0, 8)}…${value.slice(-7)}` : value) : '—';
@@ -164,26 +285,28 @@
             this.ctx.imageSmoothingEnabled = false;
             this.callbacks = callbacks;
             this.world = null;
+            this.meterPresentation = buildMeterPresentation(null);
             this.entities = new Map();
             this.hitRegions = [];
             this.hovered = null;
             this.selectedEventId = null;
             this.lastFrame = performance.now();
             this.frameRequest = null;
-            this.motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
-            this.reducedMotion = this.motionPreference.matches;
-            this.motionPreference.addEventListener('change', event => {
-                this.reducedMotion = event.matches;
-                this.syncAnimation();
+            this.systemMotionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+            this.motionMode = this.loadMotionMode();
+            this.reducedMotion = false;
+            this.systemMotionPreference.addEventListener('change', () => {
+                if (this.motionMode === 'system') this.applyMotionPreference();
             });
             this.canvas.addEventListener('mousemove', event => this.onPointerMove(event));
             this.canvas.addEventListener('mouseleave', () => this.clearHover());
             this.canvas.addEventListener('click', event => this.onClick(event));
-            this.syncAnimation();
+            this.applyMotionPreference();
         }
 
         setWorld(world) {
             this.world = world || null;
+            this.meterPresentation = buildMeterPresentation(this.world);
             if (!world) return;
             const nextIds = new Set(Object.keys(world.entities || {}));
             for (const [id] of this.entities) {
@@ -212,6 +335,30 @@
         setSelected(eventId) {
             this.selectedEventId = eventId;
             this.requestDraw();
+        }
+
+        loadMotionMode() {
+            try {
+                const stored = localStorage.getItem('anthill.motion.v1');
+                return ['system', 'reduce', 'full'].includes(stored) ? stored : 'system';
+            } catch (_) {
+                return 'system';
+            }
+        }
+
+        setMotionMode(mode) {
+            this.motionMode = ['system', 'reduce', 'full'].includes(mode) ? mode : 'system';
+            try { localStorage.setItem('anthill.motion.v1', this.motionMode); } catch (_) { /* optional */ }
+            this.applyMotionPreference();
+            return this.reducedMotion ? 'reduce' : 'full';
+        }
+
+        applyMotionPreference() {
+            this.reducedMotion = this.motionMode === 'reduce'
+                || (this.motionMode === 'system' && this.systemMotionPreference.matches);
+            document.body.dataset.motionPreference = this.motionMode;
+            document.body.dataset.effectiveMotion = this.reducedMotion ? 'reduce' : 'full';
+            this.syncAnimation();
         }
 
         isTerminalWorld() {
@@ -325,9 +472,11 @@
         drawZone(ctx, zone, time) {
             const state = this.world;
             const activity = state?.zone_activity?.[zone.key] || 0;
-            const lastEvent = [...(state?.recent_events || [])].reverse().find(event => event.zone === zone.key);
-            const level = lastEvent?.truth?.level || 'declared';
-            const confidence = lastEvent?.truth?.confidence ?? 1;
+            const lastEvent = state?.zone_latest_events?.[zone.key]
+                || [...(state?.recent_events || [])].reverse().find(event => event.zone === zone.key);
+            const meterTruth = zone.key === 'meter_room' ? this.meterPresentation.truthLevel : null;
+            const level = lastEvent?.truth?.level || meterTruth || 'not_observed';
+            const confidence = lastEvent?.truth?.confidence ?? 0;
             const pulse = activity > 0 ? (Math.sin(time / 260) + 1) / 2 : 0;
 
             ctx.fillStyle = activity > 0 ? this.alpha(zone.color, .075 + pulse * .045) : '#0b1815';
@@ -342,19 +491,19 @@
             ctx.fillRect(zone.x + 1, zone.y + 1, zone.w - 2, 30);
             ctx.fillStyle = zone.color;
             ctx.fillRect(zone.x + 8, zone.y + 8, 5, 13);
-            ctx.font = 'bold 10px "Cascadia Mono", monospace';
+            ctx.font = 'bold 12px "Cascadia Mono", monospace';
             ctx.textBaseline = 'top';
-            ctx.fillText(zone.label, zone.x + 19, zone.y + 7);
+            ctx.fillText(zone.label, zone.x + 19, zone.y + 4);
             ctx.fillStyle = '#58756a';
-            ctx.font = '7px "Cascadia Mono", monospace';
+            ctx.font = '9px "Cascadia Mono", monospace';
             ctx.fillText(zone.sub.toUpperCase(), zone.x + 19, zone.y + 19);
 
             if (activity > 0) {
                 ctx.fillStyle = zone.color;
                 ctx.fillRect(zone.x + zone.w - 27, zone.y + 10, 5, 5);
                 ctx.fillStyle = '#bed0c7';
-                ctx.font = '8px "Cascadia Mono", monospace';
-                ctx.fillText(String(activity), zone.x + zone.w - 17, zone.y + 8);
+                ctx.font = '10px "Cascadia Mono", monospace';
+                ctx.fillText(String(activity), zone.x + zone.w - 17, zone.y + 6);
             }
             this.drawMachine(ctx, zone, time, activity);
             this.hitRegions.push({ type: 'zone', zone, x: zone.x, y: zone.y, w: zone.w, h: zone.h, eventId: lastEvent?.event_id });
@@ -395,10 +544,34 @@
                 }
                 ctx.stroke();
             } else if (zone.key === 'meter_room') {
-                for (let index = 0; index < 3; index += 1) {
-                    ctx.fillStyle = '#142a24'; ctx.fillRect(23 + index * 61, 10, 49, 62);
-                    ctx.strokeStyle = '#355247'; ctx.strokeRect(23.5 + index * 61, 10.5, 48, 61);
-                    ctx.fillStyle = color; ctx.fillRect(32 + index * 61, 58 - ((index + 1) * 9), 31, 7 + index * 9);
+                const meter = this.meterPresentation;
+                const cells = [
+                    [meter.byId.input, 27, 11], [meter.byId.model, 111, 11],
+                    [meter.byId.output, 27, 32], [meter.byId.run, 111, 32],
+                    [meter.byId.total, 27, 53], [meter.byId.cost, 111, 53],
+                ];
+                ctx.fillStyle = '#0b1815'; ctx.fillRect(23, 8, 171, 66);
+                ctx.strokeStyle = '#355247';
+                ctx.strokeRect(23.5, 8.5, 170, 65);
+                ctx.fillStyle = '#1d352d';
+                ctx.fillRect(104, 9, 1, 64);
+                for (const [reading, cellX, cellY] of cells) {
+                    const label = reading.id === 'total'
+                        ? 'TOTAL · CALCULATED'
+                        : reading.id === 'cost' && reading.costKind === 'ESTIMATED'
+                            ? 'COST · ESTIMATED'
+                            : reading.label;
+                    ctx.fillStyle = reading.status === 'available'
+                        ? color
+                        : reading.status === 'ambiguous' ? '#ffb45f' : '#789489';
+                    ctx.font = '8px "Cascadia Mono", monospace';
+                    ctx.fillText(label, cellX, cellY);
+                    ctx.fillStyle = reading.status === 'available' ? '#d6e3dc' : '#789489';
+                    ctx.font = 'bold 10px "Cascadia Mono", monospace';
+                    const canvasValue = reading.status === 'available'
+                        ? (reading.unit === 'tokens' ? humanNumber(reading.value).toUpperCase() : reading.valueText)
+                        : reading.valueText;
+                    ctx.fillText(canvasValue, cellX, cellY + 8);
                 }
             } else if (zone.key === 'tool_workshop') {
                 ctx.fillRect(21, 48, 182, 23); ctx.strokeRect(21.5, 48.5, 181, 22);
@@ -415,15 +588,14 @@
                 }
             } else if (zone.key === 'memory_vault') {
                 const memory = this.world?.memory || {};
-                const values = [memory.working || 0, memory.episodic || 0, memory.semantic || 0];
+                const layers = ['working', 'episodic', 'semantic'];
                 for (let index = 0; index < 3; index += 1) {
+                    const observation = memory.layer_operations?.[layers[index]];
                     ctx.fillStyle = '#152c25'; ctx.fillRect(24 + index * 61, 13, 48, 59);
                     ctx.strokeStyle = color; ctx.strokeRect(24.5 + index * 61, 13.5, 47, 58);
-                    const blocks = Math.min(values[index], 5);
-                    for (let block = 0; block < blocks; block += 1) {
-                        ctx.fillStyle = this.alpha(color, .42 + block * .1);
-                        ctx.fillRect(31 + index * 61, 61 - block * 9, 34, 6);
-                    }
+                    ctx.fillStyle = observation ? color : '#789489';
+                    ctx.font = 'bold 10px "Cascadia Mono", monospace';
+                    ctx.fillText(observation ? `${observation.event_count} OPS` : 'N/O', 31 + index * 61, 38);
                 }
             } else if (zone.key === 'compaction_plant') {
                 const jobs = Object.values(this.world?.compactions || {});
@@ -435,7 +607,7 @@
                 ctx.fillStyle = '#355247'; ctx.fillRect(60, 50, 86, 13);
                 ctx.fillStyle = '#07100f'; ctx.fillRect(74, 53, 58, 7);
                 if (job?.reduction_ratio != null) {
-                    ctx.fillStyle = color; ctx.font = '8px "Cascadia Mono", monospace';
+                    ctx.fillStyle = color; ctx.font = '10px "Cascadia Mono", monospace';
                     ctx.fillText(`-${Math.round(job.reduction_ratio * 100)}%`, 177, 57);
                 }
             } else if (zone.key === 'handoff_bridge') {
@@ -472,7 +644,7 @@
                 ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
                 ctx.strokeStyle = zone.color; ctx.setLineDash(key === 'unknown_fog' ? [2, 5] : []);
                 ctx.strokeRect(zone.x + .5, zone.y + .5, zone.w - 1, zone.h - 1); ctx.setLineDash([]);
-                ctx.fillStyle = zone.color; ctx.font = '8px "Cascadia Mono", monospace';
+                ctx.fillStyle = zone.color; ctx.font = '11px "Cascadia Mono", monospace';
                 ctx.fillText(zone.label, zone.x + 11, zone.y + 13);
                 if (key === 'unknown_fog') {
                     const count = this.world?.unknown_event_types?.length || 0;
@@ -509,7 +681,12 @@
         }
 
         drawEntities(ctx, time, delta) {
-            const sprites = [...this.entities.values()].sort((a, b) => this.entityPriority(a.entity) - this.entityPriority(b.entity)).slice(0, 28);
+            const sprites = [...this.entities.values()].sort((a, b) => {
+                const priority = this.entityPriority(a.entity) - this.entityPriority(b.entity);
+                if (priority) return priority;
+                const recency = Number(b.entity.last_seq || 0) - Number(a.entity.last_seq || 0);
+                return recency || String(a.entity.id).localeCompare(String(b.entity.id), 'en-US');
+            }).slice(0, 28);
             for (const sprite of sprites) {
                 const smoothing = this.shouldAnimate() ? 1 - Math.pow(.84, delta) : 1;
                 sprite.x += (sprite.targetX - sprite.x) * smoothing;
@@ -529,8 +706,8 @@
                 this.hitRegions.push({ type: 'entity', entity, x: x - w / 2, y: y - 12, w, h: 25, eventId: entity.last_event_id });
                 if (entity.kind === 'agent') {
                     const label = entity.name.length > 16 ? `${entity.name.slice(0, 14)}…` : entity.name;
-                    ctx.fillStyle = 'rgba(4,10,9,.88)'; ctx.fillRect(x - 2 - label.length * 2.7, y + 13, label.length * 5.4 + 4, 11);
-                    ctx.fillStyle = entity.active ? '#c8f560' : '#a8beb4'; ctx.font = '7px "Cascadia Mono", monospace';
+                    ctx.fillStyle = 'rgba(4,10,9,.88)'; ctx.fillRect(x - 3 - label.length * 3.1, y + 13, label.length * 6.2 + 6, 14);
+                    ctx.fillStyle = entity.active ? '#c8f560' : '#a8beb4'; ctx.font = '9px "Cascadia Mono", monospace';
                     ctx.textAlign = 'center'; ctx.fillText(label, x, y + 15); ctx.textAlign = 'left';
                 }
             }
@@ -577,7 +754,11 @@
             ctx.strokeStyle = color;
             ctx.lineWidth = level === 'counterfactual_verified' ? 2 : 1;
             ctx.globalAlpha = .35 + confidence * .55;
-            ctx.setLineDash(level === 'inferred' ? [3, 5] : []);
+            ctx.setLineDash(
+                level === 'inferred' ? [3, 5]
+                    : level === 'mixed' ? [7, 3, 1, 3]
+                        : level === 'not_observed' ? [1, 6] : [],
+            );
             if (level === 'counterfactual_verified') {
                 ctx.shadowColor = color; ctx.shadowBlur = 8 + Math.sin(time / 300) * 3;
             }
@@ -614,8 +795,11 @@
         }
 
         entityPriority(entity) {
-            if (entity.kind === 'agent') return 0;
-            if (entity.active) return 1;
+            if (entity.last_event_id === this.selectedEventId) return -3;
+            if (['error', 'failed', 'rejected', 'cancelled', 'timeout'].includes(entity.status)) return -2;
+            if (['incident_bay', 'unknown_fog'].includes(entity.zone)) return -1;
+            if (entity.active) return 0;
+            if (entity.kind === 'agent') return 1;
             if (entity.kind === 'task') return 2;
             return 3;
         }
@@ -646,7 +830,9 @@
             const title = region.type === 'entity' ? region.entity.name : region.zone.label;
             const detail = region.type === 'entity'
                 ? `${region.entity.kind} · ${region.entity.status} · ${region.entity.truth.level} ${(region.entity.truth.confidence * 100).toFixed(0)}%`
-                : `${this.world?.zone_activity?.[region.zone.key] || 0} active · click for evidence`;
+                : region.zone.key === 'meter_room'
+                    ? `${this.meterPresentation.availableCount} available · ${this.meterPresentation.ambiguousCount} ambiguous · OBJECTS lists scoped evidence`
+                : `${this.world?.zone_event_counts?.[region.zone.key] || 0} events · ${this.world?.zone_activity?.[region.zone.key] || 0} open · ${region.eventId ? 'click for evidence' : 'not observed'}`;
             tooltip.innerHTML = `<b>${esc(title)}</b><span>${esc(detail)}</span>`;
             tooltip.hidden = false;
             const left = clamp(event.clientX - rect.left + 14, 8, rect.width - 270);
@@ -707,10 +893,13 @@
             this.compareRequestId = 0;
             this.compareRequestController = null;
             this.refreshTimer = null;
+            this.lastAnnouncement = '';
+            this.announcedRunStateKey = '';
             this.canvas = new AnthillCanvas($('anthill-canvas'), {
                 onEvent: id => this.selectEvent(id),
                 onZone: zone => this.selectZone(zone),
             });
+            $('motion-preference').value = this.canvas.motionMode;
             this.bind();
             this.renderChamberList();
             this.loadRuns();
@@ -744,6 +933,12 @@
                 this.loadComparison(this.compareProgress);
             });
             $('truth-help').addEventListener('click', () => $('truth-dialog').showModal());
+            $('object-search').addEventListener('input', () => this.renderObjectMirror());
+            document.querySelectorAll('[data-memory-layer]').forEach(button => {
+                button.addEventListener('click', () => {
+                    if (button.dataset.eventId) this.selectEvent(button.dataset.eventId);
+                });
+            });
 
             const inspectorTabs = [...document.querySelectorAll('.inspector-tabs button')];
             inspectorTabs.forEach((button, index) => {
@@ -761,7 +956,11 @@
             document.querySelectorAll('.view-button[data-view]').forEach(button => button.addEventListener('click', () => this.switchView(button.dataset.view)));
             document.querySelectorAll('.causal-controls button').forEach(button => button.addEventListener('click', () => {
                 this.causalDirection = button.dataset.direction;
-                document.querySelectorAll('.causal-controls button').forEach(item => item.classList.toggle('active', item === button));
+                document.querySelectorAll('.causal-controls button').forEach(item => {
+                    const selected = item === button;
+                    item.classList.toggle('active', selected);
+                    item.setAttribute('aria-pressed', String(selected));
+                });
                 if (this.selectedEventId) this.loadCausality(this.selectedEventId);
             }));
 
@@ -788,8 +987,16 @@
             });
             $('play-toggle').addEventListener('click', () => this.togglePlayback());
             $('play-speed').addEventListener('change', () => { if (this.playTimer) { this.stopPlayback(); this.startPlayback(); } });
+            $('motion-preference').addEventListener('change', event => {
+                const effective = this.canvas.setMotionMode(event.target.value);
+                this.announceStatus(`Motion preference ${event.target.value}; effective motion ${effective}.`);
+            });
             $('follow-live').addEventListener('click', () => {
-                this.setFollow(!this.followLive);
+                const following = !this.followLive;
+                this.setFollow(following);
+                this.announceStatus(following
+                    ? 'Presentation is following ledger head; ledger capture was never paused.'
+                    : 'Presentation paused at ledger head; ledger capture continues.');
                 if (this.followLive) this.gotoSeq(this.headSeq);
             });
             $('fork-run').addEventListener('click', () => this.forkCurrentRun());
@@ -1120,6 +1327,7 @@
             this.renderTruthMix();
             this.renderCognition();
             this.renderChamberList();
+            this.renderObjectMirror();
             this.renderStatePanel();
             this.renderCoveragePanel();
             this.renderEventFeed();
@@ -1132,6 +1340,11 @@
             $('world-mode').textContent = isHead
                 ? (this.followLive ? 'AT HEAD · FOLLOWING' : 'AT HEAD · PAUSED')
                 : `HISTORY · SEQ ${this.cursorSeq}`;
+            const runStateKey = `${this.runId}\u0000${this.world?.run_status || 'unknown'}`;
+            if (runStateKey !== this.announcedRunStateKey) {
+                this.announcedRunStateKey = runStateKey;
+                this.announceStatus(`Run status ${this.world?.run_status || 'unknown'} at cursor sequence ${this.cursorSeq}.`);
+            }
         }
 
         renderRunSummary() {
@@ -1172,7 +1385,6 @@
             const eventTypes = Object.keys(this.world.event_type_counts || {});
             const hasFamily = prefix => eventTypes.some(eventType => eventType.startsWith(prefix));
             const contextObserved = hasFamily('context.');
-            const memoryObserved = hasFamily('memory.');
             const compactionObserved = hasFamily('compaction.');
             const ratio = budget != null && budget > 0 ? used / budget : 0;
             $('context-label').textContent = budget != null
@@ -1183,10 +1395,37 @@
             const fill = $('context-fill');
             fill.style.width = `${clamp(ratio * 100, 0, 100)}%`;
             fill.className = context.overflow ? 'overflow' : ratio >= .85 ? 'warning' : '';
-            const memoryValue = key => memoryObserved ? (this.world.memory?.[key] ?? 0) : 'NOT OBSERVED';
-            $('memory-working').textContent = memoryValue('working');
-            $('memory-episodic').textContent = memoryValue('episodic');
-            $('memory-semantic').textContent = memoryValue('semantic');
+            const memory = this.world.memory || {};
+            const operationLabels = {
+                'memory.written': 'WRITE',
+                'memory.updated': 'UPDATE',
+                'memory.deleted': 'DELETE',
+                'memory.evicted': 'EVICTION',
+                'memory.hit': 'HIT',
+                'memory.miss': 'MISS',
+                'memory.read': 'READ',
+                'memory.searched': 'SEARCH',
+            };
+            for (const layer of ['working', 'episodic', 'semantic']) {
+                const button = document.querySelector(`[data-memory-layer="${layer}"]`);
+                const value = $(`memory-${layer}`);
+                const observation = memory.layer_operations?.[layer];
+                button.disabled = !observation;
+                button.dataset.eventId = observation?.last_event_id || '';
+                button.dataset.truth = observation?.truth?.level || 'not_observed';
+                if (!observation) {
+                    value.textContent = 'NOT OBSERVED';
+                    button.querySelector('small').textContent = 'NO LAYER SIGNAL';
+                    button.setAttribute('aria-label', `${layer} memory operations not observed at cursor`);
+                    continue;
+                }
+                const parts = Object.entries(observation.event_type_counts || {})
+                    .filter(([eventType]) => operationLabels[eventType])
+                    .map(([eventType, count]) => `${count} ${operationLabels[eventType]}${count === 1 ? '' : 'S'}`);
+                value.textContent = parts.join(' · ') || `${observation.event_count} EVENT${observation.event_count === 1 ? '' : 'S'}`;
+                button.querySelector('small').textContent = `OBSERVED · #${observation.last_seq}`;
+                button.setAttribute('aria-label', `${layer} memory: ${value.textContent}; ${observation.truth?.level || 'unknown'} evidence; inspect event ${observation.last_event_id}`);
+            }
             const jobs = Object.values(this.world.compactions || {});
             const job = jobs[jobs.length - 1];
             $('compact-status').textContent = job
@@ -1202,22 +1441,115 @@
         renderChamberList() {
             const container = $('chamber-list');
             const state = this.world;
+            const meter = buildMeterPresentation(state);
             container.innerHTML = '';
             const terminalRun = TERMINAL_RUN_STATUSES.has(state?.run_status);
             const activityLabel = terminalRun ? 'UNRESOLVED' : 'OPEN';
             for (const zone of ZONES) {
                 const activity = state?.zone_activity?.[zone.key] || 0;
-                const count = (state?.recent_events || []).filter(event => event.zone === zone.key).length;
+                const count = state?.zone_event_counts?.[zone.key]
+                    ?? (state?.recent_events || []).filter(event => event.zone === zone.key).length;
                 const button = document.createElement('button');
                 button.type = 'button';
                 const activityClass = activity > 0
                     ? (terminalRun ? 'unresolved' : 'active') : '';
+                const meterSignal = zone.key === 'meter_room'
+                    ? [
+                        meter.availableCount ? `${meter.availableCount} SAFE` : '',
+                        meter.ambiguousCount ? `${meter.ambiguousCount} AMBIG` : '',
+                    ].filter(Boolean).join(' · ')
+                    : '';
                 button.className = `chamber-item ${activityClass}`;
                 button.style.setProperty('--chamber-color', zone.color);
-                button.innerHTML = `<i></i><span>${esc(zone.label)}</span><b>${activity ? `${activity} ${activityLabel}` : count ? `${count} EVT` : '—'}</b>`;
+                button.innerHTML = `<i></i><span>${esc(zone.label)}</span><b>${activity ? `${activity} ${activityLabel}` : meterSignal || (count ? `${count} EVT` : '—')}</b>`;
                 button.addEventListener('click', () => this.selectZone(zone.key));
                 container.append(button);
             }
+        }
+
+        renderObjectMirror() {
+            const container = $('object-mirror');
+            if (!container) return;
+            const state = this.world;
+            if (!state) {
+                container.innerHTML = '<div class="empty-detail">选择 run 后显示全部语义对象。</div>';
+                return;
+            }
+            const query = textField($('object-search')?.value, 120).toLocaleLowerCase('en-US');
+            const zoneOrder = new Map(Object.keys(ZONE_MAP).map((key, index) => [key, index]));
+            const sortKey = entity => [
+                String(zoneOrder.get(entity.zone) ?? 999).padStart(3, '0'),
+                textField(entity.kind, 80), textField(entity.name, 160), identityField(entity.id),
+            ].join('\u0000');
+            const matches = values => !query || values.some(value => String(value ?? '').toLocaleLowerCase('en-US').includes(query));
+            const entities = Object.values(state.entities || {})
+                .filter(entity => matches([
+                    entity.id, entity.name, entity.kind, entity.zone, entity.status,
+                    entity.truth?.level, entity.truth?.source_adapter,
+                ]))
+                .sort((left, right) => sortKey(left) < sortKey(right) ? -1 : sortKey(left) > sortKey(right) ? 1 : 0);
+            const zones = Object.values(ZONE_MAP).filter(zone => matches([zone.key, zone.label]));
+            const meter = buildMeterPresentation(state);
+            const meterReadings = meter.readings.filter(reading => matches([
+                'meter', 'measurement', reading.id, reading.key, reading.label,
+                reading.status, reading.valueText, reading.detailText,
+            ]));
+            const terminalRun = TERMINAL_RUN_STATUSES.has(state.run_status);
+            const zoneButtons = zones.map(zone => {
+                const activity = Number(state.zone_activity?.[zone.key] || 0);
+                const recent = state.zone_latest_events?.[zone.key]
+                    || [...(state.recent_events || [])].reverse().find(event => event.zone === zone.key);
+                const entityCount = Object.values(state.entities || {}).filter(entity => entity.zone === zone.key).length;
+                const eventCount = Number(state.zone_event_counts?.[zone.key] || 0);
+                const meterSignal = zone.key === 'meter_room'
+                    && (meter.availableCount > 0 || meter.ambiguousCount > 0);
+                const signal = activity ? (terminalRun ? 'UNRESOLVED' : 'OPEN')
+                    : meterSignal ? 'MEASUREMENT SIGNAL AT CURSOR'
+                        : (recent || entityCount ? 'SIGNAL AT CURSOR' : 'NO SIGNAL AT CURSOR');
+                const truth = recent?.truth?.level || (meterSignal ? meter.truthLevel : 'not_observed');
+                const meterSummary = meterSignal
+                    ? ` · ${meter.availableCount} SAFE · ${meter.ambiguousCount} AMBIGUOUS`
+                    : '';
+                return `<button type="button" class="object-button zone-object" data-zone-id="${esc(zone.key)}" data-truth="${esc(truth)}" aria-label="${esc(`${zone.label}; chamber; ${signal}; ${truth}; cursor seq ${state.cursor_seq}`)}">
+                    <span class="object-kind">CHAMBER</span><strong>${esc(zone.label)}</strong>
+                    <small>${esc(signal)} · ${esc(truth.toUpperCase())} · ${eventCount} EVENTS · ${entityCount} OBJECT${entityCount === 1 ? '' : 'S'}${esc(meterSummary)}</small>
+                </button>`;
+            }).join('');
+            const entityButtons = entities.map(entity => {
+                const truth = entity.truth?.level || 'unknown';
+                const confidence = entity.truth?.confidence == null ? 'UNKNOWN' : `${Math.round(entity.truth.confidence * 100)}%`;
+                const eventCount = Number(entity.event_count || 0);
+                const name = textField(entity.name, 160) || identityField(entity.id) || 'UNKNOWN ENTITY';
+                const label = `${name}; ${entity.kind}; ${entity.status}; ${truth} ${confidence}; ${eventCount} event${eventCount === 1 ? '' : 's'}; cursor seq ${state.cursor_seq}; zone ${entity.zone}`;
+                return `<button type="button" class="object-button entity-object" data-entity-id="${esc(entity.id)}" data-event-id="${esc(entity.last_event_id)}" data-truth="${esc(truth)}" aria-label="${esc(label)}">
+                    <span class="object-kind">${esc(entity.kind)}</span><strong>${esc(name)}</strong>
+                    <small>${esc(String(entity.status).toUpperCase())} · ${esc(truth.toUpperCase())} ${esc(confidence)} · ${eventCount} EVT · ${esc(entity.zone)}</small>
+                </button>`;
+            }).join('');
+            const meterButtons = meterReadings.map(reading => {
+                const evidenceLevels = Object.keys(reading.source?.evidence_counts || {});
+                const truth = evidenceLevels.length === 1 ? evidenceLevels[0] : 'mixed';
+                const route = reading.eventId
+                    ? `inspect evidence event ${reading.eventId}`
+                    : 'no aggregate evidence event observed';
+                const label = `${reading.label}; ${reading.status.replaceAll('_', ' ')}; ${reading.valueText}; ${reading.detailText}; ${route}; cursor seq ${state.cursor_seq}`;
+                return `<button type="button" class="object-button meter-object" data-meter-id="${esc(reading.id)}" data-event-id="${esc(reading.eventId)}" data-meter-status="${esc(reading.status)}" data-truth="${esc(truth)}" aria-label="${esc(label)}">
+                    <span class="object-kind">MEASURE</span><strong>${esc(reading.label)} · ${esc(reading.valueText)}</strong>
+                    <small>${esc(reading.status.toUpperCase().replaceAll('_', ' '))} · ${esc(reading.detailText)}</small>
+                </button>`;
+            }).join('');
+            $('objects-heading').textContent = `${entities.length} OBJECTS · ${zones.length} CHAMBERS · ${meter.readings.length} METER READOUTS · SEQ ${state.cursor_seq}`;
+            container.dataset.cursorSeq = state.cursor_seq;
+            container.innerHTML = `
+                <section class="object-group meter-object-group"><header><span>SAFE MEASUREMENTS</span><b>${meter.availableCount} AVAILABLE · ${meter.ambiguousCount} AMBIGUOUS</b></header><div class="object-list">${meterButtons || '<div class="empty-detail">No meter readout matches</div>'}</div></section>
+                <section class="object-group"><header><span>CHAMBERS</span><b>${zones.length}</b></header><div class="object-list">${zoneButtons || '<div class="empty-detail">No chamber matches</div>'}</div></section>
+                <section class="object-group"><header><span>ENTITIES</span><b>${entities.length}</b></header><div class="object-list">${entityButtons || '<div class="empty-detail">No entity matches</div>'}</div></section>`;
+            container.querySelectorAll('[data-zone-id]').forEach(button => button.addEventListener('click', () => this.selectZone(button.dataset.zoneId)));
+            container.querySelectorAll('[data-entity-id]').forEach(button => button.addEventListener('click', () => this.selectEvent(button.dataset.eventId)));
+            container.querySelectorAll('[data-meter-id]').forEach(button => button.addEventListener('click', () => {
+                if (button.dataset.eventId) this.selectEvent(button.dataset.eventId);
+                else this.selectZone('meter_room');
+            }));
         }
 
         renderStatePanel() {
@@ -1228,30 +1560,44 @@
             const jobs = Object.values(state.compactions || {});
             const latestJob = jobs[jobs.length - 1];
             const context = state.context || {};
+            const contextObserved = Boolean(context.last_event_id);
+            const contextItemCount = Object.keys(context.items || {}).length;
+            const contextStatus = typeof context.status === 'string' ? context.status : '';
+            const contextStatusObserved = contextObserved
+                && !['', 'idle', 'unknown'].includes(contextStatus.toLowerCase());
+            const contextBudget = contextObserved && context.budget_tokens != null
+                ? `${context.used_tokens != null ? humanNumber(context.used_tokens) : 'NOT OBSERVED'} / ${humanNumber(context.budget_tokens)} tokens`
+                : 'NOT OBSERVED';
             const memory = state.memory || {};
+            const memoryEventCount = Object.entries(state.event_type_counts || {})
+                .filter(([eventType]) => eventType.startsWith('memory.'))
+                .reduce((total, [, count]) => total + Number(count || 0), 0);
+            const memoryObserved = memoryEventCount > 0;
             const blocks = [
                 {
-                    title: 'AGENTS', value: agents.length,
+                    title: 'OBSERVED AGENTS', value: agents.length,
                     rows: agents.length ? agents.slice(0, 8).map(agent => [agent.name, `${agent.zone} · ${agent.status}`, agent.active ? 'good' : '']) : [['none observed', '—', '']],
                 },
                 {
-                    title: 'CONTEXT MANIFEST', value: Object.keys(context.items || {}).length,
+                    title: 'CONTEXT MANIFEST',
+                    value: contextObserved ? `${contextItemCount} OBSERVED ITEMS` : 'NOT OBSERVED',
                     rows: [
-                        ['budget', context.budget_tokens ? `${humanNumber(context.used_tokens)} / ${humanNumber(context.budget_tokens)} tokens` : 'not captured', context.overflow ? 'danger' : ''],
-                        ['policy', context.policy || 'not captured', ''],
-                        ['status', context.status || 'unknown', context.overflow ? 'danger' : 'good'],
+                        ['budget', contextBudget, context.overflow ? 'danger' : ''],
+                        ['policy', contextObserved && context.policy ? context.policy : 'NOT OBSERVED', ''],
+                        ['status', contextStatusObserved ? contextStatus : 'NOT OBSERVED', contextStatusObserved ? (context.overflow ? 'danger' : 'good') : ''],
                     ],
                 },
                 {
-                    title: 'MEMORY OPERATIONS', value: memory.hits + memory.misses + memory.writes,
-                    rows: [
+                    title: 'OBSERVED MEMORY OPERATIONS',
+                    value: memoryObserved ? memoryEventCount : 'NOT OBSERVED',
+                    rows: memoryObserved ? [
                         ['hit / miss', `${memory.hits || 0} / ${memory.misses || 0}`, ''],
                         ['writes / evictions', `${memory.writes || 0} / ${memory.evictions || 0}`, ''],
                         ['conflicts', memory.conflicts || 0, memory.conflicts ? 'warning' : ''],
-                    ],
+                    ] : [['signal', 'NOT OBSERVED', '']],
                 },
                 {
-                    title: 'LATEST COMPACTION', value: jobs.length,
+                    title: 'LATEST COMPACTION', value: latestJob ? jobs.length : 'NOT OBSERVED',
                     rows: latestJob ? [
                         ['status', latestJob.status, latestJob.status === 'failed' ? 'danger' : 'good'],
                         ['tokens', `${humanNumber(latestJob.tokens_before)} → ${humanNumber(latestJob.tokens_after)}`, ''],
@@ -1286,11 +1632,14 @@
             const signalText = row => {
                 const parts = [];
                 if (row.event_count) parts.push(`${row.event_count} EVT`);
-                if (row.measurement_keys?.length) parts.push(`${row.measurement_keys.length} METRIC`);
+                if (row.measurement_keys?.length) parts.push(`${row.measurement_keys.length} SAFE METRIC`);
+                if (row.unaggregated_measurement_keys?.length) {
+                    parts.push(`${row.unaggregated_measurement_keys.length} RAW · UNSAFE`);
+                }
                 return parts.join(' · ') || '0 SEEN';
             };
             const domainRow = row => `
-                <div class="coverage-domain ${esc(row.status)}">
+                <div class="coverage-domain ${esc(row.status)}" data-coverage-domain="${esc(row.domain)}">
                     <i></i><span>${esc(row.domain.toUpperCase())}</span>
                     <b>${esc(row.status === 'observable_not_seen' ? 'CAN OBSERVE · 0 SEEN' : signalText(row))}</b>
                 </div>`;
@@ -1304,10 +1653,17 @@
             const unregistered = visibility.unregistered_adapters?.length
                 ? `<div class="coverage-alert">UNREGISTERED: ${esc(visibility.unregistered_adapters.join(', '))}</div>`
                 : '';
+            const unsafeMeasurements = (visibility.unsafe_measurements || []).map(item => {
+                const count = Number(item.issue_count || 0);
+                const measurementKey = textField(identityField(item.measurement_key), 96) || 'UNKNOWN';
+                const reasons = (item.recent_reasons || []).join(' · ') || 'reason outside recent diagnostic tail';
+                return `<div class="coverage-alert measurement-unsafe"><strong>${esc(measurementKey)} · ${count} ISSUE${count === 1 ? '' : 'S'}</strong><span>RAW SIGNAL · SAFE AGGREGATE UNAVAILABLE · ${esc(reasons)}</span></div>`;
+            }).join('');
             container.className = 'coverage-content';
             container.innerHTML = `
                 <div class="coverage-warning">${esc(visibility.warnings?.[0] || 'Unobserved does not mean absent.')}</div>
                 ${unregistered}
+                ${unsafeMeasurements ? `<section class="coverage-section"><header><span>UNAGGREGATED MEASUREMENTS</span><b>${visibility.unsafe_measurements.length}</b></header>${unsafeMeasurements}</section>` : ''}
                 <section class="coverage-section">
                     <header><span>VISIBLE EVENT / METRIC SIGNALS</span><b>${observed.length}</b></header>
                     <div class="coverage-domains">${observed.map(domainRow).join('') || '<div class="empty-detail">No semantic domain observed</div>'}</div>
@@ -1349,7 +1705,7 @@
                 button.className = event.event_id === this.selectedEventId ? 'selected' : '';
                 button.innerHTML = `
                     <span class="event-seq">#${event.seq}</span>
-                    <span class="event-copy"><strong><i></i>${esc(event.event_type)}</strong><small>${esc(event.summary || event.subject_id || event.zone)}</small></span>`;
+                    <span class="event-copy"><strong><i></i>${esc(event.event_type)} <b class="event-truth">${esc(event.truth.level.toUpperCase())}</b></strong><small>${esc(event.summary || event.subject_id || event.zone)}</small></span>`;
                 button.addEventListener('click', () => this.selectEvent(event.event_id));
                 item.append(button); list.append(item);
             });
@@ -1366,6 +1722,7 @@
                 this.updateTimelineLabel();
                 $('follow-live').classList.remove('active');
                 $('follow-live').disabled = true;
+                $('follow-live').setAttribute('aria-pressed', 'false');
                 $('fork-run').disabled = true;
                 ['jump-start', 'step-back', 'play-toggle', 'step-forward', 'jump-head'].forEach(id => $(id).disabled = !enabled);
                 const ticks = $('timeline-ticks');
@@ -1379,6 +1736,7 @@
             this.updateTimelineLabel(this.cursorSeq);
             $('follow-live').classList.toggle('active', this.followLive);
             $('follow-live').disabled = false;
+            $('follow-live').setAttribute('aria-pressed', String(this.followLive));
             const disabled = this.headSeq < 0;
             $('fork-run').disabled = disabled;
             ['jump-start', 'step-back', 'play-toggle', 'step-forward', 'jump-head'].forEach(id => $(id).disabled = disabled);
@@ -1549,7 +1907,11 @@
 
         switchView(view) {
             this.currentView = view;
-            document.querySelectorAll('.view-button[data-view]').forEach(button => button.classList.toggle('active', button.dataset.view === view));
+            document.querySelectorAll('.view-button[data-view]').forEach(button => {
+                const selected = button.dataset.view === view;
+                button.classList.toggle('active', selected);
+                button.setAttribute('aria-pressed', String(selected));
+            });
             const comparing = view === 'compare';
             $('app-shell').classList.toggle('compare-layout', comparing);
             $('world-stage').classList.toggle('compare-mode', comparing);
@@ -1560,7 +1922,7 @@
                 this.stopPlayback();
                 this.populateCompareRuns();
                 this.openCompareStream();
-                this.scheduleManifestRefresh(0);
+                if (!STATIC_CAPTURE) this.scheduleManifestRefresh(0);
                 this.loadComparison(this.compareProgress);
             } else {
                 this.closeCompareStream();
@@ -1705,11 +2067,60 @@
             const mechanisms = Object.entries(summary.mechanisms || {});
             const metrics = summary.metrics || {};
             const metricKeys = [
-                'events', 'model_calls', 'tool_calls', 'agents', 'context_used_tokens',
+                'events', 'model_requests_dispatched', 'model_response_first_chunk_events',
+                'model_response_chunk_events', 'model_calls_completed', 'model_calls_failed',
+                'tool_calls', 'agents', 'context_used_tokens',
                 'memory_hits', 'memory_writes', 'compactions', 'compaction_tokens_removed',
                 'handoffs', 'checkpoints', 'open_errors', 'input_tokens', 'output_tokens',
                 'cost_usd', 'duration_ms_sum',
             ].filter(key => key in metrics);
+            const metricLabels = {
+                model_requests_dispatched: 'MODEL REQUESTS DISPATCHED',
+                model_response_first_chunk_events: 'FIRST CHUNK MARKERS',
+                model_response_chunk_events: 'MODEL RESPONSE CHUNKS',
+                model_calls_completed: 'COMPLETED MODEL CALLS',
+                model_calls_failed: 'FAILED MODEL CALLS',
+            };
+            const measurementLabels = {
+                'model_call.input_tokens': 'MODEL INPUT TOKENS',
+                'model_call.output_tokens': 'MODEL OUTPUT TOKENS',
+                'model_call.cached_tokens': 'MODEL CACHED TOKENS',
+                'model_call.total_tokens': 'MODEL TOTAL TOKENS',
+                'model_call.duration_ms': 'MODEL CALL SPAN TIME',
+                'model_call.cost_usd': 'MODEL COST',
+                'tool.duration_ms': 'TOOL CALL SPAN TIME',
+                'code_call.duration_ms': 'CODE CALL SPAN TIME',
+                'compaction.duration_ms': 'COMPACTION SPAN TIME',
+                'run.elapsed_ms': 'RUN ELAPSED',
+            };
+            const measurementRows = [
+                ...Object.entries(summary.measurements || {}).map(([key, value]) => ({ key, origin: 'aggregate', value })),
+                ...Object.entries(summary.calculated_measurements || {}).map(([key, value]) => ({ key, origin: 'calculated', value })),
+            ].sort((left, right) => `${left.key}:${left.origin}`.localeCompare(`${right.key}:${right.origin}`, 'en-US'));
+            const measurementValue = row => {
+                const measurement = row.value || {};
+                const label = row.origin === 'calculated' ? 'CALCULATED' : String(measurement.status || 'not_observed').toUpperCase();
+                if (measurement.status !== 'available' || !isSafeMeasurementValue(measurement.value)) {
+                    const reason = (measurement.conflict_reasons || [])[0];
+                    return `${label}${reason ? ` · ${reason}` : ''}`;
+                }
+                const value = formatMeasurementValue({
+                    status: 'available', value: measurement.value, unit: measurement.unit,
+                });
+                const contract = `${String(measurement.scope || 'unknown').replaceAll('_', ' ').toUpperCase()} · ${String(measurement.aggregation || 'unknown').toUpperCase()}`;
+                if (row.origin === 'calculated') {
+                    const calculation = String(measurement.calculation || '')
+                        .replaceAll('_', ' ').replaceAll('.', ' ').toUpperCase();
+                    return `${value} · CALCULATED · ${calculation} · EXPLICIT ${String(measurement.explicit_consistency || 'not_observed').replaceAll('_', ' ').toUpperCase()}`;
+                }
+                if (row.key === 'model_call.cost_usd') {
+                    const estimate = measurement.estimated_values?.length === 1
+                        ? (measurement.estimated_values[0] ? 'ESTIMATED' : 'MEASURED')
+                        : 'ESTIMATE STATUS MIXED';
+                    return `${value} · ${contract} · ${estimate} · BASIS ${(measurement.basis_values || []).join(' + ') || 'NOT OBSERVED'}`;
+                }
+                return `${value} · ${contract}`;
+            };
             const domains = Object.entries(summary.domain_counts || {}).sort((a, b) => b[1] - a[1]).slice(0, 10);
             const domainMax = Math.max(...domains.map(item => item[1]), 1);
             container.style.setProperty('--side-color', color);
@@ -1720,10 +2131,15 @@
                     <p>${esc(textField((summary.frameworks || []).join(', '), 160) || 'framework not declared')} · ${esc(displayId)}</p>
                 </header>
                 <div class="compare-mechanisms">
-                    ${mechanisms.map(([name, enabled]) => `<div class="mechanism-cell ${enabled ? 'on' : ''}"><i></i><span>${esc(name.toUpperCase())}</span></div>`).join('')}
+                    ${mechanisms.map(([name, enabled]) => {
+                        const observedState = enabled === true ? 'true' : enabled === false ? 'false' : 'not_observed';
+                        const label = enabled === true ? 'ON' : enabled === false ? 'OFF' : 'NOT OBSERVED';
+                        return `<div class="mechanism-cell ${enabled === true ? 'on' : ''}" data-mechanism="${esc(name)}" data-enabled="${observedState}"><i></i><span>${esc(name.toUpperCase())}</span><b>${label}</b></div>`;
+                    }).join('')}
                 </div>
                 <dl class="compare-metrics">
-                    ${metricKeys.map(key => `<dt>${esc(key)}</dt><dd>${esc(humanNumber(metrics[key]))}</dd>`).join('')}
+                    ${metricKeys.map(key => `<div data-metric="${esc(key)}"><dt>${esc(metricLabels[key] || key.replaceAll('_', ' ').toUpperCase())}</dt><dd>${esc(metrics[key] == null ? 'NOT OBSERVED' : humanNumber(metrics[key]))}</dd></div>`).join('')}
+                    ${measurementRows.map(row => `<div data-measurement="${esc(row.key)}" data-origin="${esc(row.origin)}"><dt>${esc(measurementLabels[row.key] || row.key.toUpperCase())}${row.origin === 'calculated' ? ' (CALCULATED)' : ''}</dt><dd>${esc(measurementValue(row))}</dd></div>`).join('')}
                 </dl>
                 <section class="domain-chart">
                     <h3>EVENT DOMAIN DENSITY</h3>
@@ -1733,16 +2149,45 @@
 
         renderCompareDelta(result) {
             const metricRows = (result.metric_differences || [])
-                .filter(item => item.delta !== 0)
-                .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+                .filter(item => item.comparison === 'availability' || item.delta !== 0)
+                .sort((a, b) => (b.comparison === 'availability') - (a.comparison === 'availability')
+                    || Math.abs(b.delta || 0) - Math.abs(a.delta || 0))
+                .slice(0, 12);
+            const measurementRows = (result.measurement_differences || [])
+                .filter(item => item.comparison !== 'numeric' || item.delta !== 0)
+                .sort((left, right) => {
+                    const priority = { not_comparable: 0, availability: 1, numeric: 2 };
+                    return (priority[left.comparison] ?? 3) - (priority[right.comparison] ?? 3)
+                        || Math.abs(right.delta || 0) - Math.abs(left.delta || 0)
+                        || String(left.measurement).localeCompare(String(right.measurement), 'en-US');
+                })
                 .slice(0, 12);
             const eventRows = (result.event_type_differences || []).slice(0, 12);
             const deltaText = value => `${value > 0 ? '+' : ''}${humanNumber(value)}`;
+            const metricLabel = key => ({
+                model_response_chunk_events: 'MODEL RESPONSE CHUNKS',
+                model_calls_completed: 'COMPLETED MODEL CALLS',
+                model_calls_failed: 'FAILED MODEL CALLS',
+            }[key] || key.replaceAll('_', ' ').toUpperCase());
+            const metricDifference = item => item.comparison === 'availability'
+                ? `${metricLabel(item.metric)} · OBSERVED ${item.left == null ? 'RIGHT' : 'LEFT'} ONLY`
+                : `${metricLabel(item.metric)} · ${deltaText(item.delta)}`;
+            const measurementDifference = item => {
+                const origin = item.origin === 'calculated' ? ' · CALCULATED' : '';
+                const label = `${String(item.measurement).replaceAll('_', ' ').replaceAll('.', ' ').toUpperCase()}${origin}`;
+                if (item.comparison === 'not_comparable') return `${label} · NOT COMPARABLE · ${item.reason}`;
+                if (item.comparison === 'availability') return `${label} · ${item.reason.toUpperCase()}`;
+                return `${label} · ${deltaText(item.delta)} ${String(item.left_contract?.unit || '').toUpperCase()}`;
+            };
             $('compare-delta').innerHTML = `
                 <header class="compare-delta-head"><strong>Δ DIFFERENCE</strong><span>right minus left · ${(result.progress * 100).toFixed(1)}% progress</span></header>
                 <section class="delta-section">
                     <h3><span>METRICS</span><b>${metricRows.length}</b></h3>
-                    <div class="delta-list">${metricRows.length ? metricRows.map(item => `<div class="delta-row"><span>${esc(item.metric)}</span><b>${esc(deltaText(item.delta))}</b></div>`).join('') : '<div class="delta-empty">No numeric differences</div>'}</div>
+                    <div class="delta-list">${metricRows.length ? metricRows.map(item => `<div class="delta-row ${item.comparison === 'availability' ? 'availability' : ''}"><span>${esc(metricDifference(item))}</span><b>${item.comparison === 'availability' ? '↔' : esc(deltaText(item.delta))}</b></div>`).join('') : '<div class="delta-empty">No observed numeric or availability differences</div>'}</div>
+                </section>
+                <section class="delta-section">
+                    <h3><span>SAFE MEASUREMENTS</span><b>${measurementRows.length}</b></h3>
+                    <div class="delta-list">${measurementRows.length ? measurementRows.map(item => `<div class="delta-row ${item.comparison !== 'numeric' ? 'availability' : ''}" data-measurement="${esc(item.measurement)}" data-origin="${esc(item.origin)}" data-comparison="${esc(item.comparison)}"><span>${esc(measurementDifference(item))}</span><b>${item.comparison === 'not_comparable' ? 'NOT COMPARABLE' : item.comparison === 'availability' ? '↔' : esc(deltaText(item.delta))}</b></div>`).join('') : '<div class="delta-empty">Same available measurement values and contracts</div>'}</div>
                 </section>
                 <section class="delta-section">
                     <h3><span>EVENT TYPES</span><b>${eventRows.length}</b></h3>
@@ -1757,6 +2202,7 @@
                 if (!this.compareRunId) return;
                 if (this.compareProgress >= 1) this.compareProgress = 0;
                 $('play-toggle').textContent = 'Ⅱ';
+                $('play-toggle').setAttribute('aria-pressed', 'true');
                 const tickCompare = () => {
                     if (this.compareProgress >= 1) return this.stopPlayback();
                     this.loadComparison(Math.min(1, this.compareProgress + .025));
@@ -1769,6 +2215,7 @@
             if (this.cursorSeq >= this.headSeq) this.gotoSeq(0);
             this.setFollow(false);
             $('play-toggle').textContent = 'Ⅱ';
+            $('play-toggle').setAttribute('aria-pressed', 'true');
             const tick = async () => {
                 if (this.cursorSeq >= this.headSeq) return this.stopPlayback();
                 await this.gotoSeq(this.cursorSeq + 1);
@@ -1781,6 +2228,7 @@
             if (this.playTimer) clearInterval(this.playTimer);
             this.playTimer = null;
             $('play-toggle').textContent = '▶';
+            $('play-toggle').setAttribute('aria-pressed', 'false');
         }
 
         setFollow(value, render = true) {
@@ -1975,8 +2423,13 @@
         }
 
         setConnection(state, label) {
-            $('connection-state').dataset.state = state;
+            const element = $('connection-state');
+            const changed = element.dataset.state !== state || $('connection-label').textContent !== label;
+            element.dataset.state = state;
             $('connection-label').textContent = label;
+            if (changed && ['error', 'offline'].includes(state)) {
+                this.announceStatus(`Ledger transport ${label.toLocaleLowerCase('en-US')}.`);
+            }
         }
 
         showEmpty(value, message = null, title = null) {
@@ -2024,7 +2477,15 @@
             const tooltip = $('canvas-tooltip');
             tooltip.innerHTML = `<b style="color:#ff5c57">ERROR</b><span>${esc(message)}</span>`;
             tooltip.style.left = '16px'; tooltip.style.top = '70px'; tooltip.hidden = false;
+            this.announceStatus(`Error: ${textField(message, 170) || 'unknown error'}`);
             setTimeout(() => { if (!this.canvas.hovered) tooltip.hidden = true; }, 4500);
+        }
+
+        announceStatus(message) {
+            const safe = textField(message, 220);
+            if (!safe || safe === this.lastAnnouncement) return;
+            this.lastAnnouncement = safe;
+            $('anthill-live-status').textContent = safe;
         }
 
         async fetchJson(url, options = {}) {

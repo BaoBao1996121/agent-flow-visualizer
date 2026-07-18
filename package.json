@@ -6,7 +6,8 @@
   "scripts": {
     "test:browser": "playwright test",
     "test:browser:headed": "playwright test --headed",
-    "test:browser:update": "playwright test --update-snapshots"
+    "test:browser:update": "playwright test --update-snapshots",
+    "test:visual": "playwright test --config=playwright.visual.config.mjs"
   },
   "engines": {
     "node": ">=22"

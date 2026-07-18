@@ -8,6 +8,7 @@ from typing import Mapping
 from analyzer.pattern_detector import NodeClassification
 from tracer.tracer import TraceEvent, TraceResult
 
+from ..measurements import MeasurementSemantics, measurement_semantics_extension
 from ..schema import (
     AgentRuntimeEvent,
     ContentCapture,
@@ -189,6 +190,20 @@ def trace_result_to_events(
         measurements = {}
         if raw.duration_ms is not None:
             measurements["duration_ms"] = raw.duration_ms
+        extensions = {}
+        if "duration_ms" in measurements:
+            extensions = measurement_semantics_extension(
+                {
+                    "duration_ms": MeasurementSemantics(
+                        aggregate_key="code_call.duration_ms",
+                        unit="ms",
+                        scope="code_call",
+                        aggregation="sum",
+                        temporality="cumulative",
+                        owner_id=span_id or event_id,
+                    )
+                }
+            )
 
         observed = AgentRuntimeEvent(
             event_id=event_id,
@@ -216,6 +231,7 @@ def trace_result_to_events(
             summary=f"{raw.event_type.title()} {raw.qualified_name}",
             payload=payload,
             measurements=measurements,
+            extensions=extensions,
             privacy=privacy,
         )
         normalized.append(observed)
@@ -264,7 +280,19 @@ def trace_result_to_events(
                 ),
                 **({"error": result.error} if capture_content and result.error else {}),
             },
-            measurements={"duration_ms": result.total_duration_ms},
+            measurements={"run_duration_ms": result.total_duration_ms},
+            extensions=measurement_semantics_extension(
+                {
+                    "run_duration_ms": MeasurementSemantics(
+                        aggregate_key="run.elapsed_ms",
+                        unit="ms",
+                        scope="run",
+                        aggregation="latest",
+                        temporality="cumulative",
+                        owner_id=run_id,
+                    )
+                }
+            ),
             privacy=privacy,
         )
     )
@@ -328,6 +356,6 @@ def _semantic_companion(
         ),
         summary=f"Inferred {semantic_type} from {raw.qualified_name}",
         payload=payload,
-        measurements=observed.measurements,
+        measurements={},
         privacy=privacy,
     )

@@ -9,10 +9,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .projections.world import WorldState
+from .projections.world import MeasurementAggregate, WorldState
 
 
-COVERAGE_CONTRACT_VERSION = "0.2.0"
+COVERAGE_CONTRACT_VERSION = "0.3.0"
 
 DOMAIN_ORDER = (
     "run",
@@ -190,7 +190,10 @@ def build_instrumentation_visibility(state: WorldState) -> dict:
         if domain == "extension":
             extension_families.add(prefix)
 
-    measurement_keys = _measurement_domains(state.totals)
+    measurement_keys = _measurement_aggregate_domains(state.measurement_aggregates)
+    unaggregated_measurement_keys = _raw_measurement_domains(
+        state.unclassified_measurement_counts
+    )
     observable: set[str] = set()
     adapter_rows = []
     unregistered = []
@@ -229,9 +232,10 @@ def build_instrumentation_visibility(state: WorldState) -> dict:
     for domain in DOMAIN_ORDER:
         count = event_counts.get(domain, 0)
         keys = measurement_keys.get(domain, [])
+        unsafe_keys = unaggregated_measurement_keys.get(domain, [])
         status = (
             "observed"
-            if count or keys
+            if count or keys or unsafe_keys
             else "observable_not_seen"
             if domain in observable
             else "outside_adapter_contract"
@@ -242,6 +246,26 @@ def build_instrumentation_visibility(state: WorldState) -> dict:
                 "status": status,
                 "event_count": count,
                 "measurement_keys": keys,
+                "unaggregated_measurement_keys": unsafe_keys,
+            }
+        )
+
+    unsafe_measurements = []
+    for measurement_key, issue_count in sorted(
+        state.unclassified_measurement_counts.items()
+    ):
+        recent_reasons = sorted(
+            {
+                issue.reason
+                for issue in state.measurement_issues
+                if issue.measurement_key == measurement_key
+            }
+        )
+        unsafe_measurements.append(
+            {
+                "measurement_key": measurement_key,
+                "issue_count": issue_count,
+                "recent_reasons": recent_reasons,
             }
         )
 
@@ -257,6 +281,7 @@ def build_instrumentation_visibility(state: WorldState) -> dict:
         "blind_spots": sorted(set(blind_spots)),
         "unmapped_event_types": list(state.unknown_event_types),
         "extension_families": sorted(extension_families),
+        "unsafe_measurements": unsafe_measurements,
         "warnings": [
             "An observable domain with no event does not prove the operation did not happen.",
             "An observed domain proves event visibility, not complete instrumentation of that domain.",
@@ -265,7 +290,39 @@ def build_instrumentation_visibility(state: WorldState) -> dict:
     }
 
 
-def _measurement_domains(totals: dict[str, int | float]) -> dict[str, list[str]]:
+def _measurement_aggregate_domains(
+    aggregates: dict[str, MeasurementAggregate],
+) -> dict[str, list[str]]:
+    scope_domains = {
+        "model_call": "model",
+        "tool_call": "tool",
+        "code_call": "code",
+        "compaction": "compaction",
+        "run": "run",
+    }
+    usage_keys = {
+        "model_call.input_tokens",
+        "model_call.output_tokens",
+        "model_call.cached_tokens",
+        "model_call.total_tokens",
+    }
+    result: dict[str, list[str]] = {}
+    for key, aggregate in sorted(aggregates.items()):
+        if aggregate.status != "available":
+            continue
+        domains = []
+        if key in usage_keys:
+            domains.append("usage")
+        elif key == "model_call.cost_usd":
+            domains.append("cost")
+        if scope_domain := scope_domains.get(aggregate.scope):
+            domains.append(scope_domain)
+        for domain in domains:
+            result.setdefault(domain, []).append(key)
+    return result
+
+
+def _raw_measurement_domains(totals: dict[str, int | float]) -> dict[str, list[str]]:
     result: dict[str, list[str]] = {}
     for key in sorted(totals):
         if key in {"input_tokens", "output_tokens", "cached_tokens", "total_tokens"}:

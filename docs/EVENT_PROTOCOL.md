@@ -46,7 +46,7 @@ value is anonymous, secret, or safe for URL logs.
 | `evidence` | Truth level, confidence, refs, derivation, explanation |
 | `summary` | Short safe description, not private reasoning |
 | `payload` | Event-specific metadata/content under privacy policy |
-| `measurements` | Numeric/string telemetry with explicit unit in the key |
+| `measurements` | Source-preserved scalar telemetry; aggregation requires the versioned semantics extension below |
 | `artifacts` | URI/hash/type/size references for large content |
 | `privacy` | Capture mode, sensitive-data flag, redacted fields, retention |
 | `extensions` | Namespaced adapter/project fields |
@@ -156,14 +156,57 @@ The summary text itself can remain encrypted or absent. The lineage and hashes s
 
 ## Measurement conventions
 
-Use unit-bearing names:
+`measurements` preserves source scalar fields, but a numeric field is not safe to
+sum merely because its key contains `tokens`, `duration`, or `cost`. Adapters can
+report the same cumulative usage at several lifecycle events, and parent/child
+span durations overlap. The reducer therefore promotes a value only when the
+same event carries `extensions["anthill.measurements"]` schema `1.0.0`.
 
-- `duration_ms`, `latency_ms`;
-- `input_tokens`, `output_tokens`, `cached_tokens`;
-- `cost_usd` with `pricing_version` and `estimated` in payload/extensions;
-- `size_bytes`, `candidate_count`.
+Each item binds one raw measurement key to:
 
-Raw usage is an observed fact. Currency cost is calculated data and must identify the pricing version.
+| Field | Contract |
+|---|---|
+| `aggregate_key` | One key in the closed registry published by `GET /api/anthill/schema` |
+| `unit` / `scope` / `aggregation` | Must exactly match that registry entry |
+| `temporality` | `delta`, `cumulative`, or `unknown` |
+| `owner_id` | Stable identity of the model call, tool call, code call, compaction, or run that owns the sample |
+| `basis` / `estimated` | Required together for `model_call.cost_usd`; the basis identifies the pricing source/version |
+
+`owner_id` and pricing `basis` reject surrounding whitespace plus Unicode
+control/format characters. These values are rendered as operational identity and
+cost evidence, so accepting bidi or control-text spoofing would weaken the truth
+contract even when HTML escaping is correct.
+
+The initial registry contains model input/output/cached/explicit-total tokens,
+model/tool/code/compaction scoped duration, model cost, and run elapsed time.
+There is deliberately no generic `duration_ms_sum`: nested model, tool, and run
+time cannot be added into one latency number without double-counting.
+
+Arithmetic is owner-aware:
+
+- `delta` samples add within their owner;
+- `cumulative` samples replace the prior contribution and a decrease makes the
+  aggregate ambiguous;
+- one `unknown` sample may represent its owner, but a repeated sample for the
+  same owner is ambiguous rather than guessed as delta or cumulative;
+- a temporality change for one owner is a conflict;
+- `latest` is available only with one owner; multiple owners are ambiguous
+  rather than silently choosing the last arrival;
+- non-finite, negative, non-numeric, missing-semantics, and invalid-semantics
+  samples stay visible as unaggregated diagnostics and never enter Meter or
+  numeric Compare. Arithmetic that overflows after otherwise finite inputs is
+  also persisted as an ambiguous conflict.
+
+`model_call.total_tokens` from a source remains an explicit aggregate. The world
+also exposes a separate `calculated_measurements["model_call.total_tokens"]`
+view when safe input and output aggregates are both available. It is labelled
+`aggregation="derived"`; a mismatch with an explicit total makes that calculated
+view ambiguous instead of overwriting either value.
+
+Cost comparison additionally requires one complete basis and one consistent
+`estimated` value on each side, with both sides equal. Otherwise Compare returns
+`NOT COMPARABLE` and a reason. This extension adds no top-level event field, so
+legacy event hash canonicalization remains unchanged.
 
 ## Privacy
 
@@ -180,5 +223,5 @@ Never place credentials in summary, identifiers, or source URIs. A field-level r
 Protocol `0.2.0` adds stricter validation for newly written run identities while
 retaining the explicit storage-only `0.1.0` read path above. Adapters declare
 their own version. Projectors declare `reducer_version`; the current world
-reducer is `0.3.0`. Snapshots are isolated by reducer version, and reprojection
+reducer is `0.4.0`. Snapshots are isolated by reducer version, and reprojection
 after an upgrade must never rewrite the original ledger.

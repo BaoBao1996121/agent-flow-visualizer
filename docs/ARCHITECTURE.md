@@ -125,7 +125,7 @@ The production backend target is PostgreSQL:
 
 ### 4. Projectors
 
-`reduce_world(state, event) -> new_state` is deterministic and does not mutate its input. A projection records `reducer_version`, cursor sequence, and cursor event. The current reducer is `0.3.0`; it shares one explicit run-lifecycle fold with manifest reconstruction, while snapshots produced by earlier reducer versions remain isolated caches.
+`reduce_world(state, event) -> new_state` is deterministic and does not mutate its input. A projection records `reducer_version`, cursor sequence, and cursor event. The current reducer is `0.4.0`; it shares one explicit run-lifecycle fold with manifest reconstruction, while snapshots produced by earlier reducer versions remain isolated caches.
 
 Run-selector identity is a ledger-HEAD snapshot. Its lifecycle status can
 therefore differ intentionally from the world state reconstructed at a
@@ -140,13 +140,43 @@ The same ledger therefore supports:
 - comparison under the same reducer;
 - state-hash verification.
 
-The local implementation now stores immutable world snapshots keyed by run, reducer version, and sequence. A snapshot includes the reducer state hash and the hash of its anchor ledger event. If either check fails, projection falls back to the ledger and reports a warning. Snapshots are caches, never replacement facts.
+The local implementation now stores immutable world snapshots keyed by run, reducer version, and sequence. A snapshot includes the reducer state hash and the hash of its anchor ledger event. Its envelope version must match both the embedded world state and the version directory requested by the projector. If any version, anchor, or state-hash check fails, projection falls back to the ledger and reports a warning. Snapshots are caches, never replacement facts.
 
 The local branch implementation materializes a parent prefix into a new ledger, remaps event/causal identity, adds `derived_from` links to the parent, records the parent state hash, and appends `run.forked`. It never executes a model or tool. Target creation uses an atomic empty-ledger precondition and complete batch append under the per-run lock. If a competing direct write creates the target first, Fork returns `409`; if Fork wins, its complete materialized prefix precedes any later append. A future database backend should represent branches as parent snapshot + tail DAG to avoid copying long prefixes.
 
 Pixel rendering consumes world state. It cannot update authoritative state itself.
 
 Instrumentation visibility is a projection, not a score. It combines the event families recorded at the current cursor with versioned built-in adapter capability contracts. The state name `observed` means “an event or metric signal is present in the ledger,” not that every event has `evidence.level=observed`; the truth mix remains a separate dimension. The other states are `observable_not_seen` and `outside_adapter_contract`; “not seen” is never treated as proof that an operation did not occur. Third-party adapters without a registered contract are shown as unregistered.
+
+### Safe measurement projection
+
+Raw scalar measurements remain ledger evidence even when their arithmetic is
+unknown. A versioned `anthill.measurements` extension supplies the closed
+aggregate key, scope, unit, aggregation rule, temporality, and stable owner. The
+reducer keeps per-owner state so repeated cumulative usage is replaced, deltas
+are added, and repeated unknown-temporality samples become ambiguous. A `latest`
+aggregate requires exactly one owner, and any raw or derived non-finite result
+becomes a persistent conflict rather than entering JSON output. Persistent
+unclassified/invalid counters prevent a bounded diagnostic tail or a snapshot
+resume from accidentally turning a partial total into a safe one.
+
+```mermaid
+flowchart LR
+    E[Canonical event + raw scalar] --> S{Valid measurement semantics?}
+    S -- yes --> O[Owner-aware reducer]
+    O --> A[Scoped safe aggregate]
+    A --> M[Meter + evidence route]
+    A --> C[Contract-aware Compare]
+    S -- no --> U[Unaggregated diagnostic]
+    U --> V[Coverage: RAW / UNSAFE]
+```
+
+Explicit total tokens and the separately derived input-plus-output view never
+overwrite one another. Cost comparison requires the same singular pricing basis
+and estimated/measured status. Generic nested duration totals are intentionally
+absent. The owner map is currently embedded in the world snapshot; very long
+untrusted runs still need measurement-key/owner cardinality budgets and a more
+compact production projection.
 
 ### 5. Delivery
 

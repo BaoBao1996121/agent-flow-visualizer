@@ -116,6 +116,56 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  visual-baseline-canary:
+    name: Pinned Chromium visual-baseline candidate
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    timeout-minutes: 20
+    container:
+      image: "mcr.microsoft.com/playwright:v1.61.1-noble-amd64@sha256:cf0daee9b994042e011bc29f20cdff1a9f682a039b43fcd738f7d8a9d3bcd9d6"
+      options: --ipc=host --init
+    env:
+      CI: "true"
+      ANTHILL_UPDATE_VISUALS: "1"
+      ANTHILL_VISUAL_IMAGE: "mcr.microsoft.com/playwright:v1.61.1-noble-amd64@sha256:cf0daee9b994042e011bc29f20cdff1a9f682a039b43fcd738f7d8a9d3bcd9d6"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.13"
+          cache: pip
+          cache-dependency-path: requirements-visual.txt
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install runtime dependencies
+        run: python -m pip install -r requirements-visual.txt
+      - name: Install exact frontend test dependencies
+        run: npm ci
+      - name: Generate visual-baseline candidates
+        run: npm run test:visual
+      - name: Verify all visual candidates exist
+        run: |
+          test -s tests/visual/goldens/chromium-noble/overview.png
+          test -s tests/visual/goldens/chromium-noble/evidence.png
+          test -s tests/visual/goldens/chromium-noble/coverage.png
+          test -s tests/visual/goldens/chromium-noble/compare.png
+      - name: Upload visual candidates and diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-baseline-candidate
+          path: |
+            tests/visual/goldens/
+            output/playwright/visual-report/
+            output/playwright/visual-results/
+          if-no-files-found: warn
+          retention-days: 14
+
   container:
     runs-on: ubuntu-latest
     timeout-minutes: 15

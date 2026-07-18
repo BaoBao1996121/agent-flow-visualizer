@@ -84,7 +84,7 @@ Long traces must collapse by semantic stage before they become graph hairballs.
 The current implementation proves the event kernel, Python,
 OTLP/OpenInference, AG-UI JSON/NDJSON, and LangGraph StreamPart v2 offline
 paths; event schema `0.2.0`; a single-process local ledger; snapshot-accelerated
-deterministic projection under reducer `0.3.0`; time travel, comparison,
+deterministic projection under reducer `0.4.0`; time travel, comparison,
 explicit causal slicing, cursor-specific instrumentation visibility, and the
 first pixel observatory. LangGraph `1.1.0` and `1.2.9` pass isolated real-runtime
 probes.
@@ -95,12 +95,20 @@ projection. Cursor-specific world and Compare states remain the authority for
 availability around damaged ledgers; it reports `not_checked` and is not an
 integrity authority. Full per-run integrity remains an explicit operation.
 
-The current local evidence is 326 passing Python tests (plus one optional skip),
-29 passing Chromium contracts, and 58/58 repeated browser executions. The first
-hosted run passed its 13-test browser, container, frontend, and Python 3.11 jobs,
-but failed Python 3.12/3.13 and both LangGraph jobs on one shared deep-NDJSON
-assertion; it predates the current fix and every schema/reducer/browser claim in
-this section. Exact dated evidence lives in [the verification record](VERIFICATION.md).
+The current local evidence is 384 passing Python tests in 19.87 seconds (plus
+one optional skip), 49/49 Chromium contracts in 2.0 minutes, and 98/98 browser
+executions in 4.4 minutes under two repeats. Full-repository Ruff, six
+JavaScript syntax checks, and patch hygiene pass. Visual fixture/contract tests
+pass 7/7, and all four scenes reach their screenshot boundary with
+`--ignore-snapshots`; that is functional scene evidence, not golden comparison.
+
+The newest published all-green evidence remains historical GitHub Actions run
+29629916726 at commit `c39c70a`, whose eight jobs predate reducer `0.4.0`, the
+49-contract suite, and the visual candidate job. Hosted verification for the
+current working branch is pending. The earlier failed run remains recorded for
+provenance in [the verification record](VERIFICATION.md), as do the exact dated
+commands, timings, and limitations. No reviewed pinned-Linux goldens are yet
+committed.
 
 It does not yet prove:
 

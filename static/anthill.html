@@ -42,9 +42,9 @@
             </div>
 
             <nav class="view-switch" aria-label="视图">
-                <button class="view-button active" data-view="world" type="button">WORLD</button>
-                <button class="view-button" data-view="causal" type="button">CAUSAL</button>
-                <button class="view-button" data-view="compare" type="button">COMPARE</button>
+                <button class="view-button active" data-view="world" type="button" aria-pressed="true">WORLD</button>
+                <button class="view-button" data-view="causal" type="button" aria-pressed="false">CAUSAL</button>
+                <button class="view-button" data-view="compare" type="button" aria-pressed="false">COMPARE</button>
                 <a class="view-button" href="/graph">SOURCE X-RAY</a>
             </nav>
 
@@ -96,9 +96,9 @@
                     <div class="meter-track"><b id="context-fill"></b><i id="context-limit"></i></div>
                 </div>
                 <div class="memory-grid">
-                    <div><span>WORKING</span><strong id="memory-working">NOT OBSERVED</strong></div>
-                    <div><span>EPISODIC</span><strong id="memory-episodic">NOT OBSERVED</strong></div>
-                    <div><span>SEMANTIC</span><strong id="memory-semantic">NOT OBSERVED</strong></div>
+                    <button data-memory-layer="working" type="button" disabled><span>WORKING</span><strong id="memory-working">NOT OBSERVED</strong><small>NO LAYER SIGNAL</small></button>
+                    <button data-memory-layer="episodic" type="button" disabled><span>EPISODIC</span><strong id="memory-episodic">NOT OBSERVED</strong><small>NO LAYER SIGNAL</small></button>
+                    <button data-memory-layer="semantic" type="button" disabled><span>SEMANTIC</span><strong id="memory-semantic">NOT OBSERVED</strong><small>NO LAYER SIGNAL</small></button>
                 </div>
                 <div class="compact-readout">
                     <span>COMPACTION</span>
@@ -170,7 +170,7 @@
                 <div class="transport">
                     <button id="jump-start" type="button" title="回到开头">|◀</button>
                     <button id="step-back" type="button" title="后退一条">◀</button>
-                    <button id="play-toggle" class="play" type="button" title="播放 / 暂停">▶</button>
+                    <button id="play-toggle" class="play" type="button" title="播放 / 暂停" aria-pressed="false">▶</button>
                     <button id="step-forward" type="button" title="前进一条">▶</button>
                     <button id="jump-head" type="button" title="回到实时头部">▶|</button>
                 </div>
@@ -190,14 +190,22 @@
                         <option value="100">5×</option>
                     </select>
                 </label>
+                <label class="motion-control">MOTION
+                    <select id="motion-preference" aria-label="Motion preference">
+                        <option value="system" selected>SYSTEM</option>
+                        <option value="reduce">REDUCE</option>
+                        <option value="full">FULL</option>
+                    </select>
+                </label>
                 <button class="fork-button" id="fork-run" type="button" title="从当前事件创建不执行副作用的物化分支">⑂ FORK HERE</button>
-                <button class="follow-button active" id="follow-live" type="button"><i></i> FOLLOW HEAD</button>
+                <button class="follow-button active" id="follow-live" type="button" aria-pressed="true"><i></i> FOLLOW HEAD</button>
             </section>
         </main>
 
         <aside class="inspector" aria-label="证据检查器">
             <div class="inspector-tabs" role="tablist" aria-label="证据检查器分区">
                 <button class="active" id="inspector-tab-state" data-tab="state" type="button" role="tab" aria-selected="true" aria-controls="state-panel" tabindex="0">STATE</button>
+                <button id="inspector-tab-objects" data-tab="objects" type="button" role="tab" aria-selected="false" aria-controls="objects-panel" tabindex="-1">OBJECTS</button>
                 <button id="inspector-tab-coverage" data-tab="coverage" type="button" role="tab" aria-selected="false" aria-controls="coverage-panel" tabindex="-1">COVERAGE</button>
                 <button id="inspector-tab-event" data-tab="event" type="button" role="tab" aria-selected="false" aria-controls="event-panel" tabindex="-1">EVENT</button>
                 <button id="inspector-tab-causal" data-tab="causal" type="button" role="tab" aria-selected="false" aria-controls="causal-panel" tabindex="-1">CAUSAL</button>
@@ -213,6 +221,20 @@
                 <section class="event-feed-section">
                     <div class="section-title"><span>RECENT LEDGER</span><span class="section-code" id="recent-count">0</span></div>
                     <ol class="event-feed" id="event-feed"></ol>
+                </section>
+            </div>
+
+            <div class="inspector-panel" id="objects-panel" role="tabpanel" aria-labelledby="inspector-tab-objects" hidden>
+                <div class="inspector-heading">
+                    <span class="section-kicker">SEMANTIC CANVAS MIRROR</span>
+                    <h2 id="objects-heading">等待 world</h2>
+                    <p id="object-mirror-summary">画布中的房间与对象在这里有等价的键盘和证据路径。</p>
+                </div>
+                <label class="object-search" for="object-search">SEARCH OBJECTS
+                    <input id="object-search" type="search" autocomplete="off" placeholder="name, kind, state, truth, zone" />
+                </label>
+                <section id="object-mirror" class="object-mirror" role="region" aria-label="World objects at cursor">
+                    <div class="empty-detail">选择 run 后显示全部语义对象。</div>
                 </section>
             </div>
 
@@ -240,15 +262,17 @@
                     <h2 id="causal-heading">因果切片</h2>
                     <p>只显示 causation_id 与明确 link；相邻时间不会被冒充成因果。</p>
                 </div>
-                <div class="causal-controls">
-                    <button type="button" data-direction="ancestors" class="active">上游</button>
-                    <button type="button" data-direction="both">上下游</button>
-                    <button type="button" data-direction="descendants">下游</button>
+                <div class="causal-controls" role="group" aria-label="Causal direction">
+                    <button type="button" data-direction="ancestors" class="active" aria-pressed="true">上游</button>
+                    <button type="button" data-direction="both" aria-pressed="false">上下游</button>
+                    <button type="button" data-direction="descendants" aria-pressed="false">下游</button>
                 </div>
                 <div id="causal-graph" class="causal-graph empty-detail">选择一个事件以构建因果切片</div>
             </div>
         </aside>
     </div>
+
+    <div id="anthill-live-status" class="sr-only" role="status" aria-label="Monitoring announcements" aria-live="polite" aria-atomic="true"></div>
 
     <dialog id="truth-dialog" class="truth-dialog">
         <form method="dialog">

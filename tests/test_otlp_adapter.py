@@ -73,6 +73,61 @@ def test_otlp_default_is_metadata_only_and_redacts_content_attributes():
     assert "gen_ai.tool.call.arguments" in tool.privacy.redacted_fields
 
 
+def test_otlp_span_measurements_appear_once_when_the_span_completes():
+    events = otlp_json_to_events(load_fixture(), run_id="measurement-boundary")
+    model_start = next(
+        event for event in events if event.event_type == "model.request.dispatched"
+    )
+    model_complete = next(
+        event for event in events if event.event_type == "model.response.completed"
+    )
+
+    assert model_start.measurements == {}
+    assert model_complete.measurements == {
+        "input_tokens": 128,
+        "output_tokens": 42,
+        "duration_ms": 300,
+    }
+
+    previous_hash = None
+    stamped = []
+    for seq, event in enumerate(events):
+        item = event.with_ingest_metadata(
+            ingest_seq=seq,
+            previous_event_hash=previous_hash,
+        )
+        previous_hash = item.integrity.event_hash
+        stamped.append(item)
+    start_seq = next(
+        event.clock.ingest_seq
+        for event in stamped
+        if event.event_type == "model.request.dispatched"
+    )
+    at_start = project_world(
+        stamped,
+        run_id="measurement-boundary",
+        at_seq=start_seq,
+    )
+    at_head = project_world(stamped, run_id="measurement-boundary")
+
+    assert "input_tokens" not in at_start.totals
+    assert "output_tokens" not in at_start.totals
+    assert at_head.totals["input_tokens"] == 128
+    assert at_head.totals["output_tokens"] == 42
+    assert "model_call.input_tokens" not in at_start.measurement_aggregates
+    assert at_head.measurement_aggregates["model_call.input_tokens"].value == 128
+    assert at_head.measurement_aggregates["model_call.output_tokens"].value == 42
+    assert at_head.measurement_aggregates["model_call.duration_ms"].value == 300
+    assert at_head.measurement_aggregates["tool.duration_ms"].value == 350
+    assert at_head.measurement_aggregates["model_call.duration_ms"].status == "available"
+    assert at_head.measurement_aggregates["model_call.input_tokens"].last_event_id == (
+        model_complete.event_id
+    )
+    assert "duration_ms_sum" not in at_head.totals
+    assert at_head.totals["model_duration_ms_sum"] == 300
+    assert at_head.totals["tool_duration_ms_sum"] == 350
+
+
 def test_otlp_plaintext_capture_requires_explicit_opt_in():
     events = otlp_json_to_events(
         load_fixture(),

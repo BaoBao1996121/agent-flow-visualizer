@@ -115,6 +115,58 @@ test('completed run labels unfinished chamber activity as unresolved', async ({ 
   await expect(page.locator('#chamber-list')).not.toContainText('LIVE');
 });
 
+test('chamber counts use the full cursor history instead of the recent feed window', async ({ page, request }) => {
+  const runId = `phase1-zone-count-${Date.now()}`;
+  await ingestRun(request, runId, [
+    canonicalEvent(runId, 'run-started', 'run.started'),
+    ...Array.from({ length: 90 }, (_, index) => (
+      canonicalEvent(runId, `model-chunk-${index}`, 'model.response.chunk')
+    )),
+    canonicalEvent(runId, 'run-completed', 'run.completed', {
+      payload: { status: 'success' },
+    }),
+  ]);
+
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(runId);
+
+  const chamber = page.locator('#chamber-list .chamber-item').filter({
+    hasText: 'MODEL ENGINE',
+  });
+  await expect(chamber).toContainText('90 EVT');
+});
+
+test('canvas entity cap keeps failed and unknown objects visible', async ({ page, request }) => {
+  const runId = `phase1-entity-priority-${Date.now()}`;
+  await ingestRun(request, runId, [
+    canonicalEvent(runId, 'run-started', 'run.started'),
+    ...Array.from({ length: 30 }, (_, index) => canonicalEvent(
+      runId,
+      `agent-${index}`,
+      'agent.spawned',
+      {
+        agent_id: `agent-${index}`,
+        subject: { kind: 'agent', id: `agent-${index}`, name: `Agent ${index}` },
+      },
+    )),
+    canonicalEvent(runId, 'failed-tool', 'tool.execution.failed', {
+      subject: { kind: 'tool.call', id: 'failed-tool', name: 'Failed tool' },
+    }),
+    canonicalEvent(runId, 'unknown-object', 'mystery.signal', {
+      subject: { kind: 'extension.object', id: 'unknown-object', name: 'Unknown object' },
+    }),
+  ]);
+
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(runId);
+
+  await expect.poll(() => page.evaluate(() => (
+    window.anthillApp.canvas.hitRegions
+      .filter(region => region.type === 'entity')
+      .map(region => region.entity.id)
+  ))).toEqual(expect.arrayContaining(['failed-tool', 'unknown-object']));
+});
+
 test('interrupted run is terminal and leaves no activity ticker running', async ({ page, request }) => {
   await page.addInitScript(() => {
     const requestFrame = window.requestAnimationFrame.bind(window);
@@ -195,6 +247,261 @@ test('missing cognition telemetry is not rendered as zero or idle', async ({ pag
   for (const selector of unobservedValues) {
     await expect(page.locator(selector)).toHaveText('NOT OBSERVED');
   }
+});
+
+test('event feed prints evidence level instead of relying on color alone', async ({ page, request }) => {
+  const runId = `phase1-event-truth-${Date.now()}`;
+  await ingestRun(request, runId, [
+    canonicalEvent(runId, 'run-started', 'run.started'),
+    canonicalEvent(runId, 'inferred-event', 'decision.evaluated', {
+      evidence: { level: 'inferred', confidence: 0.72 },
+    }),
+    canonicalEvent(runId, 'run-completed', 'run.completed', {
+      payload: { status: 'success' },
+    }),
+  ]);
+
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(runId);
+
+  const event = page.locator(`[data-event-id="${runId}:inferred-event"]`);
+  await expect(event).toContainText('INFERRED');
+  await expect(event).toHaveAttribute('data-truth', 'inferred');
+});
+
+test('safe Meter readouts expose scoped values, derivation, pricing basis, and evidence', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__anthillCanvasText = [];
+    const original = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function fillText(text, ...args) {
+      window.__anthillCanvasText.push(String(text));
+      return original.call(this, text, ...args);
+    };
+  });
+  await createDemo(page);
+  await page.getByRole('tab', { name: 'OBJECTS' }).click();
+
+  const expected = {
+    input: ['1,680 TOKENS'],
+    output: ['420 TOKENS'],
+    total: ['2,100 TOKENS', 'CALCULATED'],
+    model: ['780 MS', 'MODEL CALL · SUM'],
+    run: ['11.18 S', 'RUN · LATEST'],
+    cost: ['$0.0062', 'ESTIMATED', 'synthetic-fixture:demo-pricing-v1'],
+  };
+  for (const [id, fragments] of Object.entries(expected)) {
+    const reading = page.locator(`[data-meter-id="${id}"]`);
+    await expect(reading).toHaveAttribute('data-meter-status', 'available');
+    for (const fragment of fragments) await expect(reading).toContainText(fragment);
+  }
+  await expect(page.locator('#chamber-list .chamber-item').filter({ hasText: 'METER ROOM' }))
+    .toContainText('6 SAFE');
+
+  const canvasText = await page.evaluate(() => window.__anthillCanvasText);
+  expect(canvasText).toEqual(expect.arrayContaining([
+    'TOTAL · CALCULATED', 'MODEL SPAN TIME', 'RUN ELAPSED', 'COST · ESTIMATED',
+  ]));
+
+  const cost = page.locator('[data-meter-id="cost"]');
+  const evidenceEventId = await cost.getAttribute('data-event-id');
+  expect(evidenceEventId).toBeTruthy();
+  await cost.focus();
+  await cost.press('Enter');
+  await expect(page.getByRole('tab', { name: 'EVENT' }))
+    .toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#event-detail .detail-grid')).toContainText(evidenceEventId);
+});
+
+test('canvas reports unsafe meter aggregates as not observed', async ({ page, request }) => {
+  await page.addInitScript(() => {
+    window.__anthillCanvasText = [];
+    const original = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function fillText(text, ...args) {
+      window.__anthillCanvasText.push(String(text));
+      return original.call(this, text, ...args);
+    };
+  });
+
+  const runId = `phase1-unsafe-meter-${Date.now()}`;
+  const spoofedMeasurementKey = 'prompt\u202Egnp.\u0007';
+  await ingestRun(request, runId, [
+    canonicalEvent(runId, 'run-started', 'run.started'),
+    canonicalEvent(runId, 'raw-usage', 'model.response.completed', {
+      measurements: { input_tokens: 99, [spoofedMeasurementKey]: 7 },
+    }),
+  ]);
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(runId);
+
+  expect(await page.evaluate(() => window.__anthillCanvasText))
+    .toContain('NOT OBSERVED');
+  await page.getByRole('tab', { name: 'OBJECTS' }).click();
+  const input = page.locator('[data-meter-id="input"]');
+  await expect(input).toHaveAttribute('data-meter-status', 'not_observed');
+  await expect(input).not.toContainText('99');
+
+  await page.getByRole('tab', { name: 'COVERAGE' }).click();
+  const usage = page.locator('[data-coverage-domain="usage"]');
+  await expect(usage).toContainText('1 RAW · UNSAFE');
+  await expect(page.locator('#coverage-content')).toContainText('input_tokens · 1 ISSUE');
+  const unsafeLabels = await page.locator('.measurement-unsafe strong').allTextContents();
+  expect(unsafeLabels).toContain('prompt\\u202egnp.\\u0007 · 1 ISSUE');
+  expect(unsafeLabels.join('')).not.toContain('\u202E');
+  expect(unsafeLabels.join('')).not.toContain('\u0007');
+});
+
+test('repeated unknown-temporality owner is ambiguous instead of summed', async ({ page, request }) => {
+  const runId = `phase1-ambiguous-meter-${Date.now()}`;
+  const semantics = {
+    'anthill.measurements': {
+      schema_version: '1.0.0',
+      items: {
+        input_tokens: {
+          aggregate_key: 'model_call.input_tokens',
+          unit: 'tokens',
+          scope: 'model_call',
+          aggregation: 'sum',
+          temporality: 'unknown',
+          owner_id: 'message-1',
+        },
+      },
+    },
+  };
+  await ingestRun(request, runId, [
+    canonicalEvent(runId, 'usage-1', 'model.response.completed', {
+      measurements: { input_tokens: 10 }, extensions: semantics,
+    }),
+    canonicalEvent(runId, 'usage-2', 'model.response.completed', {
+      measurements: { input_tokens: 12 }, extensions: semantics,
+    }),
+  ]);
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(runId);
+  await page.getByRole('tab', { name: 'OBJECTS' }).click();
+
+  await expect(page.locator('[data-meter-id="input"]'))
+    .toHaveAttribute('data-meter-status', 'ambiguous');
+  await expect(page.locator('[data-meter-id="total"]'))
+    .toHaveAttribute('data-meter-status', 'ambiguous');
+});
+
+test('memory layers expose only recorded operations with an evidence route', async ({ page, request }) => {
+  const runId = `phase1-memory-layer-${Date.now()}`;
+  await ingestRun(request, runId, [
+    canonicalEvent(runId, 'run-started', 'run.started'),
+    canonicalEvent(runId, 'episodic-write', 'memory.written', {
+      subject: { kind: 'memory.item', id: 'lesson-1', name: 'Deploy lesson' },
+      payload: { layer: 'episodic' },
+    }),
+    canonicalEvent(runId, 'run-completed', 'run.completed', {
+      payload: { status: 'success' },
+    }),
+  ]);
+
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(runId);
+
+  await expect(page.locator('#memory-working')).toHaveText('NOT OBSERVED');
+  await expect(page.locator('#memory-episodic')).toHaveText('1 WRITE');
+  await expect(page.locator('#memory-semantic')).toHaveText('NOT OBSERVED');
+  const episodic = page.locator('[data-memory-layer="episodic"]');
+  await expect(episodic).toBeEnabled();
+  await expect(episodic.locator('small')).toHaveText('OBSERVED · #1');
+  await episodic.focus();
+  await episodic.press('Enter');
+  await expect(page.getByRole('tab', { name: 'EVENT' }))
+    .toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#event-heading')).toHaveText('memory.written');
+});
+
+test('State panel keeps unobserved memory operations unknown instead of rendering zeros', async ({ page, request }) => {
+  const runId = `phase1-state-memory-unobserved-${Date.now()}`;
+  await ingestRun(request, runId, [
+    canonicalEvent(runId, 'run-started', 'run.started'),
+    canonicalEvent(runId, 'run-completed', 'run.completed', {
+      payload: { status: 'success' },
+    }),
+  ]);
+
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(runId);
+
+  const memory = page.locator('.state-block').filter({ hasText: 'MEMORY OPERATIONS' });
+  await expect(memory.locator('header b')).toHaveText('NOT OBSERVED');
+  await expect(memory).toContainText('signalNOT OBSERVED');
+  await expect(memory).not.toContainText('0 / 0');
+});
+
+test('State panel does not mark an unobserved context status as healthy', async ({ page, request }) => {
+  const runId = `phase1-state-context-unobserved-${Date.now()}`;
+  await ingestRun(request, runId, [
+    canonicalEvent(runId, 'run-started', 'run.started'),
+    canonicalEvent(runId, 'run-completed', 'run.completed', {
+      payload: { status: 'success' },
+    }),
+  ]);
+
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(runId);
+
+  const context = page.locator('.state-block').filter({ hasText: 'CONTEXT MANIFEST' });
+  const values = context.locator('dd');
+  await expect(context.locator('header b')).toHaveText('NOT OBSERVED');
+  await expect(values.nth(0)).toHaveText('NOT OBSERVED');
+  await expect(values.nth(1)).toHaveText('NOT OBSERVED');
+  const status = values.nth(2);
+  await expect(status).toHaveText('NOT OBSERVED');
+  await expect(status).not.toHaveClass(/good/);
+});
+
+test('State panel preserves an observed zero context budget', async ({ page, request }) => {
+  const runId = `phase1-state-zero-context-budget-${Date.now()}`;
+  await ingestRun(request, runId, [
+    canonicalEvent(runId, 'run-started', 'run.started'),
+    canonicalEvent(runId, 'zero-budget', 'context.budget.updated', {
+      payload: { budget_tokens: 0, used_tokens: 0 },
+    }),
+  ]);
+
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(runId);
+
+  const context = page.locator('.state-block').filter({ hasText: 'CONTEXT MANIFEST' });
+  await expect(context.locator('header b')).toHaveText('0 OBSERVED ITEMS');
+  await expect(context.locator('dd').nth(0)).toHaveText('0 / 0 tokens');
+});
+
+test('State panel keeps an unobserved latest compaction unknown', async ({ page, request }) => {
+  const runId = `phase1-state-compaction-unobserved-${Date.now()}`;
+  await ingestRun(request, runId, [
+    canonicalEvent(runId, 'run-started', 'run.started'),
+    canonicalEvent(runId, 'run-completed', 'run.completed', {
+      payload: { status: 'success' },
+    }),
+  ]);
+
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(runId);
+
+  const compaction = page.locator('.state-block').filter({ hasText: 'LATEST COMPACTION' });
+  await expect(compaction.locator('header b')).toHaveText('NOT OBSERVED');
+});
+
+test('State panel labels the agent count as observed rather than total population', async ({ page, request }) => {
+  const runId = `phase1-state-observed-agents-${Date.now()}`;
+  await ingestRun(request, runId, [
+    canonicalEvent(runId, 'run-started', 'run.started'),
+    canonicalEvent(runId, 'run-completed', 'run.completed', {
+      payload: { status: 'success' },
+    }),
+  ]);
+
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(runId);
+
+  const agents = page.locator('.state-block').filter({ hasText: 'AGENTS' });
+  await expect(agents.locator('header span')).toHaveText('OBSERVED AGENTS');
+  await expect(agents.locator('header b')).toHaveText('0');
 });
 
 test('completed run freezes decorative canvas motion and its ticker', async ({ page }) => {
@@ -295,6 +602,21 @@ test('a stale causal direction response cannot overwrite the latest request', as
   await expect(rootType).toContainText('test.descendants');
   await page.waitForTimeout(350);
   await expect(rootType).toContainText('test.descendants');
+});
+
+test('causal direction exposes its selected state without relying on color', async ({ page }) => {
+  await createDemo(page);
+  await page.locator('.inspector-tabs button[data-tab="causal"]').click();
+
+  const controls = page.getByRole('group', { name: 'Causal direction' });
+  const ancestors = controls.locator('[data-direction="ancestors"]');
+  const descendants = controls.locator('[data-direction="descendants"]');
+  await expect(ancestors).toHaveAttribute('aria-pressed', 'true');
+  await expect(descendants).toHaveAttribute('aria-pressed', 'false');
+
+  await descendants.click();
+  await expect(ancestors).toHaveAttribute('aria-pressed', 'false');
+  await expect(descendants).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('event detail and causality preserve an exact dot-segment event ID', async ({ page, request }) => {
@@ -1020,6 +1342,155 @@ test('active Compare cards recompute at the current progress after events on bot
   await expect(rightEvents).toHaveText('3');
 });
 
+test('Compare mechanisms distinguish ON from NOT OBSERVED without relying on color', async ({ page, request }) => {
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const leftRun = `compare-mechanism-left-${suffix}`;
+  const rightRun = `compare-mechanism-right-${suffix}`;
+  const common = { project_id: 'phase1-project', task_id: 'phase1-task' };
+  await ingestRun(request, leftRun, [
+    canonicalEvent(leftRun, 'start', 'run.started', common),
+    canonicalEvent(leftRun, 'memory-hit', 'memory.hit', {
+      ...common,
+      payload: { layer: 'episodic' },
+    }),
+  ]);
+  await ingestRun(request, rightRun, [
+    canonicalEvent(rightRun, 'start', 'run.started', common),
+  ]);
+
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(leftRun);
+  await page.locator('.view-button[data-view="compare"]').click();
+  await page.locator('#compare-run-select').selectOption(rightRun);
+
+  const leftMemory = page.locator('#compare-left [data-mechanism="memory"]');
+  const rightMemory = page.locator('#compare-right [data-mechanism="memory"]');
+  await expect(leftMemory).toHaveAttribute('data-enabled', 'true');
+  await expect(leftMemory).toContainText('ON');
+  await expect(rightMemory).toHaveAttribute('data-enabled', 'not_observed');
+  await expect(rightMemory.locator('b')).toHaveText('NOT OBSERVED');
+});
+
+test('Compare separates model chunks and completed calls without inventing zero', async ({ page, request }) => {
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const chunksRun = `compare-chunks-${suffix}`;
+  const completedRun = `compare-completed-${suffix}`;
+  const common = { project_id: 'phase1-project', task_id: 'phase1-task' };
+  await ingestRun(request, chunksRun, [
+    canonicalEvent(chunksRun, 'start', 'run.started', common),
+    canonicalEvent(chunksRun, 'chunk-1', 'model.response.chunk', common),
+    canonicalEvent(chunksRun, 'chunk-2', 'model.response.chunk', common),
+    canonicalEvent(chunksRun, 'done', 'run.completed', {
+      ...common,
+      payload: { status: 'success' },
+    }),
+  ]);
+  await ingestRun(request, completedRun, [
+    canonicalEvent(completedRun, 'start', 'run.started', common),
+    canonicalEvent(completedRun, 'dispatch', 'model.request.dispatched', common),
+    canonicalEvent(completedRun, 'response', 'model.response.completed', common),
+    canonicalEvent(completedRun, 'done', 'run.completed', {
+      ...common,
+      payload: { status: 'success' },
+    }),
+  ]);
+
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(chunksRun);
+  await page.locator('.view-button[data-view="compare"]').click();
+  await page.locator('#compare-run-select').selectOption(completedRun);
+
+  const left = page.locator('#compare-left');
+  const right = page.locator('#compare-right');
+  await expect(left.locator('[data-metric="model_response_chunk_events"] dd'))
+    .toHaveText('2');
+  await expect(left.locator('[data-metric="model_calls_completed"] dd'))
+    .toHaveText('NOT OBSERVED');
+  await expect(right.locator('[data-metric="model_response_chunk_events"] dd'))
+    .toHaveText('NOT OBSERVED');
+  await expect(right.locator('[data-metric="model_calls_completed"] dd'))
+    .toHaveText('1');
+  await expect(page.locator('[data-metric="model_calls"]')).toHaveCount(0);
+  await expect(page.locator('#compare-delta')).toContainText(
+    'MODEL RESPONSE CHUNKS · OBSERVED LEFT ONLY',
+  );
+});
+
+test('Compare separates numeric measurement deltas from incompatible pricing', async ({ page, request }) => {
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const leftRun = `compare-measure-left-${suffix}`;
+  const rightRun = `compare-measure-right-${suffix}`;
+  const common = { project_id: 'phase1-project', task_id: 'phase1-task' };
+  const measuredEvent = (runId, input, basis) => canonicalEvent(
+    runId,
+    'response',
+    'model.response.completed',
+    {
+      ...common,
+      measurements: { input_tokens: input, output_tokens: 2, cost_usd: input / 100 },
+      extensions: {
+        'anthill.measurements': {
+          schema_version: '1.0.0',
+          items: {
+            input_tokens: {
+              aggregate_key: 'model_call.input_tokens', unit: 'tokens',
+              scope: 'model_call', aggregation: 'sum', temporality: 'cumulative',
+              owner_id: `${runId}:call`,
+            },
+            output_tokens: {
+              aggregate_key: 'model_call.output_tokens', unit: 'tokens',
+              scope: 'model_call', aggregation: 'sum', temporality: 'cumulative',
+              owner_id: `${runId}:call`,
+            },
+            cost_usd: {
+              aggregate_key: 'model_call.cost_usd', unit: 'usd',
+              scope: 'model_call', aggregation: 'sum', temporality: 'cumulative',
+              owner_id: `${runId}:call`, basis, estimated: true,
+            },
+          },
+        },
+      },
+    },
+  );
+  await ingestRun(request, leftRun, [measuredEvent(leftRun, 10, 'price-book-a')]);
+  await ingestRun(request, rightRun, [measuredEvent(rightRun, 20, 'price-book-b')]);
+
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(leftRun);
+  await page.locator('.view-button[data-view="compare"]').click();
+  await page.locator('#compare-run-select').selectOption(rightRun);
+
+  const leftInput = page.locator(
+    '#compare-left [data-measurement="model_call.input_tokens"][data-origin="aggregate"]',
+  );
+  const rightInput = page.locator(
+    '#compare-right [data-measurement="model_call.input_tokens"][data-origin="aggregate"]',
+  );
+  await expect(leftInput).toContainText('10');
+  await expect(rightInput).toContainText('20');
+  await expect(page.locator(
+    '#compare-left [data-measurement="model_call.total_tokens"][data-origin="calculated"]',
+  )).toContainText('12 TOKENS · CALCULATED');
+  await expect(page.locator(
+    '#compare-right [data-measurement="model_call.total_tokens"][data-origin="calculated"]',
+  )).toContainText('22 TOKENS · CALCULATED');
+  await expect(page.locator(
+    '#compare-left [data-measurement="model_call.cost_usd"]',
+  )).toContainText('ESTIMATED · BASIS price-book-a');
+  await expect(page.locator(
+    '#compare-right [data-measurement="model_call.cost_usd"]',
+  )).toContainText('ESTIMATED · BASIS price-book-b');
+
+  const incompatible = page.locator('#compare-delta [data-comparison="not_comparable"]');
+  await expect(incompatible).toContainText('MODEL CALL COST USD');
+  await expect(incompatible).toContainText('NOT COMPARABLE');
+  await expect(incompatible).toContainText('basis');
+  await expect(page.locator(
+    '#compare-delta [data-measurement="model_call.input_tokens"][data-comparison="numeric"]',
+  ))
+    .toContainText('MODEL CALL INPUT TOKENS');
+});
+
 test('switching the primary run invalidates an older Compare response', async ({ page, request }) => {
   const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const [runA, runB, runC] = ['a', 'b', 'c'].map(side => `compare-switch-${side}-${suffix}`);
@@ -1171,6 +1642,7 @@ test('inspector tabs expose selection and support roving arrow-key navigation', 
 
   const tablist = page.getByRole('tablist', { name: '证据检查器分区' });
   const stateTab = tablist.getByRole('tab', { name: 'STATE' });
+  const objectsTab = tablist.getByRole('tab', { name: 'OBJECTS' });
   const coverageTab = tablist.getByRole('tab', { name: 'COVERAGE' });
 
   await expect(stateTab).toHaveAttribute('aria-selected', 'true');
@@ -1183,6 +1655,11 @@ test('inspector tabs expose selection and support roving arrow-key navigation', 
   await stateTab.focus();
   await stateTab.press('ArrowRight');
 
+  await expect(objectsTab).toBeFocused();
+  await expect(objectsTab).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('tabpanel', { name: 'OBJECTS' })).toBeVisible();
+  await objectsTab.press('ArrowRight');
+
   await expect(coverageTab).toBeFocused();
   await expect(coverageTab).toHaveAttribute('aria-selected', 'true');
   await expect(coverageTab).toHaveAttribute('tabindex', '0');
@@ -1190,4 +1667,162 @@ test('inspector tabs expose selection and support roving arrow-key navigation', 
   await expect(stateTab).toHaveAttribute('tabindex', '-1');
   await expect(page.getByRole('tabpanel', { name: 'COVERAGE' })).toBeVisible();
   await expect(page.locator('#state-panel')).toBeHidden();
+});
+
+test('semantic object mirror covers every world entity and opens evidence by keyboard', async ({ page, request }) => {
+  const runId = await createDemo(page);
+  const response = await request.get(`/api/anthill/runs/${runId}/world`);
+  expect(response.status(), await response.text()).toBe(200);
+  const world = (await response.json()).state;
+  const agent = Object.values(world.entities).find(entity => entity.kind === 'agent');
+  expect(agent).toBeTruthy();
+
+  const objectsTab = page.getByRole('tab', { name: 'OBJECTS' });
+  await objectsTab.click();
+  const mirror = page.getByRole('region', { name: 'World objects at cursor' });
+  const entityButtons = mirror.locator('[data-entity-id]');
+  await expect(entityButtons).toHaveCount(Object.keys(world.entities).length);
+
+  const agentButton = mirror.locator(`[data-entity-id="${agent.id}"]`);
+  await expect(agentButton).toHaveAccessibleName(new RegExp(
+    `${agent.name}.*${agent.kind}.*${agent.status}.*${agent.truth.level}.*${agent.event_count} event.*cursor seq ${world.cursor_seq}`,
+    'i',
+  ));
+  await agentButton.focus();
+  await agentButton.press('Enter');
+
+  const eventResponse = await request.get(
+    `/api/anthill/runs/${runId}/event?event_id=${encodeURIComponent(agent.last_event_id)}`,
+  );
+  expect(eventResponse.status(), await eventResponse.text()).toBe(200);
+  await expect(page.getByRole('tab', { name: 'EVENT' }))
+    .toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#event-heading')).toHaveText((await eventResponse.json()).event_type);
+});
+
+test('important presentation state is semantic and live announcements stay bounded', async ({ page, request }) => {
+  const runId = `phase1-live-status-${Date.now()}`;
+  await ingestRun(request, runId, [
+    canonicalEvent(runId, 'run-started', 'run.started'),
+  ]);
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(runId);
+
+  const live = page.getByRole('status', { name: 'Monitoring announcements' });
+  await expect(live).toHaveAttribute('aria-live', 'polite');
+  await expect(live).toHaveAttribute('aria-atomic', 'true');
+  await expect(page.locator('[data-view="world"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('[data-view="causal"]')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('#play-toggle')).toHaveAttribute('aria-pressed', 'false');
+  const follow = page.locator('#follow-live');
+  await expect(follow).toHaveAttribute('aria-pressed', 'true');
+
+  await follow.click();
+  await expect(follow).toHaveAttribute('aria-pressed', 'false');
+  await expect(live).toHaveText(
+    'Presentation paused at ledger head; ledger capture continues.',
+  );
+  await page.evaluate(() => {
+    window.__anthillLiveMutations = 0;
+    new MutationObserver(() => { window.__anthillLiveMutations += 1; })
+      .observe(document.querySelector('#anthill-live-status'), {
+        childList: true, characterData: true, subtree: true,
+      });
+  });
+
+  await ingestRun(request, runId, Array.from({ length: 20 }, (_, index) => (
+    canonicalEvent(runId, `chunk-${index}`, 'model.response.chunk')
+  )));
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => window.__anthillLiveMutations)).toBe(0);
+});
+
+test('application motion preference overrides the OS without reload and stops ambient work', async ({ page, request }) => {
+  const runId = `phase1-motion-${Date.now()}`;
+  await ingestRun(request, runId, [
+    canonicalEvent(runId, 'run-started', 'run.started'),
+    canonicalEvent(runId, 'agent-started', 'agent.started', {
+      agent_id: 'moving-agent',
+      subject: { kind: 'agent', id: 'moving-agent', name: 'Moving Agent' },
+    }),
+  ]);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.addInitScript(() => {
+    const requestFrame = window.requestAnimationFrame.bind(window);
+    window.__anthillRafCalls = 0;
+    window.requestAnimationFrame = callback => {
+      window.__anthillRafCalls += 1;
+      return requestFrame(callback);
+    };
+  });
+  await page.goto('/anthill');
+  await page.locator('#run-select').selectOption(runId);
+
+  const motion = page.getByLabel('Motion preference');
+  await expect(motion).toHaveValue('system');
+  await expect(page.locator('body')).toHaveAttribute('data-effective-motion', 'reduce');
+  const reducedRaf = await page.evaluate(() => window.__anthillRafCalls);
+  await page.waitForTimeout(250);
+  expect(await page.evaluate(() => window.__anthillRafCalls)).toBe(reducedRaf);
+
+  await motion.selectOption('full');
+  await expect(page.locator('body')).toHaveAttribute('data-effective-motion', 'full');
+  await expect.poll(() => page.evaluate(() => window.__anthillRafCalls))
+    .toBeGreaterThan(reducedRaf);
+
+  await motion.selectOption('reduce');
+  await expect(page.locator('body')).toHaveAttribute('data-effective-motion', 'reduce');
+  await page.waitForTimeout(50);
+  const before = await page.locator('#anthill-canvas').evaluate(canvas => ({
+    frame: canvas.toDataURL(), raf: window.__anthillRafCalls,
+  }));
+  await page.waitForTimeout(350);
+  const after = await page.locator('#anthill-canvas').evaluate(canvas => ({
+    frame: canvas.toDataURL(), raf: window.__anthillRafCalls,
+  }));
+  expect(after).toEqual(before);
+  expect(await page.evaluate(() => document.getAnimations({ subtree: true })
+    .filter(animation => animation.playState === 'running').length)).toBe(0);
+});
+
+test('core observatory labels meet the 12px and WCAG AA contrast floors', async ({ page }) => {
+  await createDemo(page);
+  const coreSelectors = [
+    '.view-button[data-view]', '.status-chip', '.truth-bars > div',
+    '.memory-grid span', '.memory-grid small', '.chamber-item',
+    '.timeline-labels', '.follow-button', '.inspector-tabs button',
+    '.event-copy strong', '.event-copy small', '.object-button strong',
+    '.object-button small',
+  ];
+  for (const selector of coreSelectors) {
+    const sizes = await page.locator(selector).evaluateAll(nodes => (
+      nodes.map(node => Number.parseFloat(getComputedStyle(node).fontSize))
+    ));
+    expect(sizes.length, selector).toBeGreaterThan(0);
+    expect(Math.min(...sizes), selector).toBeGreaterThanOrEqual(12);
+  }
+
+  const contrastSelectors = [
+    '#compact-delta', '.event-copy small', '.state-block dt', '.object-button small',
+  ];
+  for (const selector of contrastSelectors) {
+    const ratios = await page.locator(selector).evaluateAll(nodes => nodes.map(node => {
+      const rgb = value => (value.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+      const luminance = value => {
+        const channels = rgb(value).map(channel => channel / 255)
+          .map(channel => channel <= 0.04045
+            ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+        return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+      };
+      let background = node;
+      while (background && getComputedStyle(background).backgroundColor === 'rgba(0, 0, 0, 0)') {
+        background = background.parentElement;
+      }
+      const foregroundLuminance = luminance(getComputedStyle(node).color);
+      const backgroundLuminance = luminance(getComputedStyle(background || document.body).backgroundColor);
+      return (Math.max(foregroundLuminance, backgroundLuminance) + 0.05)
+        / (Math.min(foregroundLuminance, backgroundLuminance) + 0.05);
+    }));
+    expect(Math.min(...ratios), selector).toBeGreaterThanOrEqual(4.5);
+  }
 });

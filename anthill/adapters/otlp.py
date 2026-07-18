@@ -11,6 +11,10 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Iterator
 
+from ..measurements import (
+    MeasurementSemantics,
+    measurement_semantics_extension,
+)
 from ..schema import (
     AgentRuntimeEvent,
     ContentCapture,
@@ -318,7 +322,7 @@ def _span_to_events(
         ),
         summary=f"{start_type}: {subject.name or subject.id}",
         payload=payload,
-        measurements=_measurements(span, include_duration=False),
+        measurements={},
         **common,
     )
     terminal_payload = dict(payload)
@@ -330,6 +334,18 @@ def _span_to_events(
             message = _text((span.span.get("status") or {}).get("message"))
             if message:
                 terminal_payload["error_message"] = message
+    terminal_measurements = _measurements(span, include_duration=True)
+    terminal_common = {
+        **common,
+        "extensions": {
+            **common["extensions"],
+            **_measurement_semantics(
+                category,
+                f"otel-span:{span.trace_id}:{span.span_id}",
+                terminal_measurements,
+            ),
+        },
+    }
     terminal_event = AgentRuntimeEvent(
         event_id=terminal_event_id,
         event_type=terminal_type,
@@ -340,8 +356,8 @@ def _span_to_events(
         ),
         summary=f"{terminal_type}: {subject.name or subject.id}",
         payload=terminal_payload,
-        measurements=_measurements(span, include_duration=True),
-        **common,
+        measurements=terminal_measurements,
+        **terminal_common,
     )
     return [start_event, terminal_event]
 
@@ -489,6 +505,50 @@ def _measurements(span: OtlpSpan, *, include_duration: bool) -> dict[str, int | 
     if include_duration and span.end_ns >= span.start_ns:
         result["duration_ms"] = (span.end_ns - span.start_ns) / 1_000_000
     return result
+
+
+def _measurement_semantics(
+    category: str,
+    owner_id: str,
+    measurements: dict[str, int | float],
+) -> dict[str, Any]:
+    semantics: dict[str, MeasurementSemantics] = {}
+    if category == "model":
+        token_keys = {
+            "input_tokens": "model_call.input_tokens",
+            "output_tokens": "model_call.output_tokens",
+            "cached_tokens": "model_call.cached_tokens",
+            "total_tokens": "model_call.total_tokens",
+        }
+        for measurement_key, aggregate_key in token_keys.items():
+            if measurement_key in measurements:
+                semantics[measurement_key] = MeasurementSemantics(
+                    aggregate_key=aggregate_key,
+                    unit="tokens",
+                    scope="model_call",
+                    aggregation="sum",
+                    temporality="cumulative",
+                    owner_id=owner_id,
+                )
+        if "duration_ms" in measurements:
+            semantics["duration_ms"] = MeasurementSemantics(
+                aggregate_key="model_call.duration_ms",
+                unit="ms",
+                scope="model_call",
+                aggregation="sum",
+                temporality="cumulative",
+                owner_id=owner_id,
+            )
+    elif category == "tool" and "duration_ms" in measurements:
+        semantics["duration_ms"] = MeasurementSemantics(
+            aggregate_key="tool.duration_ms",
+            unit="ms",
+            scope="tool_call",
+            aggregation="sum",
+            temporality="cumulative",
+            owner_id=owner_id,
+        )
+    return measurement_semantics_extension(semantics) if semantics else {}
 
 
 def _event_source(
