@@ -36,4 +36,5 @@ node_modules/
 playwright-report/
 test-results/
 .playwright-cli/
-output/playwright/
+output/
+debug.log

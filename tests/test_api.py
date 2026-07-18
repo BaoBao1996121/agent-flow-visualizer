@@ -94,10 +94,17 @@ def test_schema_endpoint_publishes_truth_contract(tmp_path):
     assert response.status_code == 200
     body = response.json()
     assert body["schema_version"] == "0.2.0"
-    assert body["reducer_version"] == "0.3.0"
-    assert body["coverage_contract_version"] == "0.2.0"
+    assert body["reducer_version"] == "0.4.0"
+    assert body["coverage_contract_version"] == "0.3.0"
     assert "anthill.ag-ui" in body["adapter_coverage_contracts"]
     assert "anthill.langgraph-v2" in body["adapter_coverage_contracts"]
+    assert body["measurement_contract"]["extension_key"] == "anthill.measurements"
+    assert body["measurement_contract"]["schema_version"] == "1.0.0"
+    assert body["measurement_contract"]["registry"]["model_call.input_tokens"] == {
+        "unit": "tokens",
+        "scope": "model_call",
+        "aggregation": "sum",
+    }
     assert "compaction.completed" in body["event_types"]
     assert set(body["evidence_levels"]) == {
         "observed",
@@ -127,7 +134,20 @@ def test_one_click_demo_is_explicitly_synthetic_and_projects_all_core_chambers(t
     assert world["context"]["used_tokens"] == 3920
     assert world["context"]["overflow"] is False
     assert world["memory"]["hits"] == 1
-    assert world["memory"]["semantic"] == 1
+    assert world["memory"]["layer_operations"]["semantic"]["event_type_counts"] == {
+        "memory.written": 1
+    }
+    assert world["memory"]["layer_population"] == {}
+    aggregates = world["measurement_aggregates"]
+    assert aggregates["model_call.input_tokens"]["value"] == 1680
+    assert aggregates["model_call.output_tokens"]["value"] == 420
+    assert aggregates["model_call.duration_ms"]["value"] == 780
+    assert aggregates["model_call.cost_usd"]["value"] == 0.0062
+    assert aggregates["model_call.cost_usd"]["basis_values"] == [
+        "synthetic-fixture:demo-pricing-v1"
+    ]
+    assert aggregates["model_call.cost_usd"]["estimated_values"] == [True]
+    assert aggregates["run.elapsed_ms"]["value"] == 11180
     assert world["compactions"]["compact.ctx-1"]["tokens_removed"] == 4540
     assert world["event_type_counts"]["handoff.completed"] == 2
     assert world["event_type_counts"]["tool.execution.failed"] == 1

@@ -5,7 +5,7 @@
 
 ![Agent Anthill overview](docs/assets/anthill-overview.png)
 
-> Alpha · application `0.6.0` · event protocol `0.2.0` · reducer `0.3.0` · coverage contract `0.2.0`
+> Alpha · application `0.7.0` · event protocol `0.2.0` · reducer `0.4.0` · measurement contract `1.0.0` · coverage contract `0.3.0`
 > Python runtime tracing plus OTLP/OpenInference, AG-UI, and LangGraph StreamPart v2 offline import work today. Framework-native live bridges remain the next expansion, not a claim hidden behind the UI.
 
 Most agent visualizers answer “what looks busy?” Agent Anthill is built to answer harder questions:
@@ -43,6 +43,7 @@ The pixel world is a semantic projection over an append-only event ledger. It is
 - Cursor-specific instrumentation visibility: domains with recorded signals, registered adapter capabilities, declared blind spots, unregistered adapters, and Unknown Fog types—without a misleading aggregate score.
 - Synchronized two-run comparison with normalized progress, mechanism/metric diffs, and comparability warnings when project/task keys do not match.
 - Context budget, memory layers, compaction lineage, handoff, checkpoint, artifacts, usage, and incident projections.
+- Owner-aware safe measurement aggregation: raw usage remains inspectable, while Meter and numeric Compare accept only versioned scope/unit/temporality/owner semantics; incompatible pricing is `NOT COMPARABLE`.
 - FastAPI ingestion/query/replay/integrity APIs plus live SSE with gap detection and ledger resync.
 - Source X-Ray view for the original static call graph and real Python execution trace.
 - Collision-aware run selectors that show source, ledger-head lifecycle status, UTC ingest date, stable ID, and an explicit synthetic marker; historical world status remains tied to the selected cursor rather than being rewritten by head metadata.
@@ -255,7 +256,7 @@ The renderer migration is governed by the [visual-system decision](docs/VISUAL_S
 
 Near-term, in order:
 
-1. Continue Phase -1 visual-truth cleanup against all eight blocking corrections in [VISUAL_SYSTEM.md](docs/VISUAL_SYSTEM.md). Remaining work includes projection reconciliation, signal prioritization, a non-overloaded color vocabulary, per-field observation provenance, keyboard/DOM mirrors, complete reduced-motion coverage, and reproducible visual baselines.
+1. Measure Phase 0 comprehension, information density, recognition, accessibility, and art-direction candidates; publish the results rather than judging the interface by screenshots alone.
 2. Introduce a renderer-independent `VisualModel` and deterministic animation-intent contract; build the bounded PixiJS 8 vertical slice and same-scene Phaser 4.2.1 benchmark before choosing a migration path.
 3. Add OTLP protobuf/live collection plus AG-UI and LangGraph live stream bridges with bounded ingestion and backpressure.
 4. Add native Claude Code and Codex hook providers with published capability contracts.

@@ -40,6 +40,7 @@ from .coverage import (
     build_instrumentation_visibility,
     describe_adapter_contracts,
 )
+from .measurements import describe_measurement_contract
 from .projection_service import WorldProjectionService
 from .projections import (
     REDUCER_VERSION,
@@ -232,6 +233,7 @@ def create_anthill_router(
             "zone_by_family": ZONE_BY_FAMILY,
             "coverage_contract_version": COVERAGE_CONTRACT_VERSION,
             "adapter_coverage_contracts": describe_adapter_contracts(),
+            "measurement_contract": describe_measurement_contract(),
             "truth_contract": {
                 "observed": "Captured directly while the runtime executed",
                 "declared": "Explicitly present in source or framework configuration",

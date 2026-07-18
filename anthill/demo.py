@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from .adapters._common import stable_id
+from .measurements import MeasurementSemantics, measurement_semantics_extension
 from .schema import (
     AgentRuntimeEvent,
     EntityRef,
@@ -52,6 +53,17 @@ def build_demo_events(run_id: str) -> list[AgentRuntimeEvent]:
     ) -> str:
         index = len(events)
         event_id = stable_id("evt", run_id, "demo", index, event_type)
+        measurement_values = measurements or {}
+        extensions = {"anthill.demo": True}
+        extensions.update(
+            _demo_measurement_semantics(
+                event_type=event_type,
+                subject=subject,
+                event_id=event_id,
+                run_id=run_id,
+                measurements=measurement_values,
+            )
+        )
         fidelity = (
             SourceFidelity.INFERRED
             if level == EvidenceLevel.INFERRED
@@ -96,9 +108,9 @@ def build_demo_events(run_id: str) -> list[AgentRuntimeEvent]:
                 ),
                 summary=_summary(event_type, subject),
                 payload={"synthetic": True, **(payload or {})},
-                measurements=measurements or {},
+                measurements=measurement_values,
                 privacy=Privacy(),
-                extensions={"anthill.demo": True},
+                extensions=extensions,
             )
         )
         return event_id
@@ -444,6 +456,83 @@ def build_demo_events(run_id: str) -> list[AgentRuntimeEvent]:
         agent_id=coordinator.id,
     )
     return events
+
+
+def _demo_measurement_semantics(
+    *,
+    event_type: str,
+    subject: EntityRef | None,
+    event_id: str,
+    run_id: str,
+    measurements: dict,
+) -> dict:
+    semantics: dict[str, MeasurementSemantics] = {}
+    owner_id = subject.id if subject else run_id
+    if event_type.startswith("model."):
+        aggregate_keys = {
+            "input_tokens": "model_call.input_tokens",
+            "output_tokens": "model_call.output_tokens",
+            "cached_tokens": "model_call.cached_tokens",
+            "total_tokens": "model_call.total_tokens",
+        }
+        for key, aggregate_key in aggregate_keys.items():
+            if key in measurements:
+                semantics[key] = MeasurementSemantics(
+                    aggregate_key=aggregate_key,
+                    unit="tokens",
+                    scope="model_call",
+                    aggregation="sum",
+                    temporality="cumulative",
+                    owner_id=owner_id,
+                )
+        if "duration_ms" in measurements:
+            semantics["duration_ms"] = MeasurementSemantics(
+                aggregate_key="model_call.duration_ms",
+                unit="ms",
+                scope="model_call",
+                aggregation="sum",
+                temporality="cumulative",
+                owner_id=owner_id,
+            )
+        if "cost_usd" in measurements:
+            semantics["cost_usd"] = MeasurementSemantics(
+                aggregate_key="model_call.cost_usd",
+                unit="usd",
+                scope="model_call",
+                aggregation="sum",
+                temporality="cumulative",
+                owner_id=owner_id,
+                basis="synthetic-fixture:demo-pricing-v1",
+                estimated=True,
+            )
+    elif event_type.startswith("tool.") and "duration_ms" in measurements:
+        semantics["duration_ms"] = MeasurementSemantics(
+            aggregate_key="tool.duration_ms",
+            unit="ms",
+            scope="tool_call",
+            aggregation="sum",
+            temporality="cumulative",
+            owner_id=f"{owner_id}:{event_id}",
+        )
+    elif event_type.startswith("compaction.") and "duration_ms" in measurements:
+        semantics["duration_ms"] = MeasurementSemantics(
+            aggregate_key="compaction.duration_ms",
+            unit="ms",
+            scope="compaction",
+            aggregation="sum",
+            temporality="cumulative",
+            owner_id=owner_id,
+        )
+    elif event_type == "run.completed" and "run_duration_ms" in measurements:
+        semantics["run_duration_ms"] = MeasurementSemantics(
+            aggregate_key="run.elapsed_ms",
+            unit="ms",
+            scope="run",
+            aggregation="latest",
+            temporality="cumulative",
+            owner_id=run_id,
+        )
+    return measurement_semantics_extension(semantics) if semantics else {}
 
 
 def _summary(event_type: str, subject: EntityRef | None) -> str:

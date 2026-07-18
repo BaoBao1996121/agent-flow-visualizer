@@ -1,0 +1,2563 @@
+{
+  "fixture_version": "1.0.0",
+  "run_id": "visual-rich-v1",
+  "synthetic": true,
+  "source": "anthill.demo.build_demo_events",
+  "license": "Apache-2.0",
+  "events_sha256": "8facca02864c8b925a3f9d80d18c43fa7cd15917f8f8a711d7288119b1aa01a7",
+  "events": [
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_6088dc64f751dc0bd1f577f655df0677",
+      "event_type": "manifest.snapshot",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:00Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 0
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:0"
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "manifest snapshot",
+      "payload": {
+        "synthetic": true,
+        "title": "Checkout incident — full Anthill exhibit",
+        "description": "A no-network fixture that exercises every core chamber",
+        "scenario_version": "0.1.0"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_3ad7ba3ec84f2a85da6557065d30bfce",
+      "event_type": "run.started",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_6088dc64f751dc0bd1f577f655df0677",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:00.260000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 1
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:1"
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "run started",
+      "payload": {
+        "synthetic": true,
+        "title": "Checkout incident",
+        "status": "running"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_300f8e7e85a0d2ecad79e2986022cc51",
+      "event_type": "agent.spawned",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_3ad7ba3ec84f2a85da6557065d30bfce",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:00.520000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 2
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:2"
+      },
+      "subject": {
+        "kind": "agent",
+        "id": "agent.coordinator",
+        "name": "Coordinator",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "agent spawned: Coordinator",
+      "payload": {
+        "synthetic": true
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_ca150d6c6aab3657d99af27515dfb6fc",
+      "event_type": "task.created",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_300f8e7e85a0d2ecad79e2986022cc51",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:00.780000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 3
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:3"
+      },
+      "subject": {
+        "kind": "task",
+        "id": "task.incident-42",
+        "name": "Explain checkout failures",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "task created: Explain checkout failures",
+      "payload": {
+        "synthetic": true
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_637a04af0290edeb5eea9d270476781e",
+      "event_type": "agent.plan.created",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_ca150d6c6aab3657d99af27515dfb6fc",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:01.040000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 4
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:4"
+      },
+      "subject": {
+        "kind": "agent",
+        "id": "agent.coordinator",
+        "name": "Coordinator",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "agent plan created: Coordinator",
+      "payload": {
+        "synthetic": true,
+        "steps": 4,
+        "strategy": "evidence-first"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_b925cb4eb8704069e7947ce0ddfce276",
+      "event_type": "context.assembly.started",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_637a04af0290edeb5eea9d270476781e",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:01.300000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 5
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:5"
+      },
+      "subject": {
+        "kind": "agent",
+        "id": "agent.coordinator",
+        "name": "Coordinator",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "context assembly started: Coordinator",
+      "payload": {
+        "synthetic": true,
+        "budget_tokens": 8192,
+        "used_tokens": 820
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_c1f63e4fc317ac1356b5461c1dac4181",
+      "event_type": "context.item.added",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_b925cb4eb8704069e7947ce0ddfce276",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:01.560000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 6
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:6"
+      },
+      "subject": {
+        "kind": "context.item",
+        "id": "ctx.system",
+        "name": "System policy",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "context item added: System policy",
+      "payload": {
+        "synthetic": true,
+        "source": "system",
+        "token_count": 620
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_a72dcb5712248739865b761dc2159f00",
+      "event_type": "memory.searched",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_c1f63e4fc317ac1356b5461c1dac4181",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:01.820000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 7
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:7"
+      },
+      "subject": {
+        "kind": "agent",
+        "id": "agent.coordinator",
+        "name": "Coordinator",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "memory searched: Coordinator",
+      "payload": {
+        "synthetic": true,
+        "layer": "episodic",
+        "query_hash": "sha256:demo-query"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_01f28016f93126d5f536819f11673810",
+      "event_type": "memory.hit",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_a72dcb5712248739865b761dc2159f00",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:02.080000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 8
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:8"
+      },
+      "subject": {
+        "kind": "memory.item",
+        "id": "mem.deploy-lesson",
+        "name": "Prior deploy lesson",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "memory hit: Prior deploy lesson",
+      "payload": {
+        "synthetic": true,
+        "layer": "episodic",
+        "score": 0.93
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_a296c3291d2088bc0611c810ada6a386",
+      "event_type": "context.item.added",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_01f28016f93126d5f536819f11673810",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:02.340000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 9
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:9"
+      },
+      "subject": {
+        "kind": "memory.item",
+        "id": "mem.deploy-lesson",
+        "name": "Prior deploy lesson",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "context item added: Prior deploy lesson",
+      "payload": {
+        "synthetic": true,
+        "source": "memory",
+        "token_count": 380,
+        "retrieval_score": 0.93
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_56f2a27fe8e84fc0ef9ce39da990d387",
+      "event_type": "context.assembly.completed",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_a296c3291d2088bc0611c810ada6a386",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:02.600000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 10
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:10"
+      },
+      "subject": {
+        "kind": "agent",
+        "id": "agent.coordinator",
+        "name": "Coordinator",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "context assembly completed: Coordinator",
+      "payload": {
+        "synthetic": true,
+        "budget_tokens": 8192,
+        "used_tokens": 1680,
+        "item_count": 4
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_1b633d9abb374ccb5db00a8eb4cd5c58",
+      "event_type": "model.request.prepared",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "model.plan-1",
+      "causation_id": "evt_56f2a27fe8e84fc0ef9ce39da990d387",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:02.860000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 11
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:11"
+      },
+      "subject": {
+        "kind": "model.call",
+        "id": "model.plan-1",
+        "name": "Planner call",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "model request prepared: Planner call",
+      "payload": {
+        "synthetic": true,
+        "model": "demo-reasoner",
+        "purpose": "plan incident investigation"
+      },
+      "measurements": {
+        "input_tokens": 1680
+      },
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true,
+        "anthill.measurements": {
+          "schema_version": "1.0.0",
+          "items": {
+            "input_tokens": {
+              "aggregate_key": "model_call.input_tokens",
+              "unit": "tokens",
+              "scope": "model_call",
+              "aggregation": "sum",
+              "temporality": "cumulative",
+              "owner_id": "model.plan-1"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_57eb56194b5fbb3f129f1c02577587f9",
+      "event_type": "model.request.dispatched",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "model.plan-1",
+      "causation_id": "evt_1b633d9abb374ccb5db00a8eb4cd5c58",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:03.120000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 12
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:12"
+      },
+      "subject": {
+        "kind": "model.call",
+        "id": "model.plan-1",
+        "name": "Planner call",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "model request dispatched: Planner call",
+      "payload": {
+        "synthetic": true,
+        "model": "demo-reasoner"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_f27cc3ca2be23ef69af43b922bb64dec",
+      "event_type": "model.response.first_chunk",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "model.plan-1",
+      "causation_id": "evt_57eb56194b5fbb3f129f1c02577587f9",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:03.380000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 13
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:13"
+      },
+      "subject": {
+        "kind": "model.call",
+        "id": "model.plan-1",
+        "name": "Planner call",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "model response first_chunk: Planner call",
+      "payload": {
+        "synthetic": true
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_21f3fc51bd0e28ff1227039892e7b880",
+      "event_type": "model.response.completed",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "model.plan-1",
+      "causation_id": "evt_f27cc3ca2be23ef69af43b922bb64dec",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:03.640000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 14
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:14"
+      },
+      "subject": {
+        "kind": "model.call",
+        "id": "model.plan-1",
+        "name": "Planner call",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "model response completed: Planner call",
+      "payload": {
+        "synthetic": true,
+        "finish_reason": "tool_call"
+      },
+      "measurements": {
+        "output_tokens": 420,
+        "duration_ms": 780,
+        "cost_usd": 0.0062
+      },
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true,
+        "anthill.measurements": {
+          "schema_version": "1.0.0",
+          "items": {
+            "output_tokens": {
+              "aggregate_key": "model_call.output_tokens",
+              "unit": "tokens",
+              "scope": "model_call",
+              "aggregation": "sum",
+              "temporality": "cumulative",
+              "owner_id": "model.plan-1"
+            },
+            "duration_ms": {
+              "aggregate_key": "model_call.duration_ms",
+              "unit": "ms",
+              "scope": "model_call",
+              "aggregation": "sum",
+              "temporality": "cumulative",
+              "owner_id": "model.plan-1"
+            },
+            "cost_usd": {
+              "aggregate_key": "model_call.cost_usd",
+              "unit": "usd",
+              "scope": "model_call",
+              "aggregation": "sum",
+              "temporality": "cumulative",
+              "owner_id": "model.plan-1",
+              "basis": "synthetic-fixture:demo-pricing-v1",
+              "estimated": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_e3bf007dd06f7c01a22388ad21b3ddf6",
+      "event_type": "decision.started",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_21f3fc51bd0e28ff1227039892e7b880",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:03.900000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 15
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "inferred",
+        "raw_event_ref": "fixture:15"
+      },
+      "subject": {
+        "kind": "agent",
+        "id": "agent.coordinator",
+        "name": "Coordinator",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "inferred",
+        "confidence": 0.86,
+        "refs": [],
+        "derived_from": [
+          "evt_21f3fc51bd0e28ff1227039892e7b880"
+        ],
+        "explanation": "Synthetic semantic inference used to demonstrate truth styling"
+      },
+      "summary": "decision started: Coordinator",
+      "payload": {
+        "synthetic": true,
+        "candidates": [
+          "query_logs",
+          "inspect_code",
+          "ask_human"
+        ]
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_e41e10292e2ea19bb91b6040abdc7af4",
+      "event_type": "decision.evaluated",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_e3bf007dd06f7c01a22388ad21b3ddf6",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:04.160000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 16
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "inferred",
+        "raw_event_ref": "fixture:16"
+      },
+      "subject": {
+        "kind": "agent",
+        "id": "agent.coordinator",
+        "name": "Coordinator",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "inferred",
+        "confidence": 0.86,
+        "refs": [],
+        "derived_from": [
+          "evt_e3bf007dd06f7c01a22388ad21b3ddf6"
+        ],
+        "explanation": "Synthetic semantic inference used to demonstrate truth styling"
+      },
+      "summary": "decision evaluated: Coordinator",
+      "payload": {
+        "synthetic": true,
+        "selected": "query_logs",
+        "reason_summary": "Errors began after deploy"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_5c30171d839cf0de6a0cf079dd70301b",
+      "event_type": "handoff.proposed",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_e41e10292e2ea19bb91b6040abdc7af4",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:04.420000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 17
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:17"
+      },
+      "subject": {
+        "kind": "task",
+        "id": "task.incident-42",
+        "name": "Explain checkout failures",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "handoff proposed: Explain checkout failures",
+      "payload": {
+        "synthetic": true,
+        "from": "agent.coordinator",
+        "to": "agent.researcher",
+        "context_items": 4
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_012f613d538cc906d8d462dc91b25bf0",
+      "event_type": "agent.spawned",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_5c30171d839cf0de6a0cf079dd70301b",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:04.680000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 18
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:18"
+      },
+      "subject": {
+        "kind": "agent",
+        "id": "agent.researcher",
+        "name": "Researcher",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "agent spawned: Researcher",
+      "payload": {
+        "synthetic": true,
+        "parent_agent_id": "agent.coordinator"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_c3c55fc5f59798e48db063a7ab5bc5d4",
+      "event_type": "handoff.completed",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_012f613d538cc906d8d462dc91b25bf0",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:04.940000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 19
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:19"
+      },
+      "subject": {
+        "kind": "task",
+        "id": "task.incident-42",
+        "name": "Explain checkout failures",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "handoff completed: Explain checkout failures",
+      "payload": {
+        "synthetic": true,
+        "from": "agent.coordinator",
+        "to": "agent.researcher",
+        "ownership": "transferred"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_ce5569d341d48b04c301759fb1753056",
+      "event_type": "tool.call.requested",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "tool.logs-1",
+      "causation_id": "evt_c3c55fc5f59798e48db063a7ab5bc5d4",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:05.200000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 20
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:20"
+      },
+      "subject": {
+        "kind": "tool.call",
+        "id": "tool.logs-1",
+        "name": "Query logs",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "tool call requested: Query logs",
+      "payload": {
+        "synthetic": true,
+        "tool": "query_logs",
+        "approval_required": false
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_59d337b05a0cd41904da9a4bfd60f4b7",
+      "event_type": "tool.execution.started",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "tool.logs-1",
+      "causation_id": "evt_ce5569d341d48b04c301759fb1753056",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:05.460000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 21
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:21"
+      },
+      "subject": {
+        "kind": "tool.call",
+        "id": "tool.logs-1",
+        "name": "Query logs",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "tool execution started: Query logs",
+      "payload": {
+        "synthetic": true,
+        "tool": "query_logs"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_4169ca30cd82f5f52890267220fca9d4",
+      "event_type": "retrieval.search.started",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "retrieval.logs-1",
+      "parent_span_id": "tool.logs-1",
+      "causation_id": "evt_59d337b05a0cd41904da9a4bfd60f4b7",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:05.720000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 22
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:22"
+      },
+      "subject": {
+        "kind": "retrieval",
+        "id": "retrieval.logs-1",
+        "name": "Incident evidence",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "retrieval search started: Incident evidence",
+      "payload": {
+        "synthetic": true,
+        "index": "service-logs",
+        "time_range_minutes": 30
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_5f7c5b9dfe2825573e9df4f34062cd93",
+      "event_type": "tool.execution.failed",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "tool.logs-1",
+      "causation_id": "evt_4169ca30cd82f5f52890267220fca9d4",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:05.980000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 23
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:23"
+      },
+      "subject": {
+        "kind": "tool.call",
+        "id": "tool.logs-1",
+        "name": "Query logs",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "tool execution failed: Query logs",
+      "payload": {
+        "synthetic": true,
+        "error_type": "RateLimit",
+        "retryable": true
+      },
+      "measurements": {
+        "duration_ms": 340
+      },
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true,
+        "anthill.measurements": {
+          "schema_version": "1.0.0",
+          "items": {
+            "duration_ms": {
+              "aggregate_key": "tool.duration_ms",
+              "unit": "ms",
+              "scope": "tool_call",
+              "aggregation": "sum",
+              "temporality": "cumulative",
+              "owner_id": "tool.logs-1:evt_5f7c5b9dfe2825573e9df4f34062cd93"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_2a4ad4a33914ee8a0c8070c43aa2db80",
+      "event_type": "error.raised",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "tool.logs-1",
+      "causation_id": "evt_5f7c5b9dfe2825573e9df4f34062cd93",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:06.240000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 24
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:24"
+      },
+      "subject": {
+        "kind": "tool.call",
+        "id": "tool.logs-1",
+        "name": "Query logs",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "error raised: Query logs",
+      "payload": {
+        "synthetic": true,
+        "error_type": "RateLimit",
+        "handled": true
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_b0573d9756c4ab9571162d5919877334",
+      "event_type": "tool.retry.scheduled",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "tool.logs-1",
+      "causation_id": "evt_2a4ad4a33914ee8a0c8070c43aa2db80",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:06.500000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 25
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:25"
+      },
+      "subject": {
+        "kind": "tool.call",
+        "id": "tool.logs-1",
+        "name": "Query logs",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "tool retry scheduled: Query logs",
+      "payload": {
+        "synthetic": true,
+        "attempt": 2,
+        "backoff_ms": 500
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_aeeb4412b8b328292f0f0377494128fb",
+      "event_type": "tool.execution.started",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "tool.logs-1",
+      "causation_id": "evt_b0573d9756c4ab9571162d5919877334",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:06.760000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 26
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:26"
+      },
+      "subject": {
+        "kind": "tool.call",
+        "id": "tool.logs-1",
+        "name": "Query logs",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "tool execution started: Query logs",
+      "payload": {
+        "synthetic": true,
+        "tool": "query_logs",
+        "attempt": 2
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_661761f687eb7b081d66c7472eda583f",
+      "event_type": "retrieval.candidates.returned",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "retrieval.logs-1",
+      "parent_span_id": "tool.logs-1",
+      "causation_id": "evt_aeeb4412b8b328292f0f0377494128fb",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:07.020000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 27
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:27"
+      },
+      "subject": {
+        "kind": "retrieval",
+        "id": "retrieval.logs-1",
+        "name": "Incident evidence",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "retrieval candidates returned: Incident evidence",
+      "payload": {
+        "synthetic": true,
+        "candidate_count": 128
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_0d4cbddc23e539404c069cae1addd4ac",
+      "event_type": "retrieval.documents.selected",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "retrieval.logs-1",
+      "parent_span_id": "tool.logs-1",
+      "causation_id": "evt_661761f687eb7b081d66c7472eda583f",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:07.280000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 28
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:28"
+      },
+      "subject": {
+        "kind": "retrieval",
+        "id": "retrieval.logs-1",
+        "name": "Incident evidence",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "retrieval documents selected: Incident evidence",
+      "payload": {
+        "synthetic": true,
+        "selected_count": 12,
+        "top_score": 0.97
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_2f3bfa98e0b1b60df32a5abc315c29e0",
+      "event_type": "tool.execution.succeeded",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "tool.logs-1",
+      "causation_id": "evt_0d4cbddc23e539404c069cae1addd4ac",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:07.540000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 29
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:29"
+      },
+      "subject": {
+        "kind": "tool.call",
+        "id": "tool.logs-1",
+        "name": "Query logs",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "tool execution succeeded: Query logs",
+      "payload": {
+        "synthetic": true,
+        "tool": "query_logs",
+        "result_ref": "artifact://log-slice"
+      },
+      "measurements": {
+        "duration_ms": 610
+      },
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true,
+        "anthill.measurements": {
+          "schema_version": "1.0.0",
+          "items": {
+            "duration_ms": {
+              "aggregate_key": "tool.duration_ms",
+              "unit": "ms",
+              "scope": "tool_call",
+              "aggregation": "sum",
+              "temporality": "cumulative",
+              "owner_id": "tool.logs-1:evt_2f3bfa98e0b1b60df32a5abc315c29e0"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_9f3509c116f482a3ea0b204f63c214eb",
+      "event_type": "error.recovered",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_2f3bfa98e0b1b60df32a5abc315c29e0",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:07.800000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 30
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:30"
+      },
+      "subject": {
+        "kind": "tool.call",
+        "id": "tool.logs-1",
+        "name": "Query logs",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "error recovered: Query logs",
+      "payload": {
+        "synthetic": true,
+        "recovered_event_id": "evt_2a4ad4a33914ee8a0c8070c43aa2db80"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_10ee2a223a5b4482709c7dd951d583c7",
+      "event_type": "context.budget.updated",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_9f3509c116f482a3ea0b204f63c214eb",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:08.060000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 31
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:31"
+      },
+      "subject": {
+        "kind": "agent",
+        "id": "agent.researcher",
+        "name": "Researcher",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "context budget updated: Researcher",
+      "payload": {
+        "synthetic": true,
+        "budget_tokens": 8192,
+        "used_tokens": 7990
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_ac797e8c732741139b02107aab6713da",
+      "event_type": "context.overflow.detected",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_10ee2a223a5b4482709c7dd951d583c7",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:08.320000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 32
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:32"
+      },
+      "subject": {
+        "kind": "agent",
+        "id": "agent.researcher",
+        "name": "Researcher",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "context overflow detected: Researcher",
+      "payload": {
+        "synthetic": true,
+        "budget_tokens": 8192,
+        "used_tokens": 8460,
+        "over_by": 268
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_0fd3c762c0a5df7cf58fbaf4a125670f",
+      "event_type": "compaction.triggered",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "compact.ctx-1",
+      "causation_id": "evt_ac797e8c732741139b02107aab6713da",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:08.580000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 33
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:33"
+      },
+      "subject": {
+        "kind": "compaction",
+        "id": "compact.ctx-1",
+        "name": "Context compaction",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "compaction triggered: Context compaction",
+      "payload": {
+        "synthetic": true,
+        "trigger": "context_overflow",
+        "policy": "evidence-preserving-summary"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_9c6fce251c125a5c001a6b7cc29ed8b1",
+      "event_type": "compaction.started",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "compact.ctx-1",
+      "causation_id": "evt_0fd3c762c0a5df7cf58fbaf4a125670f",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:08.840000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 34
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:34"
+      },
+      "subject": {
+        "kind": "compaction",
+        "id": "compact.ctx-1",
+        "name": "Context compaction",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "compaction started: Context compaction",
+      "payload": {
+        "synthetic": true,
+        "tokens_before": 8460,
+        "policy": "evidence-preserving-summary"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_fec1922f7246c6c028594fd604c9ac0a",
+      "event_type": "compaction.summary.created",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "compact.ctx-1",
+      "causation_id": "evt_9c6fce251c125a5c001a6b7cc29ed8b1",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:09.100000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 35
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:35"
+      },
+      "subject": {
+        "kind": "compaction",
+        "id": "compact.ctx-1",
+        "name": "Context compaction",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "compaction summary created: Context compaction",
+      "payload": {
+        "synthetic": true,
+        "summary_hash": "sha256:demo-summary",
+        "source_item_count": 18
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_d0872d448c583ee87d51f49eb8256f48",
+      "event_type": "compaction.items.replaced",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "compact.ctx-1",
+      "causation_id": "evt_fec1922f7246c6c028594fd604c9ac0a",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:09.360000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 36
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:36"
+      },
+      "subject": {
+        "kind": "compaction",
+        "id": "compact.ctx-1",
+        "name": "Context compaction",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "compaction items replaced: Context compaction",
+      "payload": {
+        "synthetic": true,
+        "kept_refs": [
+          "ctx.system",
+          "mem.deploy-lesson",
+          "artifact://log-slice"
+        ],
+        "removed_refs": [
+          "ctx.turn.1",
+          "ctx.turn.2",
+          "ctx.raw-log-lines"
+        ]
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_b2c259131d35fb5588c1de257d2db7ce",
+      "event_type": "compaction.completed",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "span_id": "compact.ctx-1",
+      "causation_id": "evt_d0872d448c583ee87d51f49eb8256f48",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:09.620000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 37
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:37"
+      },
+      "subject": {
+        "kind": "compaction",
+        "id": "compact.ctx-1",
+        "name": "Context compaction",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "compaction completed: Context compaction",
+      "payload": {
+        "synthetic": true,
+        "tokens_before": 8460,
+        "tokens_after": 3920,
+        "lossy": true,
+        "summary_hash": "sha256:demo-summary",
+        "kept_refs": [
+          "ctx.system",
+          "mem.deploy-lesson",
+          "artifact://log-slice"
+        ],
+        "removed_refs": [
+          "ctx.turn.1",
+          "ctx.turn.2",
+          "ctx.raw-log-lines"
+        ]
+      },
+      "measurements": {
+        "duration_ms": 920
+      },
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true,
+        "anthill.measurements": {
+          "schema_version": "1.0.0",
+          "items": {
+            "duration_ms": {
+              "aggregate_key": "compaction.duration_ms",
+              "unit": "ms",
+              "scope": "compaction",
+              "aggregation": "sum",
+              "temporality": "cumulative",
+              "owner_id": "compact.ctx-1"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_59f988eb7a0c846f6149cfab79b553e9",
+      "event_type": "context.budget.updated",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_b2c259131d35fb5588c1de257d2db7ce",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:09.880000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 38
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:38"
+      },
+      "subject": {
+        "kind": "agent",
+        "id": "agent.researcher",
+        "name": "Researcher",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "context budget updated: Researcher",
+      "payload": {
+        "synthetic": true,
+        "budget_tokens": 8192,
+        "used_tokens": 3920
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_cca5907f79c18a0e1c2621428e5347b3",
+      "event_type": "checkpoint.created",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_59f988eb7a0c846f6149cfab79b553e9",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:10.140000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 39
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:39"
+      },
+      "subject": {
+        "kind": "checkpoint",
+        "id": "checkpoint.plan",
+        "name": "Plan checkpoint",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "checkpoint created: Plan checkpoint",
+      "payload": {
+        "synthetic": true,
+        "state_hash": "sha256:demo-state",
+        "parent_checkpoint_id": null
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_cd310dcf7a92961dcecdd0836cf72dac",
+      "event_type": "artifact.created",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_cca5907f79c18a0e1c2621428e5347b3",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:10.400000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 40
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:40"
+      },
+      "subject": {
+        "kind": "artifact",
+        "id": "artifact.report",
+        "name": "Incident report",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "artifact created: Incident report",
+      "payload": {
+        "synthetic": true,
+        "mime_type": "text/markdown",
+        "sha256": "demo-report-hash"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_bc5b15acccbe3cd8c560af8ae93658c6",
+      "event_type": "memory.written",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.researcher",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_cd310dcf7a92961dcecdd0836cf72dac",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:10.660000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 41
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:41"
+      },
+      "subject": {
+        "kind": "memory.item",
+        "id": "mem.checkout-root-cause",
+        "name": "Checkout root cause",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "memory written: Checkout root cause",
+      "payload": {
+        "synthetic": true,
+        "layer": "semantic",
+        "source_artifact_id": "artifact.report"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_d37fab93be9e5b65dc303647815c20a5",
+      "event_type": "handoff.completed",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_bc5b15acccbe3cd8c560af8ae93658c6",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:10.920000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 42
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:42"
+      },
+      "subject": {
+        "kind": "task",
+        "id": "task.incident-42",
+        "name": "Explain checkout failures",
+        "attributes": {}
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "handoff completed: Explain checkout failures",
+      "payload": {
+        "synthetic": true,
+        "from": "agent.researcher",
+        "to": "agent.coordinator",
+        "ownership": "returned"
+      },
+      "measurements": {},
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true
+      }
+    },
+    {
+      "schema_version": "0.2.0",
+      "event_id": "evt_f7a31dbae8e6deb0800251cadefc41a2",
+      "event_type": "run.completed",
+      "run_id": "visual-rich-v1",
+      "session_id": "demo-session",
+      "project_id": "anthill-demo",
+      "task_id": "task.incident-42",
+      "agent_id": "agent.coordinator",
+      "trace_id": "trace_bb69c3c2ef29d5b110575911b4271b39",
+      "causation_id": "evt_d37fab93be9e5b65dc303647815c20a5",
+      "links": [],
+      "clock": {
+        "occurred_at": "2026-07-18T00:00:11.180000Z",
+        "observed_at": "2026-07-18T00:00:00Z",
+        "source_seq": 43
+      },
+      "source": {
+        "adapter": "anthill.demo.fixture",
+        "adapter_version": "0.1.0",
+        "framework": "synthetic-fixture",
+        "language": "protocol",
+        "fidelity": "native",
+        "raw_event_ref": "fixture:43"
+      },
+      "evidence": {
+        "level": "declared",
+        "confidence": 1.0,
+        "refs": [],
+        "derived_from": [],
+        "explanation": "Scripted demonstration event; not captured from a real Agent"
+      },
+      "summary": "run completed",
+      "payload": {
+        "synthetic": true,
+        "status": "success",
+        "result_artifact_id": "artifact.report"
+      },
+      "measurements": {
+        "run_duration_ms": 11180
+      },
+      "artifacts": [],
+      "privacy": {
+        "content": "metadata_only",
+        "contains_sensitive_data": false,
+        "redacted_fields": []
+      },
+      "extensions": {
+        "anthill.demo": true,
+        "anthill.measurements": {
+          "schema_version": "1.0.0",
+          "items": {
+            "run_duration_ms": {
+              "aggregate_key": "run.elapsed_ms",
+              "unit": "ms",
+              "scope": "run",
+              "aggregation": "latest",
+              "temporality": "cumulative",
+              "owner_id": "visual-rich-v1"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

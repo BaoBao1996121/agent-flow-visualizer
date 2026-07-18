@@ -14,6 +14,10 @@ from datetime import datetime, timezone
 from math import isfinite
 from typing import Any
 
+from ..measurements import (
+    MeasurementSemantics,
+    measurement_semantics_extension,
+)
 from ..schema import (
     AgentRuntimeEvent,
     ContentCapture,
@@ -666,6 +670,21 @@ def _part_to_event(
             links.append(EventLink(type=LinkType.DERIVED_FROM, event_id=parent_event_id))
     correlation = _correlation_id(mode, data, run_id, namespace)
     source_fields = sorted(str(key) for key in data) if isinstance(data, dict) else []
+    extensions = {
+        "langgraph": {
+            "stream_version": "v2",
+            "mode": mode,
+            "original_mode": original_type,
+            "namespace": namespace,
+            "source_field_names": source_fields,
+        }
+    }
+    stable_message_id = None
+    if mode == "messages":
+        message, _ = _message_parts(data)
+        stable_message_id = _identifier(message.get("id"))
+    if stable_message_id and measurements:
+        extensions.update(_message_measurement_semantics(subject.id, measurements))
     return AgentRuntimeEvent(
         event_id=event_id,
         event_type=event_type,
@@ -709,16 +728,31 @@ def _part_to_event(
             contains_sensitive_data=True,
             redacted_fields=[] if capture_content else sorted(set(redacted)),
         ),
-        extensions={
-            "langgraph": {
-                "stream_version": "v2",
-                "mode": mode,
-                "original_mode": original_type,
-                "namespace": namespace,
-                "source_field_names": source_fields,
-            }
-        },
+        extensions=extensions,
     )
+
+
+def _message_measurement_semantics(
+    owner_id: str, measurements: dict[str, int | float]
+) -> dict[str, Any]:
+    aggregate_keys = {
+        "input_tokens": "model_call.input_tokens",
+        "output_tokens": "model_call.output_tokens",
+        "total_tokens": "model_call.total_tokens",
+    }
+    semantics = {
+        key: MeasurementSemantics(
+            aggregate_key=aggregate_keys[key],
+            unit="tokens",
+            scope="model_call",
+            aggregation="sum",
+            temporality="unknown",
+            owner_id=owner_id,
+        )
+        for key in measurements
+        if key in aggregate_keys
+    }
+    return measurement_semantics_extension(semantics)
 
 
 def _event_type_and_subject(

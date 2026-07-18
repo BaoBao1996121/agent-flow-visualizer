@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from anthill.adapters.langgraph import LangGraphImportError, langgraph_v2_to_events
+from anthill.projections import project_world
 from anthill.schema import ContentCapture, EvidenceLevel, LinkType, SourceFidelity
 
 
@@ -1405,6 +1406,49 @@ def test_langgraph_valid_zero_usage_metadata_remains_measurable():
     message = next(event for event in events if event.event_type == "model.response.chunk")
 
     assert message.measurements == usage
+    assert "anthill.measurements" not in message.extensions
+
+
+def test_langgraph_repeated_usage_with_unknown_temporality_is_ambiguous_not_summed():
+    parts = [
+        {
+            "type": "messages",
+            "ns": [],
+            "data": [
+                {
+                    "type": "ai",
+                    "id": "same-message",
+                    "content": "",
+                    "usage_metadata": usage,
+                },
+                {},
+            ],
+        }
+        for usage in (
+            {"input_tokens": 10, "output_tokens": 1, "total_tokens": 11},
+            {"input_tokens": 10, "output_tokens": 2, "total_tokens": 12},
+        )
+    ]
+    events = langgraph_v2_to_events(parts, run_id="unknown-usage-temporality")
+    previous_hash = None
+    stamped = []
+    for seq, event in enumerate(events):
+        item = event.with_ingest_metadata(
+            ingest_seq=seq, previous_event_hash=previous_hash
+        )
+        previous_hash = item.integrity.event_hash
+        stamped.append(item)
+
+    state = project_world(stamped, run_id="unknown-usage-temporality")
+
+    for key in (
+        "model_call.input_tokens",
+        "model_call.output_tokens",
+        "model_call.total_tokens",
+    ):
+        assert state.measurement_aggregates[key].status == "ambiguous"
+        assert state.measurement_aggregates[key].value is None
+        assert state.measurement_aggregates[key].sample_count == 2
 
 
 def test_langgraph_values_requires_the_official_interrupts_field():

@@ -15,12 +15,13 @@ from analyzer.ast_parser import parse_project
 from analyzer.pattern_detector import detect_patterns
 from analyzer.graph_builder import FlowGraph, build_graph, graph_to_dict
 from tracer.tracer import trace_project_entry, trace_result_to_dict
+from anthill import __version__
 from anthill.api import EventBroker, create_anthill_router
 from anthill.adapters import flow_graph_to_events, trace_result_to_events
 from anthill.store import DuplicateEventError, JsonlEventStore
 
 
-app = FastAPI(title="Agent Anthill", version="0.6.0")
+app = FastAPI(title="Agent Anthill", version=__version__)
 
 # Local-first canonical event ledger. Set ANTHILL_DATA_DIR to keep recordings
 # elsewhere; event content defaults to metadata-only when runtime traces are

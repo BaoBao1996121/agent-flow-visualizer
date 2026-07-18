@@ -125,7 +125,7 @@ The production backend target is PostgreSQL:
 
 ### 4. Projectors
 
-`reduce_world(state, event) -> new_state` is deterministic and does not mutate its input. A projection records `reducer_version`, cursor sequence, and cursor event. The current reducer is `0.3.0`; it shares one explicit run-lifecycle fold with manifest reconstruction, while snapshots produced by earlier reducer versions remain isolated caches.
+`reduce_world(state, event) -> new_state` is deterministic and does not mutate its input. A projection records `reducer_version`, cursor sequence, and cursor event. The current reducer is `0.4.0`; it shares one explicit run-lifecycle fold with manifest reconstruction, while snapshots produced by earlier reducer versions remain isolated caches.
 
 Run-selector identity is a ledger-HEAD snapshot. Its lifecycle status can
 therefore differ intentionally from the world state reconstructed at a
@@ -140,13 +140,43 @@ The same ledger therefore supports:
 - comparison under the same reducer;
 - state-hash verification.
 
-The local implementation now stores immutable world snapshots keyed by run, reducer version, and sequence. A snapshot includes the reducer state hash and the hash of its anchor ledger event. If either check fails, projection falls back to the ledger and reports a warning. Snapshots are caches, never replacement facts.
+The local implementation now stores immutable world snapshots keyed by run, reducer version, and sequence. A snapshot includes the reducer state hash and the hash of its anchor ledger event. Its envelope version must match both the embedded world state and the version directory requested by the projector. If any version, anchor, or state-hash check fails, projection falls back to the ledger and reports a warning. Snapshots are caches, never replacement facts.
 
 The local branch implementation materializes a parent prefix into a new ledger, remaps event/causal identity, adds `derived_from` links to the parent, records the parent state hash, and appends `run.forked`. It never executes a model or tool. Target creation uses an atomic empty-ledger precondition and complete batch append under the per-run lock. If a competing direct write creates the target first, Fork returns `409`; if Fork wins, its complete materialized prefix precedes any later append. A future database backend should represent branches as parent snapshot + tail DAG to avoid copying long prefixes.
 
 Pixel rendering consumes world state. It cannot update authoritative state itself.
 
 Instrumentation visibility is a projection, not a score. It combines the event families recorded at the current cursor with versioned built-in adapter capability contracts. The state name `observed` means “an event or metric signal is present in the ledger,” not that every event has `evidence.level=observed`; the truth mix remains a separate dimension. The other states are `observable_not_seen` and `outside_adapter_contract`; “not seen” is never treated as proof that an operation did not occur. Third-party adapters without a registered contract are shown as unregistered.
+
+### Safe measurement projection
+
+Raw scalar measurements remain ledger evidence even when their arithmetic is
+unknown. A versioned `anthill.measurements` extension supplies the closed
+aggregate key, scope, unit, aggregation rule, temporality, and stable owner. The
+reducer keeps per-owner state so repeated cumulative usage is replaced, deltas
+are added, and repeated unknown-temporality samples become ambiguous. A `latest`
+aggregate requires exactly one owner, and any raw or derived non-finite result
+becomes a persistent conflict rather than entering JSON output. Persistent
+unclassified/invalid counters prevent a bounded diagnostic tail or a snapshot
+resume from accidentally turning a partial total into a safe one.
+
+```mermaid
+flowchart LR
+    E[Canonical event + raw scalar] --> S{Valid measurement semantics?}
+    S -- yes --> O[Owner-aware reducer]
+    O --> A[Scoped safe aggregate]
+    A --> M[Meter + evidence route]
+    A --> C[Contract-aware Compare]
+    S -- no --> U[Unaggregated diagnostic]
+    U --> V[Coverage: RAW / UNSAFE]
+```
+
+Explicit total tokens and the separately derived input-plus-output view never
+overwrite one another. Cost comparison requires the same singular pricing basis
+and estimated/measured status. Generic nested duration totals are intentionally
+absent. The owner map is currently embedded in the world snapshot; very long
+untrusted runs still need measurement-key/owner cardinality budgets and a more
+compact production projection.
 
 ### 5. Delivery
 
@@ -201,7 +231,7 @@ The current UI queries at most 5,000 events per page. Large-run pagination, serv
 
 ## Container boundary
 
-The repository includes a local hardened container profile: non-root UID/GID `10001`, read-only root filesystem, dropped Linux capabilities, `no-new-privileges`, bounded PIDs/logs, loopback-only host binding, and a dedicated writable ledger volume. The current container job passed in [GitHub Actions run 29629916726](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29629916726), including build, non-root/read-only startup, health, and a real ledger write. The workstation still has no local Docker CLI. Current execution evidence and remaining checks belong in [the dated verification record](VERIFICATION.md) and [environment checklist](ENVIRONMENT_CHECKLIST.md).
+The repository includes a local hardened container profile: non-root UID/GID `10001`, read-only root filesystem, dropped Linux capabilities, `no-new-privileges`, bounded PIDs/logs, loopback-only host binding, and a dedicated writable ledger volume. The current container job passed in [GitHub Actions run 29639244683](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639244683), including build, non-root/read-only startup, health, and a real ledger write. The workstation still has no local Docker CLI. Current execution evidence and remaining checks belong in [the dated verification record](VERIFICATION.md) and [environment checklist](ENVIRONMENT_CHECKLIST.md).
 
 The [current workflow](../.github/workflows/ci.yml) uses the mutable v6/v7 major
 tags
@@ -213,8 +243,10 @@ Those JavaScript action majors use the Node 24 action runtime; the project test
 runtime remains Node 22 as configured by `setup-node`. Major tags are not
 immutable dependency pins; commit-SHA pinning with a reviewed Dependabot update
 path remains follow-up supply-chain hardening. Run 29570924390 predates these
-upgrades; run 29629916726 passed the current action/runtime combination across
-all eight jobs.
+upgrades; run 29639244683 passed the current action/runtime combination across
+all nine jobs. `main` protection uses strict status checks with administrator
+enforcement and requires those nine GitHub Actions contexts, including the
+digest-pinned visual regression.
 
 This reduces accidental host exposure; it does not add authentication, tenant isolation, TLS, or a sandbox around Python trace execution. The container is therefore a reproducible local deployment, not evidence of hosted-service readiness.
 
@@ -222,4 +254,4 @@ This reduces accidental host exposure; it does not add authentication, tenant is
 
 OpenTelemetry GenAI semantic conventions, OpenInference, and AG-UI are valuable inputs but still evolve. Agent Anthill aligns through versioned adapters and stores the input convention/version; none of them is the immutable internal contract.
 
-LangGraph StreamPart v2 uses the same strategy. The adapter requires the discriminated `{type, ns, data}` boundary introduced in LangGraph `1.1`; legacy mode tuples are rejected rather than guessed. Real runtime probes cover LangGraph `1.1.0` and `1.2.9`, and the configured supported lane is `>=1.2,<2`. The current hosted `1.1.0` floor and supported-1.x jobs passed in run 29629916726. Visual projection and renderer evolution follow [VISUAL_SYSTEM.md](VISUAL_SYSTEM.md); no unmeasured performance claim is part of this architecture.
+LangGraph StreamPart v2 uses the same strategy. The adapter requires the discriminated `{type, ns, data}` boundary introduced in LangGraph `1.1`; legacy mode tuples are rejected rather than guessed. Real runtime probes cover LangGraph `1.1.0` and `1.2.9`, and the configured supported lane is `>=1.2,<2`. The current hosted `1.1.0` floor and supported-1.x jobs passed in run 29639244683. Visual projection and renderer evolution follow [VISUAL_SYSTEM.md](VISUAL_SYSTEM.md); no unmeasured performance claim is part of this architecture.

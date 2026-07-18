@@ -84,7 +84,7 @@ Long traces must collapse by semantic stage before they become graph hairballs.
 The current implementation proves the event kernel, Python,
 OTLP/OpenInference, AG-UI JSON/NDJSON, and LangGraph StreamPart v2 offline
 paths; event schema `0.2.0`; a single-process local ledger; snapshot-accelerated
-deterministic projection under reducer `0.3.0`; time travel, comparison,
+deterministic projection under reducer `0.4.0`; time travel, comparison,
 explicit causal slicing, cursor-specific instrumentation visibility, and the
 first pixel observatory. LangGraph `1.1.0` and `1.2.9` pass isolated real-runtime
 probes.
@@ -95,12 +95,23 @@ projection. Cursor-specific world and Compare states remain the authority for
 availability around damaged ledgers; it reports `not_checked` and is not an
 integrity authority. Full per-run integrity remains an explicit operation.
 
-The current local evidence is 326 passing Python tests (plus one optional skip),
-29 passing Chromium contracts, and 58/58 repeated browser executions. The first
-hosted run passed its 13-test browser, container, frontend, and Python 3.11 jobs,
-but failed Python 3.12/3.13 and both LangGraph jobs on one shared deep-NDJSON
-assertion; it predates the current fix and every schema/reducer/browser claim in
-this section. Exact dated evidence lives in [the verification record](VERIFICATION.md).
+The current local evidence is 385 passing Python tests in 20.28 seconds (plus
+one optional skip), 49/49 Chromium contracts in 2.0 minutes, and 98/98 browser
+executions in 4.4 minutes under two repeats. Full-repository Ruff, nine
+JavaScript syntax checks, and patch hygiene pass. Visual fixture/contract tests
+pass 7/7, and all four scenes reach their screenshot boundary with
+`--ignore-snapshots`; that is local functional scene evidence, not Linux golden
+comparison.
+
+Phase -1 release-gate GitHub Actions
+[run 29639244683](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639244683)
+at commit `6a96011` passed all nine jobs, including the current 49-contract suite,
+hardened container, and pinned-Linux comparison against the four reviewed
+goldens. It did not update the files, and the check is now required by strict,
+administrator-enforced `main` protection. The earlier failed and candidate-stage
+runs remain recorded for provenance in
+[the verification record](VERIFICATION.md), as do the exact dated commands,
+timings, and limitations.
 
 It does not yet prove:
 

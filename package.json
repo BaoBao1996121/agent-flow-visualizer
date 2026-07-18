@@ -1,12 +1,13 @@
 {
   "name": "agent-anthill-frontend",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "scripts": {
     "test:browser": "playwright test",
     "test:browser:headed": "playwright test --headed",
-    "test:browser:update": "playwright test --update-snapshots"
+    "test:browser:update": "playwright test --update-snapshots",
+    "test:visual": "playwright test --config=playwright.visual.config.mjs"
   },
   "engines": {
     "node": ">=22"

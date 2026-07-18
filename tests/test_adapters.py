@@ -2,11 +2,12 @@ from collections import Counter
 
 from analyzer.ast_parser import parse_project
 from analyzer.graph_builder import build_graph
-from analyzer.pattern_detector import detect_patterns
+from analyzer.pattern_detector import NodeClassification, detect_patterns
 from anthill.adapters import flow_graph_to_events, trace_result_to_events
+from anthill.projections import project_world
 from anthill.schema import ContentCapture, EvidenceLevel, SourceFidelity
 from anthill.store import JsonlEventStore
-from tracer.tracer import trace_project_entry
+from tracer.tracer import TraceEvent, TraceResult, trace_project_entry
 
 
 def sample_analysis():
@@ -58,6 +59,57 @@ def test_trace_adapter_preserves_observed_facts_and_marks_semantics_inferred():
     assert inferred
     assert all(item.evidence.level == EvidenceLevel.INFERRED for item in inferred)
     assert all(item.evidence.confidence < 1.0 for item in inferred)
+
+
+def test_trace_inferred_semantic_companion_does_not_duplicate_measurements():
+    qualified_name = "sample_agent.call_model"
+    result = TraceResult(
+        entry_point=qualified_name,
+        total_duration_ms=12.5,
+        events=[
+            TraceEvent(
+                timestamp=1.0,
+                event_type="return",
+                function_name="call_model",
+                qualified_name=qualified_name,
+                filepath="sample_agent.py",
+                lineno=9,
+                duration_ms=12.5,
+            )
+        ],
+    )
+
+    events = trace_result_to_events(
+        result,
+        run_id="measurement-ownership",
+        classifications={
+            qualified_name: NodeClassification(
+                node_type="llm_call",
+                confidence=0.8,
+                reason="Function name suggests an LLM call",
+            )
+        },
+    )
+
+    observed = next(event for event in events if event.event_type == "code.call.returned")
+    inferred = next(
+        event for event in events if event.event_type == "model.response.completed"
+    )
+    assert observed.measurements == {"duration_ms": 12.5}
+    assert inferred.measurements == {}
+    previous_hash = None
+    stamped = []
+    for seq, event in enumerate(events):
+        item = event.with_ingest_metadata(
+            ingest_seq=seq, previous_event_hash=previous_hash
+        )
+        previous_hash = item.integrity.event_hash
+        stamped.append(item)
+    world = project_world(stamped, run_id="measurement-ownership")
+    assert world.measurement_aggregates["code_call.duration_ms"].value == 12.5
+    assert world.measurement_aggregates["run.elapsed_ms"].value == 12.5
+    assert "model_call.duration_ms" not in world.measurement_aggregates
+    assert world.totals["run_duration_ms"] == 12.5
 
 
 def test_trace_defaults_to_metadata_only_and_does_not_store_values():

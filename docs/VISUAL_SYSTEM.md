@@ -101,12 +101,12 @@ Implementation status (2026-07-18):
 | Correction | Status | Current evidence / remaining boundary |
 |---|---|---|
 | 1. Split overloaded live states | Complete | Browser contracts separate ledger HEAD, follow/pause, transport connection, terminal state, and unresolved work. |
-| 2. Reconcile every projection | Partial | Missing cognition telemetry is explicit; Meter Room, per-field memory provenance, and all Compare semantics still require reconciliation. |
-| 3. Prioritize signal over wallpaper | Pending | No measured information-hierarchy or chamber-collapse contract yet. |
+| 2. Reconcile every projection | Complete | Missing cognition remains `NOT OBSERVED`; Memory exposes only recorded operations with evidence routes; Meter consumes owner-aware safe aggregates and exposes ambiguity, derivation, pricing basis, and estimated status; Compare separates message chunks from completed calls and compares measurements only when unit, scope, aggregation, and cost semantics are compatible. |
+| 3. Prioritize signal over wallpaper | Complete | Inactive/no-signal chambers recede through explicit `NO SIGNAL AT CURSOR` treatment. A deterministic Canvas cap retains selected, failed, and unknown entities before ordinary activity, and Meter shows only safe signal. This is an implementation contract, not measured comprehension evidence. |
 | 4. Make causality one action away | Complete | Timeline selection is the default causal root and an open panel follows seek. |
-| 5. Separate color vocabularies | Pending | Truth, domain, health, and side still need a tested non-color-only grammar. |
-| 6. Repair accessible interaction | Partial | Inspector tabs have ARIA/keyboard behavior; bounded live status, complete keyboard equivalents, Canvas DOM mirrors, and user testing remain. |
-| 7. Implement complete reduced motion | Partial | Terminal decorative motion freezes; the full reduced-motion inventory and regression contract remain. |
+| 5. Separate color vocabularies | Complete | Event evidence is printed as text and reinforced by outline/pattern; Compare prints `ON` only for explicit `true`, `OFF` only for explicit `false`, and `NOT OBSERVED` for `null`; causal direction exposes `aria-pressed`; Compare availability/comparability is textual. Unsafe measurement identities neutralize control and bidi characters before display. Browser contracts do not rely on color alone. |
+| 6. Repair accessible interaction | Complete | Main Canvas chamber labels are 12 px; tested core DOM labels are at least 12 CSS px and tested normal-text pairs meet 4.5:1. Tabs, bounded status announcements, keyboard evidence routes, and a complete per-cursor semantic object mirror have browser regressions. Canvas micro-labels at 8–11 px are supporting glyphs with 12 px DOM equivalents, not a claim that every decorative Canvas glyph is 12 px. Real assistive-technology and user testing remain pending. |
+| 7. Implement complete reduced motion | Complete | OS preference, application `system`/`reduce`/`full` override, terminal worlds, and static capture all stop Canvas RAF work and CSS ambience; changing the application override takes effect without reload. |
 | 8. Disambiguate run identity | Complete | Run and Compare selectors share title, first-event `SRC`, ledger-HEAD status, first-event UTC `INGEST`, collision-aware ID, and explicit synthetic `[DEMO]`. |
 
 Identity labels keep absent or invalid facts `UNKNOWN`. Selector status describes
@@ -114,12 +114,21 @@ ledger HEAD, while the world and Compare cards retain their historical
 cursor/progress projection. Main titles and Compare cards use the same
 control/bidi/delimiter neutralization. Request epochs, abortable Compare work,
 both-side runtime-event refresh, stale identity markers, and atomic
-run-selection rollback have browser regressions. Three corrections are complete,
-three are partial, and two are pending; Phase -1 as a whole is not complete.
+run-selection rollback have browser regressions. All eight implementation
+corrections now have ordinary Chromium contracts. This does not prove that the
+visual hierarchy improves comprehension for real users, that every assistive
+technology works, or that a future renderer preserves the same semantics; those
+remain measured Phase 0 and renderer-parity obligations.
 
-Phase -1 exits only when browser regression tests cover these semantics and a
-paused completed run can no longer be mistaken for a live external execution.
-The same assertions become renderer-parity tests for PixiJS and Phaser.
+Phase -1 is release-complete as a visual truth gate. Run 29638608292 generated
+four pinned-Linux candidates; each image was reviewed and accepted. Required-mode
+run 29639244683 then compared the committed PNGs with updates disabled and passed
+all nine jobs. Strict, administrator-enforced `main` protection requires that
+visual check. See [VISUAL_BASELINES.md](VISUAL_BASELINES.md). The 49 ordinary
+browser contracts and their two-repeat run protect semantic behavior alongside
+pixel regression. Neither layer proves user comprehension, real assistive-
+technology behavior, cross-browser parity, or a future renderer; those remain
+Phase 0 and renderer-parity evidence gates.
 
 ## Phase 0 art-direction spike and Phase 2 representative slice
 

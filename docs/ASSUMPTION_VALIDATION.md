@@ -50,7 +50,7 @@ Sources checked before the spike:
 | Unbounded external interrupt identifiers can cross the adapter without violating canonical limits or leaking a duplicate. | Imported 3,000+ character interrupt IDs through both state and task-result paths, then queried every persisted event. | PASS. Every base/supplemental reference uses the same deterministic hash, source length is recorded, the original ID is absent, and the API returns `201` rather than `500`. |
 | Malformed runtime objects fail through the adapter boundary. | Supplied one object whose `model_dump()` raises and one whose dump returns itself. | PASS. Both become `LangGraphImportError`; neither a runtime exception nor recursion failure escapes. |
 | Official payload shapes can be enforced without importing LangGraph into the application. | Compared 1.1.0/1.2.9 runtime definitions and exercised invalid task-result branches, checkpoint tasks, messages, debug wrappers, interrupts, values, token usage, and cross-source identities. | PASS for the tested boundary. Malformed input fails as a controlled import error rather than being guessed. |
-| Historical checkpoint observations can coexist with a live approval without corrupting current state. | Ran RED/GREEN reducer probes for live interrupt followed by checkpoint snapshot, snapshot-only interrupt, reobservation, and historical task error. | PASS originally under reducer `0.2.0`; reducer `0.3.0` retains this behavior while moving explicit run-lifecycle transitions into the shared fold. Snapshots remain isolated by reducer version. |
+| Historical checkpoint observations can coexist with a live approval without corrupting current state. | Ran RED/GREEN reducer probes for live interrupt followed by checkpoint snapshot, snapshot-only interrupt, reobservation, and historical task error. | PASS originally under reducer `0.2.0`; reducer `0.3.0` retained this behavior while moving explicit run-lifecycle transitions into the shared fold, and current reducer `0.4.0` retains it. Snapshots remain isolated by reducer version. |
 
 The workstation's pre-existing LangGraph `1.0.4` returned the legacy tuple shape
 even when called with `version="v2"`, confirming the lower-bound failure mode.
@@ -91,7 +91,7 @@ Three bounded spikes gated the shared lifecycle and selector identity work.
 
 | Assumption | Validation | Result |
 |---|---|---|
-| Explicit lifecycle folding remains authoritative when non-lifecycle events trail a terminal event. | Folded `run.started`, explicit successful `run.completed`, then `artifact.created` through the shared transition helper. | PASS. The final status remains `completed`; manifest HEAD and reducer `0.3.0` use the same transition semantics. |
+| Explicit lifecycle folding remains authoritative when non-lifecycle events trail a terminal event. | Folded `run.started`, explicit successful `run.completed`, then `artifact.created` through the shared transition helper. | PASS. The final status remains `completed`; manifest HEAD and reducer `0.3.0` introduced the shared transition semantics, which current reducer `0.4.0` retains. |
 | A torn manifest can be repaired without using its stale last event as lifecycle truth. | Persisted start/completion, replaced `manifest.json` with malformed JSON, appended an artifact, and read the rebuilt manifest. | PASS. Reconstruction folds the complete ledger and restores `completed`. |
 | Selector ingest timestamps can be deterministic without treating an unzoned value as UTC. | Normalized an explicit `+08:00` value to UTC and tested the zone suffix guard against the same wall time without a zone. | PASS. The aware value becomes `2026-07-17 08:30Z`; the unzoned value is rejected by the guard. |
 
@@ -145,3 +145,44 @@ authenticity proof. Repeated single-event appends still have cumulative `O(k²)`
 byte-scanning cost even when unchanged-ledger appends avoid repeated JSON
 parsing. The per-run integrity endpoint remains the explicit full-verification
 boundary.
+
+## 2026-07-18 — Phase -1 semantic mirror and motion foundations
+
+Three bounded spikes gate the frontend restructuring and measurement-backed visual work.
+
+| Assumption | Validation | Result |
+|---|---|---|
+| OTLP span usage can be owned by the terminal mapped event without changing the recorded aggregate. | Normalized the public synthetic OTLP fixture, confirmed the request-start measurement map is empty, stamped the events, and projected the cursor-specific world. | PASS. The final projection contains exactly 128 input and 42 output tokens, not the former doubled 256/84. |
+| The current world projection exposes enough stable public fields to build a renderer-independent entity DOM mirror. | Projected the synthetic exhibit and checked every entity for ID, kind, name, zone, status, truth, event count, and last-event route. | PASS for all 12 exhibit entities. This validates the current entity boundary, not future virtualization or `VisualModel` parity. |
+| Chromium reports a runtime reduced-motion media change without a page reload. | Started Playwright Chromium with reduce enabled, attached a `MediaQueryList` change listener, switched to no-preference, and observed exactly one change. | PASS. Application override precedence and complete animation shutdown still require browser acceptance tests. |
+
+Executable evidence:
+
+- `python -m scripts.spikes.phase1_measurement_ownership`
+- `python -m scripts.spikes.phase1_entity_mirror_shape`
+- `node scripts/spikes/phase1_motion_change.mjs`
+
+All three spike files are 17 lines or fewer. Direct path invocation of the two
+Python modules initially failed because Python placed `scripts/spikes` rather
+than the repository root on `sys.path`; the documented module-form invocations
+above passed and are the supported commands.
+
+## 2026-07-18 — Phase -1 safe measurement aggregation foundations
+
+Three bounded spikes gate the reducer and snapshot changes required before Meter can show values.
+
+| Assumption | Validation | Result |
+|---|---|---|
+| A closed registry can accept supported token ownership while rejecting cost without pricing provenance. | Validated `MeasurementSemantics` for model input tokens, then attempted model cost without `basis` and `estimated`. | PASS. The token contract parsed and the unpriced cost contract raised a validation error. |
+| Per-owner temporality keeps delta, cumulative, and unknown samples arithmetically distinct. | Reduced two samples under each rule. | PASS. Delta summed to 12, cumulative selected 12, and repeated unknown temporality returned no value. |
+| Nested owner state survives the projection snapshot boundary. | Serialized a typed aggregate with one owner to JSON, restored it, then deep-copied it. | PASS. Owner value and sample count survived both operations. |
+
+Executable evidence:
+
+- `python -m scripts.spikes.phase1_measurement_semantics`
+- `python -m scripts.spikes.phase1_measurement_temporality`
+- `python -m scripts.spikes.phase1_measurement_snapshot`
+
+All three spike files are 18 lines or fewer. They validate the required
+primitives, not the production reducer; RED/GREEN projection, snapshot, adapter,
+API, Compare, and browser tests remain the acceptance boundary.
