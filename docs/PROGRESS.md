@@ -21,7 +21,8 @@ Published `v0.7.0` / protected-`main` verified baseline:
 The current Phase C branch adds an advisory S0 impact runner and chronological
 [stage log](STAGE_LOG.md). Its local preflight is `455 passed, 1 skipped`, Ruff,
 seven fixed Node syntax checks, and one 8.9-second screenshot-attaching Chromium
-vertical. These are candidate facts, not protected-main evidence.
+vertical. Draft routing and complete Ready S2 passed on PR #16; these remain
+candidate facts until the resulting protected-main commit repeats them.
 
 ## Next milestones
 
@@ -146,8 +147,8 @@ vertical. These are candidate facts, not protected-main evidence.
 - Added a versioned repository impact map, NUL-safe Git union discovery, bounded content/index fingerprints, fail-closed special-entry and visibility handling, stable plans, fixed command registry, global/per-command budgets, retained retries, and atomic machine-readable reports. The runner never grants promotion authority.
 - Added a JSON-only `python -m validation plan/run` interface with explicit exit codes for pass, failure/stale input, incomplete/S2 evidence, and discovery/configuration errors. Policy-selected targets are separated from tool options and run with `shell=False`.
 - Mapped all tracked and non-ignored untracked workspace paths, sent unknown and control-plane paths to S2, added a canonical-sample schema contract, and put the runner/CLI/documentation contracts into the fixed Draft fast gate without allowing PR content to choose whether S2 runs.
-- Added a fixture-driven `@s0` Chromium path through run truth, historical `seq 0`, Objects, keyboard Evidence activation, and browser-error capture. It attaches the exact exercised screenshot; local DLP rewrites persisted PNGs, so an in-memory 1600×1000 view was reviewed and an unmodified hosted attachment remains required.
+- Added a fixture-driven `@s0` Chromium path through run truth, historical `seq 0`, Objects, keyboard Evidence activation, and browser-error capture. It attaches the exact exercised screenshot. Ready run 29653151908 produced and uploaded the unmodified `HISTORY · SEQ 0` / `run.started` attachment; its in-memory 1600×1000 bytes were reviewed before local DLP rewrote the materialized file.
 - Rejected “full pytest fits 30 seconds” after a 30.043-second timeout. Bounded LangGraph, storage, schema, projections, analysis, and API verticals instead measured 5.683–17.072 seconds of local command time; the complete suite remains S1/S2.
 - Replayed the deep-NDJSON and visual pip-cache incidents against versioned selectors. Each current set passed, and each injected former fault produced the expected RED. Hosted cross-platform evidence still governs promotion.
 - Local candidate re-freeze passed 93/93 focused contracts in 33.44 seconds, `455 passed, 1 skipped` in 46.86 seconds, Ruff, seven fixed Node syntax checks, and `@s0` in 8.9 seconds. It includes loaded-policy digest attestation, skipped-browser rejection, and HTTP 5xx capture. A concurrent Windows launch produced Git DLL initialization exits; the unchanged focused command passed when isolated, so local Git-heavy tests remain serialized.
-- Added the append-only [stage breakthrough log](STAGE_LOG.md): every bounded gain records time, action, measured effect, and evidence/limit; frontend stages also require the exercised screenshot. Draft/Ready/protected-main evidence for this branch remains pending.
+- Added the append-only [stage breakthrough log](STAGE_LOG.md): every bounded gain records time, action, measured effect, and evidence/limit; frontend stages also require the exercised screenshot. PR #16 proved the Draft fast-only state and Ready run 29653151908 passed all 11 jobs in 100 seconds; protected-main replay remains pending.

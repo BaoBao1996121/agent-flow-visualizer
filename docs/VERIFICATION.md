@@ -338,8 +338,8 @@ evidence.
 
 ## Advisory S0 candidate evidence
 
-These 2026-07-18/19 results belong to the Phase C branch. They do not claim hosted
-or protected-main promotion:
+These 2026-07-18/19 local results belong to the Phase C branch. They do not claim
+protected-main promotion:
 
 | Boundary | Command/evidence | Result |
 |---|---|---|
@@ -351,15 +351,29 @@ or protected-main promotion:
 | Static gates | Ruff plus fixed Node syntax set | PASS |
 
 The complete suite's 46.86-second result rejects full pytest as S0. Local persisted
-PNG files are rewritten by endpoint DLP, so the browser screenshot shown from
-memory in the development task is illustrative only; an unmodified hosted
-attachment is required before promotion. Detailed chronological evidence is in
-[STAGE_LOG.md](STAGE_LOG.md).
+PNG files are rewritten by endpoint DLP, so the earlier manually driven screenshot
+was illustrative only. Ready run
+[29653151908](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29653151908)
+then uploaded the exact test attachment. Its GitHub artifact digest is
+`sha256:de170e4e77f60c222ade477b2f186fcf678e655f32dfeb947f62274d0cbdc54e`;
+the 257,419-byte screenshot plaintext was reviewed in memory at `1600×1000` with
+SHA-256 `9a6258ca12880407a85551c021add998dbad8e1a7db7cb1b9a966321f0127437`
+before DLP rewrote the disk copy. It shows `HISTORY · SEQ 0`, `run.started`,
+observed evidence, and the fixture Agent selected. Detailed chronological evidence
+is in [STAGE_LOG.md](STAGE_LOG.md).
+
+Hosted Phase C candidate evidence:
+
+| Run / candidate | Transition | Result |
+|---|---|---|
+| [29652870258](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29652870258), `757d241…` | First Draft | RED: fast contracts exposed an ambient local `node_modules` test prerequisite; aggregate also failed as designed. |
+| [29653112545](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29653112545), `1335e71…` | Final Draft candidate | Fast PASS; six S2 definitions SKIPPED; aggregate explicit FAIL with Ready instruction. |
+| [29653151908](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29653151908), same `1335e71…` | Draft → Ready | All 11 jobs PASS in 100s wall, including three Python versions, both LangGraph lanes, Chromium, pinned visual comparison, hardened container, and aggregate; Playwright artifact uploaded. |
 
 ## Explicitly pending
 
-- Staged validation still needs hosted Draft/Ready/protected-main evidence for
-  the advisory S0 candidate, representative observation-window samples,
+- Staged validation still needs protected-main evidence for the advisory S0
+  candidate, representative observation-window samples,
   dependency and matrix-member failure/skip/cancel canaries, S3 nightly breadth,
   S4 exact-release-commit evidence, rollback drill, and an escaped-defect window.
 - Measured comprehension, information-density, and recognition studies have not
