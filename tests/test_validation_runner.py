@@ -455,8 +455,11 @@ def test_deferred_checks_cannot_conclude_passed_even_if_a_plan_claims_complete()
     assert report["feedback_conclusion"] == "inconclusive"
 
 
-def test_playwright_zero_exit_must_still_report_the_one_selected_test_passed():
+def test_playwright_zero_exit_must_still_report_the_one_selected_test_passed(tmp_path):
     plan = build_plan(load_policy(POLICY), ["server.py"], change_source="explicit")
+    playwright_cli = tmp_path / "node_modules" / "@playwright" / "test" / "cli.js"
+    playwright_cli.parent.mkdir(parents=True)
+    playwright_cli.write_text("// isolated prerequisite sentinel\n", encoding="utf-8")
 
     def skipped_browser(argv, **kwargs):
         output = (
@@ -466,7 +469,7 @@ def test_playwright_zero_exit_must_still_report_the_one_selected_test_passed():
         )
         return CompletedProcess(argv, 0, stdout=output)
 
-    report = execute_plan(plan, ROOT, run_command=skipped_browser)
+    report = execute_plan(plan, tmp_path, run_command=skipped_browser)
     browser_attempt = next(
         attempt for attempt in report["attempts"] if attempt["command_id"] == "browser-s0"
     )
