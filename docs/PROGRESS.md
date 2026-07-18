@@ -118,6 +118,15 @@ Published `v0.7.0` / protected-`main` verified baseline:
 - Added an unconditional, non-matrix `Exploration fast gate` with Ruff, five focused Python contract files, and four primary JavaScript syntax checks. It is a conservative shadow S1, not yet an impact-selected required gate.
 - Added explicit Draft/Ready workflow activities plus an `always()` aggregate that fails Draft pull requests and accepts only `success` from S1 and every existing S2 dependency. Semantic PyYAML contract tests were developed RED→GREEN.
 - Design review: 5/5 passed for verified external dependencies, source-labelled performance observations, failure/rollback paths, provisional thresholds, and unchanged Phase 0/product boundaries.
-- Working-branch local gates passed: `387 passed, 1 skipped` in 19.71 seconds, full-repository Ruff, four primary JavaScript syntax checks, semantic workflow parsing, and `git diff --check`.
+- Working-branch local gates passed: `387 passed, 1 skipped` in 19.68 seconds, full-repository Ruff, four primary JavaScript syntax checks, semantic workflow parsing, and `git diff --check`.
 - Kept all nine strict, administrator-enforced required contexts and their every-PR execution unchanged. The new jobs are not protected contexts until real hosted Draft-to-Ready and failure-path evidence passes.
 - S0 commands/manifests, impact-map replay, Draft suppression of S2, S3, and S4 remain pending. No staged-validation completion or CI speedup is claimed from local contract tests alone.
+
+### 2026-07-18 — staged-validation aggregate promotion and Draft optimization
+
+- Draft run 29645134489 preserved the explicit aggregate failure after fast S1 passed in 13 seconds and every legacy S2 context passed. `ready_for_review` created run 29645207017 on the same PR candidate; complete S2 passed and the aggregate passed in 2 seconds.
+- Squash-merged PR #13 to protected-main commit `4dbd68b`; run 29645305313 repeated fast S1, complete S2, and aggregate successfully on the resulting commit.
+- Added `Protected main validation gate` as a tenth required context only after that main evidence. API readback retained strict/admin protection, all original nine contexts, app ID `15368`, and every unrelated protection field. The rejected HTTP-400 stdin attempt caused no mutation and remains recorded.
+- On the next branch, developed the exact six-job Draft condition RED→GREEN: complete S2 skips only for Draft PR events, while Ready, main push, and manual events still run. The aggregate remains an explicit required failure in Draft.
+- Design review: 5/5 passed for official dependency/event semantics, run-linked measurements, skip/failure/rollback paths, provisional threshold rationale, and unchanged Phase 0/product boundaries.
+- Phase B hosted Draft/Ready/main evidence, failure/skip/cancel canaries, historical replay, impact manifests, S0, S3, and S4 remain pending. The original nine contexts remain required; no 9→1 collapse occurred.

@@ -64,9 +64,10 @@ npm run test:browser
 The hosted container and pinned-Linux visual jobs remain authoritative boundaries
 that this workstation may not reproduce. A Draft PR can therefore show a green
 `Exploration fast gate` and an intentionally red `Protected main validation gate`.
-The latter means full merge validation has not been requested yet; mark the PR
-Ready to trigger the complete matrix. A product-test failure remains a real
-failure and must not be relabelled as this expected Draft state.
+The six complete S2 job definitions are skipped in Draft; the red required
+aggregate means full merge validation has not been requested. Mark the PR Ready
+to trigger the complete matrix. A product-test failure remains a real failure
+and must not be relabelled as this expected Draft state.
 
 On Linux or CI, use `npx playwright install --with-deps chromium`. The browser
 suite owns `127.0.0.1:8878` and an ignored ledger under `output/playwright/`; it

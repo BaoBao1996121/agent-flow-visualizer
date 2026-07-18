@@ -49,6 +49,7 @@ jobs:
           node --check static/js/simulation.js
 
   python:
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -69,6 +70,7 @@ jobs:
 
   langgraph-compat:
     name: LangGraph StreamPart v2 (${{ matrix.label }})
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -98,6 +100,7 @@ jobs:
           tests/test_langgraph_adapter.py
 
   frontend:
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -114,6 +117,7 @@ jobs:
 
   browser:
     name: Chromium observatory contract
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -153,6 +157,7 @@ jobs:
 
   visual-regression:
     name: Pinned Chromium visual regression
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     container:
@@ -198,6 +203,7 @@ jobs:
           retention-days: 14
 
   container:
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

@@ -56,8 +56,8 @@ account; organization ownership should be reconsidered before adopting that path
 | Stage | Trigger and purpose | Required evidence | Blocking boundary | Status on 2026-07-18 |
 |---|---|---|---|---|
 | S0 — exploration | Local/on-demand loop while shaping one idea | Syntax/schema plus changed-module tests and one deterministic vertical smoke | Developer feedback only | Planned; no canonical runner or manifest yet |
-| S1 — PR fast | Every PR commit; reject obvious cross-layer regressions quickly | Integrity/version contracts, affected contracts, bounded observatory smoke, stage manifest | Required before S2 in the target model | `Exploration fast gate` implemented in shadow with a fixed conservative subset; impact selection and manifest pending |
-| S2 — protected merge | Ready PR and protected-main candidate | Python 3.11–3.13, LangGraph floor/supported, frontend, full Chromium, pinned visual compare, container, S1 | Must pass on the current PR candidate against the latest protected base; the resulting main commit reruns S2 | Existing nine contexts still run on every PR; `Protected main validation gate` added in shadow and not yet required |
+| S1 — PR fast | Every PR commit; reject obvious cross-layer regressions quickly | Integrity/version contracts, affected contracts, bounded observatory smoke, stage manifest | Enforced transitively by the required aggregate | Fixed conservative subset implemented; observed at 13–18s across three hosted runs; impact selection and manifest pending |
+| S2 — protected merge | Ready PR and protected-main candidate | Python 3.11–3.13, LangGraph floor/supported, frontend, full Chromium, pinned visual compare, container, S1 | Must pass on the current PR candidate against the latest protected base; the resulting main commit reruns S2 | Aggregate is the tenth required context; Draft child suppression is implemented and awaiting hosted canary; original nine remain required |
 | S3 — deep | Scheduled/manual breadth and repetition | Repeat/order isolation, long-run and burst cases, optional browser/device/security matrices, owned quarantines | Does not block ordinary edits; failures block affected promotion until classified | Planned |
 | S4 — release | Exact release candidate/tag | Complete S2 plus provenance, asset, compatibility, benchmark, and reproducibility checks | Blocks release | Planned; no stale nightly may substitute |
 
@@ -80,11 +80,12 @@ stateDiagram-v2
     Mergeable --> ProtectedMain: strict branch update
 ```
 
-During the first shadow step, S2 still runs in Draft and the aggregate intentionally
-fails. Only after the aggregate is required and all transition probes pass may the
-S2 child jobs be suppressed in Draft. `opened`, `synchronize`, `reopened`,
+Phase A ran S2 in Draft and proved the aggregate's explicit failure, Ready success,
+and resulting-main success before adding the aggregate as the tenth required
+context. Phase B suppresses the six S2 job definitions only in Draft; its hosted
+canary remains required before promotion. `opened`, `synchronize`, `reopened`,
 `ready_for_review`, and `converted_to_draft` are explicit workflow activities so
-the same commit cannot inherit stale Draft state.
+the same PR candidate cannot inherit stale Draft state.
 
 ## Safety invariants
 
@@ -146,19 +147,19 @@ that could recreate the second must escalate to S2.
 
 ## Migration and rollback
 
-Migration order:
+Migration order and status:
 
-1. Run `Exploration fast gate` and `Protected main validation gate` in shadow;
-   retain the existing required contexts and collect representative evidence.
-2. Prove Draft, Draft-to-Ready, Ready synchronize, converted-to-Draft, dependency
-   skip/cancel, first/last Python and LangGraph matrix-member failures, and retry
-   behavior on real pull requests.
-3. After a successful protected-main run, add the aggregate as a tenth required
-   context and read branch protection back from the API.
-4. In a separate change, suppress S2 children only in Draft; the required
-   aggregate must remain explicitly failing there.
-5. Only after a stable observation window may protection be simplified from
-   child contexts to the fast gate plus aggregate.
+1. **COMPLETE:** run the fast and aggregate jobs in shadow while retaining the
+   existing required contexts.
+2. **PARTIAL:** prove Draft failure, Draft-to-Ready success, and resulting-main
+   success. Converted-to-Draft, dependency skip/cancel, first/last matrix-member
+   failures, and retry behavior remain canaries.
+3. **COMPLETE:** after protected-main run 29645305313, add the aggregate as a
+   tenth required context and read strict/admin/app bindings back from the API.
+4. **IN PROGRESS:** suppress S2 children only in Draft; the required aggregate
+   remains explicitly failing there. Hosted Draft/Ready/main evidence is pending.
+5. **PENDING:** only after a stable observation window may protection be
+   simplified from child contexts to the fast gate plus aggregate.
 
 Current rollback baseline:
 
@@ -180,9 +181,10 @@ remove the aggregate. This prevents a protection gap between old and new gates.
 - The current hosted S2 is already fast in wall-clock terms; the primary expected
   win is lower runner consumption across repeated Draft pushes and enough capacity
   for future renderer/browser/performance matrices.
-- The first shadow step temporarily increases CI work by one small runner job plus
-  the aggregate. This is accepted only for the evidence window.
+- Phase A temporarily added one small runner job plus the aggregate to every run.
+  Phase B is expected to remove complete-S2 runner work from repeated Draft pushes;
+  its actual savings remain unmeasured until the hosted canary completes.
 - The workstation has no Docker CLI, so local execution cannot claim complete S2.
-- Impact selection, machine-readable manifests, vertical browser smoke, nightly
-  breadth, and release-specific S4 remain pending and must not be inferred from
-  the shadow jobs.
+- Three hosted fast-gate samples are insufficient for p95/flake claims. Impact
+  selection, machine-readable manifests, vertical browser smoke, failure canaries,
+  nightly breadth, and release-specific S4 remain pending.

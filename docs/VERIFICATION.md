@@ -9,7 +9,7 @@ must be linked from the repository's current Actions page after publication.
 
 | Boundary | Command / method | Result |
 |---|---|---|
-| Core Python suite | `python -m pytest -q` | 387 passed in 19.71s; one optional real-runtime test skipped because the ambient LangGraph exposes the unsupported pre-1.1 tuple boundary |
+| Core Python suite | `python -m pytest -q` | 387 passed in 19.68s; one optional real-runtime test skipped because the ambient LangGraph exposes the unsupported pre-1.1 tuple boundary |
 | Schema and world contract | API, snapshot, lifecycle, storage, and reducer regressions | Event protocol `0.2.0`; reducer `0.4.0`; measurement extension `1.0.0`; coverage contract `0.3.0`; old snapshots remain isolated by reducer version; legacy `0.1.0` read compatibility is storage-only |
 | Python lint | `python -m ruff check --no-cache .` | Full repository PASS |
 | Frontend syntax | `node --check` over four application files, two Playwright configs, two specs, and the motion spike | 9/9 PASS |
@@ -44,7 +44,7 @@ the main premise. The maintained hypothesis is narrower: repeated Draft pushes
 spend avoidable runner time, and future renderer/browser/performance matrices
 need room to grow.
 
-Working-branch shadow evidence:
+Local shadow evidence:
 
 - one sequential Windows execution of the exact shadow fast command (full Ruff,
   five focused Pytest files, and four primary JavaScript syntax checks) passed in
@@ -53,14 +53,28 @@ Working-branch shadow evidence:
   separate RED failures proved the missing fast job, transition triggers, and
   aggregate were observable;
 - PyYAML `6.0.3` semantically parses the workflow and verifies exact aggregate
-  dependencies, Draft failure, `always()`, `toJSON(needs)`, and the absence of
-  job-level Draft conditions on the six existing S2 job definitions;
-- all existing nine protected contexts remain configured for every PR; no branch
-  protection change has been made from local evidence.
+  dependencies, Draft failure, `always()`, `toJSON(needs)`, bounded fast work,
+  and one exact job-level Draft condition across all six S2 job definitions.
 
-Hosted S1 timing, Draft-to-Ready transitions, matrix-member failure propagation,
-dependency skip/cancel behavior, historical replay, manifest completeness,
-branch-protection readback, and rollback drill remain pending publication.
+Hosted Phase A evidence:
+
+| Run / revision | Mode | Result |
+|---|---|---|
+| [29645134489](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29645134489), `641280e…` | Draft PR #13 | Fast PASS in 13s; every legacy S2 context PASS; aggregate explicit FAILURE in 3s with the Ready instruction. |
+| [29645207017](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29645207017), same `641280e…` | `ready_for_review` | New run ID; fast PASS in 18s; every S2 context PASS; aggregate PASS in 2s after all dependencies. |
+| [29645305313](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29645305313), resulting main `4dbd68b…` | Protected-main push | Fast PASS in 18s; complete S2 PASS; aggregate PASS in 2s. |
+
+After the main run, branch protection was changed monotonically from nine to ten
+required contexts. API readback retained `strict=true`, administrator enforcement,
+all original contexts, GitHub Actions app ID `15368`, and every unrelated
+protection field. The first stdin-based PATCH attempt returned HTTP 400 before
+mutation; the reviewed-file retry succeeded and was read back. This is recorded
+because failed control-plane attempts must not disappear from evidence.
+
+Phase B's local RED→GREEN contract now skips the six complete S2 job definitions
+only for Draft PR events. Hosted skipped-child Draft/Ready/main behavior,
+matrix-member failure propagation, dependency skip/cancel canaries, historical
+replay, manifest completeness, and rollback drill remain pending.
 
 ## Automated Chromium observatory contract
 
@@ -308,10 +322,10 @@ evidence.
 
 ## Explicitly pending
 
-- Staged validation still needs representative shadow samples, a deterministic
-  S0/impact-manifest runner, historical-regression replay, aggregate protection
-  migration, S3 nightly breadth, S4 exact-release-commit evidence, and an
-  escaped-defect observation window.
+- Staged validation still needs the Phase B hosted canary, representative samples,
+  a deterministic S0/impact-manifest runner, historical-regression replay,
+  failure/skip/cancel canaries, S3 nightly breadth, S4 exact-release-commit
+  evidence, rollback drill, and an escaped-defect observation window.
 - Measured comprehension, information-density, and recognition studies have not
   run. Automated cross-browser, screen-reader, high-contrast-mode, and real
   assistive-technology verification is not implemented.
