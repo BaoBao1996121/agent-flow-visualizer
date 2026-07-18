@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>VA1 Art Direction Gate · Agent Anthill</title>
+  <link rel="stylesheet" href="./board.css">
+</head>
+<body data-view="compare" data-active-candidate="field-manual">
+  <header class="board-header">
+    <div class="project-mark" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="board-title">
+      <p>AGENT ANTHILL / VISUAL LAB / VA1</p>
+      <h1>Art-direction gate <span>same facts, different surface</span></h1>
+    </div>
+    <p class="board-disclaimer" data-testid="va1-disclaimer">
+      CONCEPT REFERENCE · NOT RUNTIME · NOT STUDY WINNER
+    </p>
+    <nav class="view-switcher" aria-label="Concept board views">
+      <a href="?view=compare" data-view-link="compare">COMPARE 3</a>
+      <a href="?view=focus&amp;candidate=field-manual" data-view-link="focus">FOCUS 1</a>
+    </nav>
+  </header>
+
+  <section class="board-context" aria-label="Review constraints">
+    <p><strong>REVIEW QUESTION</strong> Which visual language makes state, incident, trace, and evidence fastest to find?</p>
+    <ul>
+      <li><b>Frozen reference</b> synthetic fixture · cursor 30 / head 43</li>
+      <li><b>Equal inventory</b> 8 rooms · 7 actions · 4 health signals</li>
+      <li><b>Guardrail</b> proximity never means causality</li>
+    </ul>
+  </section>
+
+  <main class="board-grid" id="concept-board">
+    <article class="concept-panel field-manual" data-testid="concept-panel"
+             data-candidate="field-manual" data-runtime-reference="none" data-selected="true">
+      <header class="panel-heading">
+        <div>
+          <p>DIRECTION F1 / RECOMMENDED HYPOTHESIS</p>
+          <h2>Technical field manual</h2>
+        </div>
+        <span class="direction-chip">PIXEL 30% · SIGNAL 70%</span>
+      </header>
+
+      <div class="health-row" aria-label="Sample health signals">
+        <span data-health="run"><i></i>RUN <strong>RUNNING</strong></span>
+        <span data-health="capture"><i></i>CAPTURE <strong>CONNECTED</strong></span>
+        <span data-health="ledger"><i></i>LEDGER <strong>VERIFIED</strong></span>
+        <span data-health="renderer"><i></i>RENDERER <strong>REFERENCE</strong></span>
+      </div>
+
+      <div class="panel-workspace">
+        <section class="colony-map" aria-label="Field manual orthographic cutaway">
+          <svg class="trace-map" viewBox="0 0 800 420" aria-hidden="true">
+            <path class="trace sequence" d="M120 110 H325 V205 H525 V315 H690" />
+            <path class="trace cause" d="M170 205 C260 190 360 190 452 205" />
+            <path class="trace handoff" d="M356 110 C410 72 510 72 565 110" />
+            <path class="trace inferred" d="M610 205 C680 220 680 278 642 305" />
+            <circle class="trace-node selected-node recovered-node" cx="452" cy="205" r="8" />
+          </svg>
+          <div class="room-grid">
+            <div class="room" data-slot="control"><span class="room-code">C01</span><b data-answer-label>CONTROL NEST</b><i class="room-glyph control-glyph"></i><em>2 agents</em></div>
+            <div class="room" data-slot="model"><span class="room-code">M02</span><b data-answer-label>MODEL ENGINE</b><i class="room-glyph model-glyph"></i><em>1 call</em></div>
+            <div class="room" data-slot="tool"><span class="room-code">T03</span><b data-answer-label>TOOL WORKSHOP</b><i class="room-glyph tool-glyph"></i><em>handoff</em></div>
+            <div class="room incident-room recovered-room selected-room" data-slot="incident"><span class="room-code">I04</span><b data-answer-label>INCIDENT BAY</b><i class="room-glyph incident-glyph"></i><em>recovered · selected</em></div>
+            <div class="room" data-slot="context"><span class="room-code">X05</span><b data-answer-label>CONTEXT LOOM</b><i class="room-glyph context-glyph"></i><em>near full</em></div>
+            <div class="room" data-slot="memory"><span class="room-code">R06</span><b data-answer-label>MEMORY VAULT</b><i class="room-glyph memory-glyph"></i><em>verified</em></div>
+            <div class="room" data-slot="compaction"><span class="room-code">P07</span><b data-answer-label>COMPACTION PRESS</b><i class="room-glyph compact-glyph"></i><em>idle</em></div>
+            <div class="room unknown-room" data-slot="unknown"><span class="room-code">U08</span><b data-answer-label>UNKNOWN FOG</b><i class="room-glyph unknown-glyph"></i><em>not observed</em></div>
+          </div>
+          <span class="map-stamp">ORTHOGRAPHIC · DEPTH IS NOT PRIORITY</span>
+        </section>
+
+        <aside class="evidence-panel" data-testid="evidence-panel">
+          <div class="evidence-head"><span>SELECTED OBJECT</span><b>SEQ 30</b></div>
+          <h3 data-answer-label>Researcher</h3>
+          <p class="object-meta">AGENT · RECOVERED · DECLARED</p>
+          <dl>
+            <div><dt>LAST FACT</dt><dd>error.recovered</dd></div>
+            <div><dt>SUBJECT</dt><dd>agent.researcher</dd></div>
+            <div><dt>TRUTH</dt><dd class="truth-declared">◇ DECLARED</dd></div>
+          </dl>
+          <div class="evidence-route">
+            <span>CANONICAL EVENT</span>
+            <strong>ROUTE SLOT ↗</strong>
+          </div>
+          <p class="reference-warning">REFERENCE ONLY · no live API claim</p>
+        </aside>
+      </div>
+
+      <div class="relation-key" data-testid="trace-legend">
+        <span class="key-sequence">SEQUENCE</span><span class="key-cause">CANONICAL CAUSE</span>
+        <span class="key-handoff">HANDOFF</span><span class="key-inferred">INFERRED</span>
+      </div>
+
+      <div class="worker-strip" aria-label="Seven proposed worker action silhouettes">
+        <span data-worker-action="idle"><i class="worker idle"></i><b>IDLE</b></span>
+        <span data-worker-action="inspect"><i class="worker inspect"></i><b>INSPECT</b></span>
+        <span data-worker-action="carry"><i class="worker carry"></i><b>CARRY</b></span>
+        <span data-worker-action="tool-call"><i class="worker tool-call"></i><b>TOOL</b></span>
+        <span data-worker-action="handoff"><i class="worker handoff"></i><b>HANDOFF</b></span>
+        <span data-worker-action="error"><i class="worker error"></i><b>ERROR</b></span>
+        <span data-worker-action="recover"><i class="worker recover"></i><b>RECOVER</b></span>
+      </div>
+
+      <div class="timeline" data-testid="timeline" aria-label="Frozen reference timeline">
+        <button type="button" aria-label="Previous event">‹</button><button type="button" aria-label="Play reference" disabled>▶</button>
+        <span class="timeline-state">HISTORICAL</span>
+        <div class="timeline-track"><i class="event incident" style="--p:55%"></i><i class="event recovery" style="--p:68%"></i><i class="event compact" style="--p:84%"></i><i class="cursor" style="--p:68%"></i></div>
+        <span class="timeline-seq">SEQ <strong>30</strong> / HEAD 43</span>
+        <button type="button" aria-label="Next event">›</button><button type="button">HEAD</button>
+      </div>
+    </article>
+
+    <article class="concept-panel blueprint" data-testid="concept-panel"
+             data-candidate="blueprint" data-runtime-reference="none" data-selected="false">
+      <header class="panel-heading">
+        <div><p>DIRECTION F2 / ANALYTICAL PEER</p><h2>Luminous blueprint</h2></div>
+        <span class="direction-chip">VECTOR · LOW TEXTURE</span>
+      </header>
+      <div class="health-row" aria-label="Sample health signals">
+        <span data-health="run"><i></i>RUN <strong>RUNNING</strong></span><span data-health="capture"><i></i>CAPTURE <strong>CONNECTED</strong></span><span data-health="ledger"><i></i>LEDGER <strong>VERIFIED</strong></span><span data-health="renderer"><i></i>RENDERER <strong>REFERENCE</strong></span>
+      </div>
+      <div class="panel-workspace">
+        <section class="colony-map" aria-label="Blueprint orthographic cutaway">
+          <svg class="trace-map" viewBox="0 0 800 420" aria-hidden="true"><path class="trace sequence" d="M120 110 H325 V205 H525 V315 H690"/><path class="trace cause" d="M170 205 C260 190 360 190 452 205"/><path class="trace handoff" d="M356 110 C410 72 510 72 565 110"/><path class="trace inferred" d="M610 205 C680 220 680 278 642 305"/><circle class="trace-node selected-node recovered-node" cx="452" cy="205" r="8"/></svg>
+          <div class="room-grid">
+            <div class="room" data-slot="control"><span class="room-code">C01</span><b data-answer-label>CONTROL NEST</b><i class="room-glyph control-glyph"></i><em>2 agents</em></div><div class="room" data-slot="model"><span class="room-code">M02</span><b data-answer-label>MODEL ENGINE</b><i class="room-glyph model-glyph"></i><em>1 call</em></div><div class="room" data-slot="tool"><span class="room-code">T03</span><b data-answer-label>TOOL WORKSHOP</b><i class="room-glyph tool-glyph"></i><em>handoff</em></div><div class="room incident-room recovered-room selected-room" data-slot="incident"><span class="room-code">I04</span><b data-answer-label>INCIDENT BAY</b><i class="room-glyph incident-glyph"></i><em>recovered · selected</em></div><div class="room" data-slot="context"><span class="room-code">X05</span><b data-answer-label>CONTEXT LOOM</b><i class="room-glyph context-glyph"></i><em>near full</em></div><div class="room" data-slot="memory"><span class="room-code">R06</span><b data-answer-label>MEMORY VAULT</b><i class="room-glyph memory-glyph"></i><em>verified</em></div><div class="room" data-slot="compaction"><span class="room-code">P07</span><b data-answer-label>COMPACTION PRESS</b><i class="room-glyph compact-glyph"></i><em>idle</em></div><div class="room unknown-room" data-slot="unknown"><span class="room-code">U08</span><b data-answer-label>UNKNOWN FOG</b><i class="room-glyph unknown-glyph"></i><em>not observed</em></div>
+          </div><span class="map-stamp">ORTHOGRAPHIC · DEPTH IS NOT PRIORITY</span>
+        </section>
+        <aside class="evidence-panel"><div class="evidence-head"><span>SELECTED OBJECT</span><b>SEQ 30</b></div><h3 data-answer-label>Researcher</h3><p class="object-meta">AGENT · RECOVERED · DECLARED</p><dl><div><dt>LAST FACT</dt><dd>error.recovered</dd></div><div><dt>SUBJECT</dt><dd>agent.researcher</dd></div><div><dt>TRUTH</dt><dd class="truth-declared">◇ DECLARED</dd></div></dl><div class="evidence-route"><span>CANONICAL EVENT</span><strong>ROUTE SLOT ↗</strong></div><p class="reference-warning">REFERENCE ONLY · no live API claim</p></aside>
+      </div>
+      <div class="relation-key"><span class="key-sequence">SEQUENCE</span><span class="key-cause">CANONICAL CAUSE</span><span class="key-handoff">HANDOFF</span><span class="key-inferred">INFERRED</span></div>
+      <div class="worker-strip" aria-label="Seven proposed worker action silhouettes"><span data-worker-action="idle"><i class="worker idle"></i><b>IDLE</b></span><span data-worker-action="inspect"><i class="worker inspect"></i><b>INSPECT</b></span><span data-worker-action="carry"><i class="worker carry"></i><b>CARRY</b></span><span data-worker-action="tool-call"><i class="worker tool-call"></i><b>TOOL</b></span><span data-worker-action="handoff"><i class="worker handoff"></i><b>HANDOFF</b></span><span data-worker-action="error"><i class="worker error"></i><b>ERROR</b></span><span data-worker-action="recover"><i class="worker recover"></i><b>RECOVER</b></span></div>
+      <div class="timeline" aria-label="Frozen reference timeline"><button type="button">‹</button><button type="button" disabled>▶</button><span class="timeline-state">HISTORICAL</span><div class="timeline-track"><i class="event incident" style="--p:55%"></i><i class="event recovery" style="--p:68%"></i><i class="event compact" style="--p:84%"></i><i class="cursor" style="--p:68%"></i></div><span class="timeline-seq">SEQ <strong>30</strong> / HEAD 43</span><button type="button">›</button><button type="button">HEAD</button></div>
+    </article>
+
+    <article class="concept-panel miniature" data-testid="concept-panel"
+             data-candidate="miniature" data-runtime-reference="none" data-selected="false">
+      <header class="panel-heading">
+        <div><p>DIRECTION F3 / DEPTH-RISK PEER</p><h2>Mechanism miniature</h2></div>
+        <span class="direction-chip">LOW-POLY · TACTILE</span>
+      </header>
+      <div class="health-row" aria-label="Sample health signals">
+        <span data-health="run"><i></i>RUN <strong>RUNNING</strong></span><span data-health="capture"><i></i>CAPTURE <strong>CONNECTED</strong></span><span data-health="ledger"><i></i>LEDGER <strong>VERIFIED</strong></span><span data-health="renderer"><i></i>RENDERER <strong>REFERENCE</strong></span>
+      </div>
+      <div class="panel-workspace">
+        <section class="colony-map" aria-label="Miniature orthographic cutaway">
+          <svg class="trace-map" viewBox="0 0 800 420" aria-hidden="true"><path class="trace sequence" d="M120 110 H325 V205 H525 V315 H690"/><path class="trace cause" d="M170 205 C260 190 360 190 452 205"/><path class="trace handoff" d="M356 110 C410 72 510 72 565 110"/><path class="trace inferred" d="M610 205 C680 220 680 278 642 305"/><circle class="trace-node selected-node recovered-node" cx="452" cy="205" r="8"/></svg>
+          <div class="room-grid">
+            <div class="room" data-slot="control"><span class="room-code">C01</span><b data-answer-label>CONTROL NEST</b><i class="room-glyph control-glyph"></i><em>2 agents</em></div><div class="room" data-slot="model"><span class="room-code">M02</span><b data-answer-label>MODEL ENGINE</b><i class="room-glyph model-glyph"></i><em>1 call</em></div><div class="room" data-slot="tool"><span class="room-code">T03</span><b data-answer-label>TOOL WORKSHOP</b><i class="room-glyph tool-glyph"></i><em>handoff</em></div><div class="room incident-room recovered-room selected-room" data-slot="incident"><span class="room-code">I04</span><b data-answer-label>INCIDENT BAY</b><i class="room-glyph incident-glyph"></i><em>recovered · selected</em></div><div class="room" data-slot="context"><span class="room-code">X05</span><b data-answer-label>CONTEXT LOOM</b><i class="room-glyph context-glyph"></i><em>near full</em></div><div class="room" data-slot="memory"><span class="room-code">R06</span><b data-answer-label>MEMORY VAULT</b><i class="room-glyph memory-glyph"></i><em>verified</em></div><div class="room" data-slot="compaction"><span class="room-code">P07</span><b data-answer-label>COMPACTION PRESS</b><i class="room-glyph compact-glyph"></i><em>idle</em></div><div class="room unknown-room" data-slot="unknown"><span class="room-code">U08</span><b data-answer-label>UNKNOWN FOG</b><i class="room-glyph unknown-glyph"></i><em>not observed</em></div>
+          </div><span class="map-stamp">ORTHOGRAPHIC · DEPTH IS NOT PRIORITY</span>
+        </section>
+        <aside class="evidence-panel"><div class="evidence-head"><span>SELECTED OBJECT</span><b>SEQ 30</b></div><h3 data-answer-label>Researcher</h3><p class="object-meta">AGENT · RECOVERED · DECLARED</p><dl><div><dt>LAST FACT</dt><dd>error.recovered</dd></div><div><dt>SUBJECT</dt><dd>agent.researcher</dd></div><div><dt>TRUTH</dt><dd class="truth-declared">◇ DECLARED</dd></div></dl><div class="evidence-route"><span>CANONICAL EVENT</span><strong>ROUTE SLOT ↗</strong></div><p class="reference-warning">REFERENCE ONLY · no live API claim</p></aside>
+      </div>
+      <div class="relation-key"><span class="key-sequence">SEQUENCE</span><span class="key-cause">CANONICAL CAUSE</span><span class="key-handoff">HANDOFF</span><span class="key-inferred">INFERRED</span></div>
+      <div class="worker-strip" aria-label="Seven proposed worker action silhouettes"><span data-worker-action="idle"><i class="worker idle"></i><b>IDLE</b></span><span data-worker-action="inspect"><i class="worker inspect"></i><b>INSPECT</b></span><span data-worker-action="carry"><i class="worker carry"></i><b>CARRY</b></span><span data-worker-action="tool-call"><i class="worker tool-call"></i><b>TOOL</b></span><span data-worker-action="handoff"><i class="worker handoff"></i><b>HANDOFF</b></span><span data-worker-action="error"><i class="worker error"></i><b>ERROR</b></span><span data-worker-action="recover"><i class="worker recover"></i><b>RECOVER</b></span></div>
+      <div class="timeline" aria-label="Frozen reference timeline"><button type="button">‹</button><button type="button" disabled>▶</button><span class="timeline-state">HISTORICAL</span><div class="timeline-track"><i class="event incident" style="--p:55%"></i><i class="event recovery" style="--p:68%"></i><i class="event compact" style="--p:84%"></i><i class="cursor" style="--p:68%"></i></div><span class="timeline-seq">SEQ <strong>30</strong> / HEAD 43</span><button type="button">›</button><button type="button">HEAD</button></div>
+    </article>
+  </main>
+
+  <footer class="decision-footer">
+    <div><strong>F1 · FIELD MANUAL</strong><span>Best signal hierarchy hypothesis</span></div>
+    <div><strong>F2 · BLUEPRINT</strong><span>Lowest texture / coldest personality</span></div>
+    <div><strong>F3 · MINIATURE</strong><span>Highest appeal / highest depth risk</span></div>
+    <p>KEEP / REVISE / KILL only after silhouette, grayscale, clipping, and independent five-second review.</p>
+  </footer>
+  <script src="./board.js"></script>
+</body>
+</html>

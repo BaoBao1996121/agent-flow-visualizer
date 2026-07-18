@@ -325,6 +325,23 @@ def test_phase0_visual_lab_has_a_dedicated_one_test_browser_and_syntax_path():
     ]
 
 
+def test_va1_concept_board_has_a_dedicated_s1_browser_docs_and_syntax_path():
+    policy = load_policy(POLICY)
+    plan = build_plan(
+        policy,
+        ["docs/visual-lab/va1/board.css"],
+        change_source="contract",
+    )
+
+    assert plan["required_stage"] == "S1"
+    assert plan["feedback_coverage"] == "complete"
+    assert [check["id"] for check in plan["checks"]] == [
+        "browser-va1-s0",
+        "docs-contracts",
+        "node-va1",
+    ]
+
+
 def test_server_entrypoint_runs_both_production_and_visual_lab_browser_smokes():
     plan = build_plan(load_policy(POLICY), ["server.py"], change_source="contract")
     check_ids = {check["id"] for check in plan["checks"]}

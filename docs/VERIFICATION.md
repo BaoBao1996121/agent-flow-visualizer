@@ -372,6 +372,14 @@ Hosted Phase C promotion evidence:
 | [29653471568](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29653471568), `4dd4564…` | Final evidence-record candidate | All 11 jobs PASS in 93s wall; aggregate PASS; final Ready artifact uploaded. |
 | [29653577169](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29653577169), squash `6b36444…` | Protected-main push | All 11 jobs PASS in 91s wall; aggregate PASS last; exact browser attachment uploaded. |
 
+### VA0 Visual Lab promotion
+
+| Run / candidate | Boundary | Result |
+|---|---|---|
+| [29659487143](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29659487143), `6520d72…` | Draft PR | Fast gate passed; six S2 jobs skipped; required aggregate failed explicitly as designed. |
+| [29659548968](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29659548968), same candidate | Ready PR | All 11 jobs passed; exact six-state Playwright artifact uploaded and reviewed. |
+| [29659786458](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29659786458), squash `91d3e09…` | Protected-main push | All 11 jobs passed; Chromium took 1m36s; six 1600×1000 states were reviewed. Artifact `8433977660` is 2,202,008 bytes with SHA-256 `4ba200b7ed5fd53ed643986951e7451f59096cd932867e62a3db573247b71519`. |
+
 ## Explicitly pending
 
 - Staged validation still needs representative observation-window samples,
@@ -380,9 +388,11 @@ Hosted Phase C promotion evidence:
 - Measured comprehension, information-density, and recognition studies have not
   run. Automated cross-browser, screen-reader, high-contrast-mode, and real
   assistive-technology verification is not implemented.
-- The renderer-independent `VisualModel`, art-direction study, PixiJS 8 vertical
-  slice, and same-scene Phaser 4.2.1 benchmark are planned work, not current
-  product capabilities.
+- VA0 is protected-main engineering evidence and VA1 now has an isolated local
+  concept reference, but the measured art-direction study and independent human
+  review have not run. The renderer-independent `VisualModel`, PixiJS 8
+  vertical slice, and same-scene Phaser 4.2.1 benchmark remain planned work,
+  not current product capabilities.
 - The local workstation has no Docker CLI, so local container execution remains
   unavailable. Protected-main run 29639913312 passed Compose validation, image
   build, non-root identity, read-only root, health, and a real ledger write.

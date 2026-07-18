@@ -1,6 +1,6 @@
 {
   "schema_version": "anthill.validation-impact/1.0.0",
-  "policy_version": "2026-07-19.7",
+  "policy_version": "2026-07-19.8",
   "historical_replays": [
     {
       "id": "langgraph-deep-ndjson-29570924390",
@@ -45,6 +45,11 @@
       "grep": "@visual-lab-s0",
       "timeout_seconds": 30
     },
+    "browser-va1-s0": {
+      "kind": "playwright",
+      "grep": "@va1-s0",
+      "timeout_seconds": 30
+    },
     "docs-contracts": {
       "kind": "pytest",
       "targets": [
@@ -73,6 +78,14 @@
         "static/js/labs/phase0/bootstrap.mjs",
         "static/js/labs/phase0/cutaway-svg.mjs",
         "static/js/labs/phase0/study-scene.mjs"
+      ],
+      "timeout_seconds": 10
+    },
+    "node-va1": {
+      "kind": "node-check",
+      "targets": [
+        "docs/visual-lab/va1/board.js",
+        "tests/browser/va1-concept-board.spec.mjs"
       ],
       "timeout_seconds": 10
     },
@@ -328,6 +341,21 @@
         "browser-visual-lab-s0",
         "frontend-contracts",
         "node-visual-lab"
+      ]
+    },
+    {
+      "id": "phase0-va1-concept",
+      "match": {
+        "prefix": [
+          "docs/visual-lab/va1/"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "complete",
+      "checks": [
+        "browser-va1-s0",
+        "docs-contracts",
+        "node-va1"
       ]
     },
     {

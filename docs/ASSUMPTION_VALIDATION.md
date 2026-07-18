@@ -363,3 +363,32 @@ timeout/retry, motion, and density paths are explicit; every threshold is
 identified as protocol-derived or an initial value pending calibration; public
 or sensitive-run response minimization remains a named later gate; the direction
 precursor remains outside the frozen study conditions and production Canvas.
+
+## 2026-07-19 — VA1 concept-board preimplementation spikes
+
+Three PowerShell spikes, each under 20 lines, gate the isolated art-direction
+board before any HTML, CSS, or browser-contract implementation:
+
+| Assumption | Executable evidence | Result |
+|---|---|---|
+| A repository-local board can be reviewed through the pinned Chromium without adding an application route or server dependency. | `scripts/spikes/va1_file_board_preflight.ps1` opened an existing repository file at a `file:` URL in a 1600×1000 page and checked CSS Grid, `color-mix()`, and polygon `clip-path`. | PASS: `file:`, Grid, color mixing, and clip paths were all supported in the installed pinned browser. This validates the review surface, not the future board content. |
+| Three equal comparison panels can retain a useful scene width in the fixed review viewport. | `scripts/spikes/va1_layout_budget.ps1` reserved 64 px outer space and 32 px of gaps inside 1600 px. | PASS: each panel receives 501 px and its inner scene 477 px, above the initial 470 px concept-review floor. The floor is a layout assumption pending the rendered clipping check. |
+| VA1 can remain outside the production server, `static/`, and `anthill/` runtime boundaries. | `scripts/spikes/va1_runtime_isolation.ps1` scans those three boundaries for the reserved VA1 paths. Its first run scanned the whole repository and correctly RED on its own source text; the corrected scan is limited to the actual runtime paths. | PASS after the visible scope correction: zero production references. The later S0 contract must preserve this invariant after assets and tests exist. |
+
+These spikes permit only a local, non-runtime concept board. They do not approve
+generated imagery, select a production renderer, freeze a Phase 0 stimulus, or
+claim that a visual direction improves comprehension.
+
+### VA1 browser and truth RED→GREEN
+
+| Behavior | RED observation | GREEN observation |
+|---|---|---|
+| Executable board boundary | The exact `@va1-s0` test failed with `ERR_FILE_NOT_FOUND` because the concept board did not exist. | The repository-local board loads from `file:`, exposes three directions with identical inventories, and makes no non-`file:` request. |
+| Focus routing under isolation | The comparison state stayed active because Chromium refused a local ES module under the `file:` security boundary. | The dependency-free classic script reads the same bounded query values without adding a product route or changing browser security. |
+| Frozen fixture truth | Visual inspection found the focus view calling cursor-30 `error.recovered` a fictional `Context Worker 02 / OBSERVED` state in Context Loom. A new browser assertion failed on that text. | All surfaces now select Incident Bay and show the fixture-backed `Researcher / RECOVERED / DECLARED` state plus `agent.researcher`; the cause line originates at Tool Workshop. |
+| Answer-label readability | The rendered focus view was measured rather than accepted from CSS intent. | At 1600×1000, answer-bearing labels have zero horizontal/vertical clipping, the minimum computed font is 12 px, and the document has no horizontal overflow. |
+
+The corrected two-test slice passed in 12.9 seconds of Playwright-reported time.
+It proves a deterministic review board and one frozen truth state only. Human
+recognition, forced-colors/grayscale review, hosted unmodified screenshots, and
+the keep/revise/kill decision remain pending.

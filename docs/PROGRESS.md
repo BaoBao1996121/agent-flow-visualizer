@@ -24,10 +24,16 @@ Ruff, seven fixed Node syntax checks, and one 8.9-second screenshot-attaching
 Chromium vertical. PR #16 proved Draft/Ready routing; protected-main run 29653577169
 then passed all 11 jobs on `6b36444` in 91 seconds.
 
+Protected `main` also contains the isolated VA0 orthographic Visual Lab at
+`91d3e09`. [Run 29659786458](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29659786458)
+passed all 11 jobs and uploaded six reviewed 1600×1000 states. VA1 now has a
+local, non-runtime three-direction concept board; its independent readability
+review and hosted promotion remain pending.
+
 ## Next milestones
 
 1. Continue the [staged-validation contract](VALIDATION_STAGES.md) tracked in [issue #12](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/12): collect the observation window, failure/skip/cancel and matrix-member canaries, manual-dispatch sample, S3 breadth, and rollback evidence. Keep the runner advisory and all ten protected contexts intact until those data justify change.
-2. Execute the [Phase 0 visual evidence plan](PHASE0_VISUAL_EVIDENCE_PLAN.md) tracked in [issue #10](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/10); then build the renderer-independent `VisualModel`, deterministic animation contract, PixiJS 8 vertical slice, and same-scene Phaser 4.2.1 benchmark. Publish measurements before selecting the migration path.
+2. Continue the [Phase 0 visual evidence plan](PHASE0_VISUAL_EVIDENCE_PLAN.md) tracked in [issue #10](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/10): independently review VA1 silhouettes/surfaces, freeze only a passing representative direction, and publish the study evidence. Then build the renderer-independent `VisualModel`, deterministic animation contract, PixiJS 8 vertical slice, and same-scene Phaser 4.2.1 benchmark. Publish measurements before selecting the migration path.
 3. Add standard live OTLP collection plus AG-UI and LangGraph stream bridges with bounded ingestion/backpressure.
 4. Add native Claude Code and Codex hooks with published capability contracts.
 5. Add queryable monitoring exports, very-long-run pagination, and reference-based parent snapshot + tail DAG storage.
@@ -164,3 +170,15 @@ then passed all 11 jobs on `6b36444` in 91 seconds.
 - Truth review found and closed three pre-PR blockers with RED/GREEN evidence: display failure can no longer invent run or ledger invalidity; a superseded seek failure can no longer erase a newer verified HEAD; and a late old HEAD can no longer poison the cache used by a later seek. The same pass added sibling-request cancellation, browser `no-store`, and honest disabled state for initially unbound HEAD controls. Public or sensitive-run response-byte/field minimization remains an explicit future gate.
 - The advisory impact runner passed the explicit Visual Lab S1 vertical with complete feedback. The full worktree correctly requires S2 because the impact policy itself changed, protected-base policy therefore differs, and skip-worktree DLP paths limit local visibility; local evidence remains non-promotional by design.
 - Final local design review: 5/5 passed. External dependencies remain verified; timings and package-size observations are source-labelled; timeout, retry, abort, stale generation, dirty data, integrity, density, accessibility, and evidence paths are explicit; thresholds remain initial; scope remains an isolated VA0 precursor. Hosted engineering S2, exact unmodified attachments, PR review, and protected-main replay remain required, so no promotion is claimed yet.
+
+### 2026-07-19 — VA0 protected-main promotion and VA1 concept gate
+
+- Promoted VA0 through [PR #18](https://github.com/BaoBao1996121/agent-flow-visualizer/pull/18) to protected-main commit `91d3e09adf0d8507e202af0432a0e6dcfb08bddb`. Ready run 29659548968 and resulting-main run 29659786458 each passed all 11 jobs.
+- Parsed and reviewed the protected-main Playwright artifact in memory. Its ZIP digest is `sha256:4ba200b7ed5fd53ed643986951e7451f59096cd932867e62a3db573247b71519`; six exact 1600×1000 states cover overview, invalidation, superseded seek, superseded HEAD cache, timeout, and recovery.
+- Re-read `main` protection after the run: strict, administrator enforcement, linear history, conversation resolution, all ten app-bound required contexts, and force-push/deletion denial remained unchanged.
+- Added the isolated [VA1 art-direction board](visual-lab/va1/README.md). It compares field-manual, blueprint, and miniature surfaces while keeping eight rooms, seven actions, four health signals, the same cursor, selection, relation vocabulary, and evidence slot.
+- The built-in image-generation attempt failed at the service network layer and returned no artifact. Its exact prompt and failure are recorded; no API-key fallback, generated bitmap, engine, product route, or runtime dependency entered the repository.
+- RED→GREEN evidence includes the initial missing board, local ES-module refusal under `file:`, and a truth audit that rejected `Context Worker 02 / OBSERVED` at cursor 30. The corrected board uses the fixture-backed `Researcher / RECOVERED / DECLARED` state in Incident Bay.
+- Local board contracts pass 2/2 in 12.9 seconds. The 1600×1000 focus view has zero measured answer-label clipping, no horizontal overflow, and a 12 px answer-label floor. Compare/focus browser-memory screenshots are 490,018/218,786 bytes with SHA-256 `b7a0f5a6…b343d` and `4f0eff71…c906a`.
+- Registered `docs/visual-lab/va1/` as a known S1 vertical in impact policy `2026-07-19.8`. The exact advisory run passed `@va1-s0`, two Node syntax checks, and five docs/version contracts with complete feedback; changes to the browser harness or policy itself still require hosted S2.
+- 设计审查: 5/5 通过. Official engine and asset-tool facts were rechecked; measurements are labelled; isolation/network/truth/clipping failures are recorded; thresholds remain hypotheses; VA1 stays outside runtime, frozen stimuli, renderer selection, and production assets. Independent human review, forced-colors/grayscale evidence, hosted screenshots, and the keep/revise/kill decision remain pending.

@@ -1,8 +1,8 @@
 # Phase 0 orthographic cutaway Visual Lab
 
-Status: exploratory direction-A precursor; not a frozen Phase 0 stimulus or
-study condition; production Canvas is unchanged; hosted engineering-validation
-S2 evidence pending.
+Status: VA0 is a protected-main executable precursor; VA1 is a local,
+non-runtime art-direction reference. Neither is a frozen Phase 0 stimulus,
+study condition, renderer decision, or production Canvas replacement.
 
 Last reviewed: 2026-07-19 (Asia/Shanghai).
 
@@ -146,6 +146,48 @@ any of the following is true: no reusable rig plus six actions; more than 20% of
 frames require pixel redraw; cleanup is not lower than VA2; the 32–48 px
 silhouette is worse; or export cannot be reproduced from source and settings.
 
+### VA1 concept-board candidate
+
+The [VA1 executable board](visual-lab/va1/index.html) compares three anonymous
+surface families over one frozen reference: technical field manual, luminous
+blueprint, and mechanism miniature. Every family keeps the same eight room
+slots, seven worker-action silhouettes, four independent health signals,
+historical cursor, selected object, relation vocabulary, and evidence slot.
+Only the presentation language changes. The current recommendation is a
+hypothesis, not a winner.
+
+The board is loaded from `file:` and has no production server, `static/`, or
+`anthill/` reference. Its [manifest](visual-lab/va1/manifest.json) forbids
+runtime import and records the authored-file hashes, screenshot hashes, review
+state, and the failed built-in image-generation attempt. That attempt ended at
+the service network layer and produced no asset; the exact prompt and failure
+boundary remain in [the attempt record](visual-lab/va1/IMAGEGEN_ATTEMPT.md).
+
+The first visual review rejected a misleading concept state before freeze. At
+synthetic cursor 30, the board originally placed `error.recovered` in Context
+Loom as `OBSERVED`. The frozen fixture instead projects Researcher and Query
+logs as recovered in Incident Bay with `DECLARED` evidence. A focused browser
+assertion failed on the old claim, then passed after all three surfaces moved
+the selection and evidence to the fixture-backed state.
+
+Current local VA1 observations:
+
+- exact `@va1-s0`: 1/1 passed after the initial missing-board RED;
+- complete board slice: 2/2 passed in 12.9 seconds of Playwright-reported time;
+- all three directions made only `file:` requests and retained equal semantic
+  inventories;
+- the recommended 1600×1000 focus view has zero measured answer-label clipping,
+  no horizontal overflow, and a 12 px minimum answer-bearing label;
+- browser-memory compare screenshot: 490,018 bytes, SHA-256
+  `b7a0f5a6b5bce13c4d2fb71d8c769b1ced536ba331c87cf5597efaeee54b343d`;
+- browser-memory focus screenshot: 218,786 bytes, SHA-256
+  `4f0eff7130bbce47bf496ca8a9c85d97f0ddba1d8e522057ab4730ebb83c906a`.
+
+These are engineering and visual-review observations only. Independent
+five-second recognition, grayscale/forced-colors review, hosted unmodified
+attachments, and keep/revise/kill evidence remain pending. VA1 does not add an
+engine or authorize VA2 production assets.
+
 ## Engine recommendation
 
 PixiJS `8.19.0` remains the leading renderer candidate because Anthill needs a
@@ -216,7 +258,7 @@ A local in-memory screenshot is illustrative. Endpoint protection rewrites
 materialized PNG bytes on this workstation, so only an unmodified hosted
 Playwright artifact can promote the candidate.
 
-### Current local candidate evidence
+### VA0 promotion evidence
 
 - Stable Chromium: 25/25 in 1.1 minutes (68.720 seconds process wall).
 - Exact engineering S0: 1/1 `@visual-lab-s0` in 10.2 seconds.
@@ -226,13 +268,25 @@ Playwright artifact can promote the candidate.
   `07154927e9ab15980ba4596b50b2e8f7766de78b20388420fa26687709e176cd`;
   12 zones, 12 entities, complete addressed run ID, and zero measured entity
   label clipping.
-- The suite declares exact-state attachments for overview, invalidation,
-  superseded seek, superseded HEAD cache, timeout, and recovery. Hosted review
-  is still pending.
+- Ready-PR run
+  [29659548968](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29659548968)
+  passed all 11 jobs, including all six hosted exact-state attachments.
+- [PR #18](https://github.com/BaoBao1996121/agent-flow-visualizer/pull/18)
+  squash-merged to protected-main commit
+  `91d3e09adf0d8507e202af0432a0e6dcfb08bddb`.
+- Protected-main run
+  [29659786458](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29659786458)
+  repeated all 11 jobs successfully; the Chromium contract took 1m36s.
+- The protected-main Playwright artifact is 2,202,008 bytes with GitHub and
+  downloaded-byte digest
+  `sha256:4ba200b7ed5fd53ed643986951e7451f59096cd932867e62a3db573247b71519`.
+  Its six 1600×1000 screenshots cover overview, invalidation, superseded seek,
+  superseded HEAD cache, timeout, and recovery; each was parsed and reviewed.
 
 Truth/security review reports zero remaining P0/P1 for the synthetic VA0 path.
-This evidence freezes a local candidate only; it does not satisfy engineering
-S2, freeze an experimental condition, or choose a production renderer.
+This satisfies the engineering-S2 promotion boundary for VA0. It does not
+freeze an experimental condition, prove comprehension, approve a public or
+sensitive-run endpoint, or choose a production renderer.
 
 ## Known limits
 

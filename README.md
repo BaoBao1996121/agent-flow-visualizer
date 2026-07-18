@@ -283,6 +283,11 @@ See the checked [environment matrix](docs/ENVIRONMENT_CHECKLIST.md) for verified
 
 The renderer migration is governed by the [visual-system decision](docs/VISUAL_SYSTEM.md). Its performance budgets are initial gates marked for measurement; the project does not claim unmeasured PixiJS or Phaser performance.
 
+The protected-main [VA0 Visual Lab](docs/PHASE0_VISUAL_LAB.md) is an executable
+truth/density precursor. The local [VA1 art-direction gate](docs/visual-lab/va1/README.md)
+compares three equal-information surfaces without adding an engine or product
+route. Neither is presented as a study winner or production renderer.
+
 ## Roadmap
 
 Near-term, in order:

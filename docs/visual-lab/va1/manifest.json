@@ -1,0 +1,47 @@
+{
+  "schema": "anthill.va1-concept-manifest/0.1.0",
+  "status": "exploration_reference",
+  "created_at": "2026-07-19T05:08:10+08:00",
+  "runtime_import_allowed": false,
+  "phase0_stimulus": false,
+  "renderer_decision": false,
+  "information_skeleton": {
+    "rooms": 8,
+    "worker_actions": 7,
+    "health_signals": 4,
+    "cursor_seq": 30,
+    "head_seq": 43
+  },
+  "directions": [
+    { "id": "field-manual", "label": "Technical field manual", "decision": "hypothesis" },
+    { "id": "blueprint", "label": "Luminous blueprint", "decision": "peer" },
+    { "id": "miniature", "label": "Mechanism miniature", "decision": "depth-risk-peer" }
+  ],
+  "source_assets": [],
+  "generation_attempts": [
+    {
+      "tool": "built-in image generation",
+      "date": "2026-07-19",
+      "result": "network_error_no_artifact",
+      "record": "IMAGEGEN_ATTEMPT.md",
+      "record_sha256": "a8d5d272e0618a158c5d9e9d3d917321ea3ab131923ad6c748feeeaa29c244ee",
+      "runtime_imported": false
+    }
+  ],
+  "authored_files": [
+    { "path": "index.html", "sha256": "b5a27079058d5370b6dd7d76da0ca6abf92e6153d48ca81b343e623be7646d5c" },
+    { "path": "board.css", "sha256": "2ab59613f3fca2754ca678dd7431be89c64695575c1771bf95085ca9495e4f48" },
+    { "path": "board.js", "sha256": "3dab74bb70edb4311ed78d06724cd1450af80c8fc3da51dc7e9396d79828f479" },
+    { "path": "README.md", "sha256": "953f2429fa62d51241d7750204021ca61de37da1139c50c9d0d5e037a7fd864d" }
+  ],
+  "local_browser_memory_screenshots": [
+    { "view": "compare", "viewport": "1600x1000", "bytes": 490018, "sha256": "b7a0f5a6b5bce13c4d2fb71d8c769b1ced536ba331c87cf5597efaeee54b343d" },
+    { "view": "focus:field-manual", "viewport": "1600x1000", "bytes": 218786, "sha256": "4f0eff7130bbce47bf496ca8a9c85d97f0ddba1d8e522057ab4730ebb83c906a" }
+  ],
+  "authored_with": ["HTML", "CSS", "SVG", "JavaScript"],
+  "review": {
+    "independent_human": "pending",
+    "five_second_recognition": "pending",
+    "keep_revise_kill": "pending"
+  }
+}
