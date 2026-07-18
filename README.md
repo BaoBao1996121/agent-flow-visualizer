@@ -8,13 +8,17 @@
 > Alpha · application `0.7.0` · event protocol `0.2.0` · reducer `0.4.0` · measurement contract `1.0.0` · coverage contract `0.3.0`
 > Python runtime tracing plus OTLP/OpenInference, AG-UI, and LangGraph StreamPart v2 offline import work today. Framework-native live bridges remain the next expansion, not a claim hidden behind the UI.
 
+[Release v0.7.0](https://github.com/BaoBao1996121/agent-flow-visualizer/releases/tag/v0.7.0) · [protected-main verification: 9/9](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639913312) · [Phase 0 evidence plan](docs/PHASE0_VISUAL_EVIDENCE_PLAN.md) · [public roadmap](https://github.com/BaoBao1996121/agent-flow-visualizer/milestones)
+
 Most agent visualizers answer “what looks busy?” Agent Anthill is built to answer harder questions:
 
 - What **actually happened**, in authoritative ingest order?
 - Which state is observed, declared in code, inferred, or counterfactually verified?
 - Why did an agent move from planning to a tool, hand off work, compact context, or recover from an error?
 - What did compaction keep, replace, and remove?
-- Can every visual object lead back to its event, span, source line, payload, and hash-chain evidence?
+- Can every semantic visual object resolve to a typed event/event set,
+  declaration, derived projection, or Coverage/Unknown explanation with the
+  available source and hash-chain evidence?
 - What did the system look like at event 17—not only at the end?
 
 The pixel world is a semantic projection over an append-only event ledger. It is not the source of truth.
@@ -256,7 +260,7 @@ The renderer migration is governed by the [visual-system decision](docs/VISUAL_S
 
 Near-term, in order:
 
-1. Measure Phase 0 comprehension, information density, recognition, accessibility, and art-direction candidates; publish the results rather than judging the interface by screenshots alone.
+1. Execute the [preregistered Phase 0 visual evidence plan](docs/PHASE0_VISUAL_EVIDENCE_PLAN.md): measure comprehension, information density, recognition, accessibility, and equal-information art-direction candidates; publish the results rather than judging the interface by screenshots alone.
 2. Introduce a renderer-independent `VisualModel` and deterministic animation-intent contract; build the bounded PixiJS 8 vertical slice and same-scene Phaser 4.2.1 benchmark before choosing a migration path.
 3. Add OTLP protobuf/live collection plus AG-UI and LangGraph live stream bridges with bounded ingestion and backpressure.
 4. Add native Claude Code and Codex hook providers with published capability contracts.
