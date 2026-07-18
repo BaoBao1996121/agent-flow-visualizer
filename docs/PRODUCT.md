@@ -81,12 +81,35 @@ Long traces must collapse by semantic stage before they become graph hairballs.
 
 ## Current scope
 
-The current implementation proves the event kernel, Python, OTLP/OpenInference, AG-UI JSON/NDJSON, and LangGraph StreamPart v2 offline paths, local ledger, snapshot-accelerated deterministic projection under reducer `0.2.0`, time travel, comparison, explicit causal slicing, cursor-specific instrumentation visibility, and the first pixel observatory. LangGraph `1.1.0` and `1.2.9` passed isolated real-runtime probes. Local Chromium observatory contract automation is in place, while the configured hosted browser job has not run; dated commands and results live in [the verification record](VERIFICATION.md). The latest-code manual Chromium rerun covered LangGraph JSON import; NDJSON, AG-UI, Demo, historical seek, Fork, and Compare are earlier same-day manual evidence. It does not yet prove:
+The current implementation proves the event kernel, Python,
+OTLP/OpenInference, AG-UI JSON/NDJSON, and LangGraph StreamPart v2 offline
+paths; event schema `0.2.0`; a single-process local ledger; snapshot-accelerated
+deterministic projection under reducer `0.3.0`; time travel, comparison,
+explicit causal slicing, cursor-specific instrumentation visibility, and the
+first pixel observatory. LangGraph `1.1.0` and `1.2.9` pass isolated real-runtime
+probes.
+
+Selector identity is a ledger-HEAD monitoring aid, not a historical
+projection. Cursor-specific world and Compare states remain the authority for
+“what was true at this point.” Lightweight run discovery maximizes observatory
+availability around damaged ledgers; it reports `not_checked` and is not an
+integrity authority. Full per-run integrity remains an explicit operation.
+
+The current local evidence is 326 passing Python tests (plus one optional skip),
+29 passing Chromium contracts, and 58/58 repeated browser executions. The first
+hosted run passed its 13-test browser, container, frontend, and Python 3.11 jobs,
+but failed Python 3.12/3.13 and both LangGraph jobs on one shared deep-NDJSON
+assertion; it predates the current fix and every schema/reducer/browser claim in
+this section. Exact dated evidence lives in [the verification record](VERIFICATION.md).
+
+It does not yet prove:
 
 - arbitrary repository import;
 - production multi-process ingestion;
 - complete framework coverage;
 - framework-native LangGraph live capture;
+- low-latency operation on very long ledgers (the JSONL reference store scans
+  growing bytes on every append);
 - deterministic real-model rerun;
 - counterfactual causality;
 - multi-tenant authorization or hosted trace storage.

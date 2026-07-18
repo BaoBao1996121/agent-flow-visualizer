@@ -4,6 +4,10 @@
     const API = '/api/anthill';
     const STATIC_CAPTURE = new URLSearchParams(window.location.search).has('static');
     const TERMINAL_RUN_STATUSES = new Set(['completed', 'failed', 'interrupted', 'cancelled']);
+    const RUN_LIFECYCLE_EVENT_TYPES = new Set([
+        'run.started', 'run.resumed', 'run.forked', 'run.paused',
+        'run.completed', 'run.cancelled', 'error.fatal',
+    ]);
     const W = 1120;
     const H = 660;
     const TRUTH_COLORS = {
@@ -49,6 +53,92 @@
     };
     const truthColor = level => TRUTH_COLORS[level] || '#789489';
     const shortId = value => value ? (value.length > 19 ? `${value.slice(0, 8)}…${value.slice(-7)}` : value) : '—';
+    const DISPLAY_CONTROL_PATTERN = /[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/gu;
+    const textField = (value, maxLength = 160) => {
+        if (typeof value !== 'string') return '';
+        const cleaned = value
+            .replace(DISPLAY_CONTROL_PATTERN, ' ')
+            .replace(/\u00b7/gu, '\u2219')
+            .replace(/\s+/gu, ' ')
+            .trim();
+        if (cleaned.length <= maxLength) return cleaned;
+        return `${cleaned.slice(0, Math.max(0, maxLength - 1))}\u2026`;
+    };
+    const runIdField = value => typeof value === 'string' ? value : '';
+    const identityField = value => {
+        if (typeof value !== 'string') return '';
+        return value
+            .replaceAll('\\', '\\\\')
+            .replace(DISPLAY_CONTROL_PATTERN, character => (
+                `\\u${character.codePointAt(0).toString(16).padStart(4, '0')}`
+            ))
+            .replace(/\u00b7/gu, '\\u00b7');
+    };
+    const buildRunIdLabels = runs => {
+        const shortCounts = new Map();
+        (runs || []).forEach(run => {
+            const runId = runIdField(run?.run_id);
+            if (!runId) return;
+            const label = shortId(runId);
+            shortCounts.set(label, (shortCounts.get(label) || 0) + 1);
+        });
+        return new Map((runs || []).flatMap(run => {
+            const runId = runIdField(run?.run_id);
+            if (!runId) return [];
+            const label = shortId(runId);
+            return [[runId, shortCounts.get(label) > 1 ? runId : label]];
+        }));
+    };
+    const formatIngestTime = value => {
+        const timestamp = textField(value, 64);
+        const match = timestamp.match(
+            /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,9})?(?:Z|[+-](\d{2}):(\d{2}))$/i,
+        );
+        if (!match) return 'UNKNOWN';
+        const [year, month, day, hour, minute, second] = match
+            .slice(1, 7).map(Number);
+        const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+        const monthDays = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const invalidCalendar = year < 1
+            || month < 1 || month > 12
+            || day < 1 || day > monthDays[month - 1]
+            || hour > 23 || minute > 59 || second > 59
+            || Number(match[7] || 0) > 23
+            || Number(match[8] || 0) > 59;
+        if (invalidCalendar) return 'UNKNOWN';
+        const date = new Date(timestamp);
+        if (Number.isNaN(date.getTime())) return 'UNKNOWN';
+        const pad = number => String(number).padStart(2, '0');
+        return [
+            String(date.getUTCFullYear()).padStart(4, '0'),
+            '-',
+            pad(date.getUTCMonth() + 1),
+            '-',
+            pad(date.getUTCDate()),
+            ' ',
+            pad(date.getUTCHours()),
+            ':',
+            pad(date.getUTCMinutes()),
+            'Z',
+        ].join('');
+    };
+    const formatRunTitle = (run, runIdLabel = '') => {
+        const runId = runIdField(run?.run_id);
+        const id = runId ? identityField(runIdLabel || shortId(runId)) : 'UNKNOWN';
+        const titleField = textField(run?.title, 120);
+        return titleField && titleField !== textField(runId, 120)
+            ? titleField
+            : id;
+    };
+    const formatRunOption = (run, runIdLabel = '', stale = false) => {
+        const title = formatRunTitle(run, runIdLabel);
+        const source = textField(run?.source_adapter, 100) || 'UNKNOWN';
+        const status = textField(run?.run_status, 32).toUpperCase() || 'UNKNOWN';
+        const marker = run?.synthetic === true ? '[DEMO] ' : '';
+        const staleMarker = stale ? '[STALE] ' : '';
+        const id = identityField(runIdLabel || shortId(runIdField(run?.run_id))) || 'UNKNOWN';
+        return `${staleMarker}${marker}${title} · SRC ${source} · ${status} · INGEST ${formatIngestTime(run?.created_at)} · ID ${id}`;
+    };
     const eventFamily = type => String(type || '').split('.')[0];
     const importRunId = prefix => {
         const uuid = globalThis.crypto?.randomUUID?.();
@@ -584,8 +674,11 @@
     class AnthillApp {
         constructor() {
             this.runs = [];
+            this.runIdLabels = new Map();
+            this.staleRunIds = new Set();
             this.runId = null;
             this.manifest = null;
+            this.committedSelection = null;
             this.worldResponse = null;
             this.world = null;
             this.events = [];
@@ -595,6 +688,7 @@
             this.followLive = true;
             this.playTimer = null;
             this.eventSource = null;
+            this.compareEventSource = null;
             this.worldRequest = null;
             this.selectedEventId = null;
             this.cursorEventId = null;
@@ -603,11 +697,15 @@
             this.runRequestEpoch = 0;
             this.worldRequestId = 0;
             this.headRefreshTimer = null;
+            this.manifestRefreshTimer = null;
+            this.manifestRefreshController = null;
+            this.manifestRefreshRequestId = 0;
             this.currentView = 'world';
             this.compareRunId = null;
             this.compareProgress = 1;
             this.compareData = null;
             this.compareRequestId = 0;
+            this.compareRequestController = null;
             this.refreshTimer = null;
             this.canvas = new AnthillCanvas($('anthill-canvas'), {
                 onEvent: id => this.selectEvent(id),
@@ -642,6 +740,7 @@
             $('langgraph-file').addEventListener('change', event => this.importLangGraphFile(event.target.files?.[0]));
             $('compare-run-select').addEventListener('change', event => {
                 this.compareRunId = event.target.value;
+                this.openCompareStream();
                 this.loadComparison(this.compareProgress);
             });
             $('truth-help').addEventListener('click', () => $('truth-dialog').showModal());
@@ -701,27 +800,48 @@
             try {
                 const response = await this.fetchJson(`${API}/runs?limit=500`);
                 this.runs = response.items || [];
-                const select = $('run-select');
-                select.innerHTML = '';
+                this.staleRunIds.clear();
                 if (!this.runs.length) {
+                    const select = $('run-select');
+                    select.innerHTML = '';
                     select.append(new Option('事件账本为空', ''));
                     this.showEmpty(true);
                     this.setConnection('offline', 'NO RUNS');
                     return;
                 }
-                this.runs.forEach(run => {
-                    const marker = run.synthetic ? '[DEMO] ' : '';
-                    const title = run.title && run.title !== run.run_id ? run.title : shortId(run.run_id);
-                    select.append(new Option(`${marker}${title} · ${run.event_count || 0} events`, run.run_id));
-                });
-                this.populateCompareRuns();
-                const target = preferredId || this.runId || this.runs[0].run_id;
-                select.value = target;
+                const requested = preferredId || this.runId;
+                const target = requested && this.runs.some(run => run.run_id === requested)
+                    ? requested
+                    : this.runs[0].run_id;
+                this.renderRunOptions(target);
                 await this.selectRun(target);
             } catch (error) {
                 this.setConnection('error', 'API ERROR');
                 this.showEmpty(true, error.message);
             }
+        }
+
+        renderRunOptions(selectedRunId = this.runId) {
+            if (selectedRunId && !this.runs.some(run => run.run_id === selectedRunId)) {
+                return false;
+            }
+            this.runIdLabels = buildRunIdLabels(this.runs);
+            const select = $('run-select');
+            select.innerHTML = '';
+            this.runs.forEach(run => {
+                if (typeof run?.run_id !== 'string') return;
+                select.append(new Option(
+                    formatRunOption(
+                        run, this.runIdLabels.get(run.run_id), this.staleRunIds.has(run.run_id),
+                    ), run.run_id,
+                ));
+            });
+            if (selectedRunId && this.runs.some(run => run.run_id === selectedRunId)) {
+                select.value = selectedRunId;
+                this.manifest = this.runs.find(run => run.run_id === selectedRunId) || null;
+            }
+            this.populateCompareRuns();
+            return true;
         }
 
         async createDemo() {
@@ -831,13 +951,34 @@
 
         async selectRun(runId) {
             if (!runId) return;
+            if (
+                this.runId
+                && this.world
+                && (!this.committedSelection || this.committedSelection.runId === this.runId)
+            ) {
+                this.committedSelection = {
+                    runId: this.runId,
+                    manifest: this.runs.find(run => run.run_id === this.runId) || this.manifest,
+                    selectedEventId: this.selectedEventId,
+                    cursorEventId: this.cursorEventId,
+                };
+            }
+            const previousSelection = this.committedSelection
+                ? { ...this.committedSelection }
+                : null;
             const runRequestEpoch = ++this.runRequestEpoch;
             this.closeStream();
+            this.closeCompareStream();
             this.stopPlayback();
             clearTimeout(this.refreshTimer);
             this.refreshTimer = null;
             clearTimeout(this.headRefreshTimer);
+            this.cancelManifestRefresh();
             this.headRefreshTimer = null;
+            this.cancelComparisonRequest();
+            if (this.currentView === 'compare') {
+                this.showComparisonLoading('LOADING SELECTED RUN…');
+            }
             if (this.worldRequest) this.worldRequest.abort();
             this.worldRequest = null;
             this.worldRequestId += 1;
@@ -848,7 +989,10 @@
             this.canvas.setSelected(null);
             this.manifest = this.runs.find(run => run.run_id === runId) || null;
             $('run-select').value = runId;
-            this.showEmpty(false);
+            const loadingId = identityField(this.runIdLabels.get(runId) || shortId(runId));
+            this.showEmpty(
+                true, `Loading run ${loadingId}…`, 'LOADING RUN',
+            );
             this.setConnection('loading', 'LOADING LEDGER');
             try {
                 const [world, eventPage, integrity] = await Promise.all([
@@ -862,6 +1006,7 @@
                 this.headSeq = Number(world.head_seq ?? -1);
                 this.cursorSeq = this.headSeq;
                 this.setFollow(true, false);
+                this.showEmpty(false);
                 this.applyWorld(world);
                 this.renderIntegrity(integrity);
                 this.renderTimelineTicks();
@@ -869,11 +1014,48 @@
                 this.openStream();
                 if (this.currentView === 'compare') {
                     this.populateCompareRuns();
+                    this.openCompareStream();
                     await this.loadComparison(this.compareProgress);
                 }
+                this.committedSelection = {
+                    runId: this.runId,
+                    manifest: this.manifest,
+                    selectedEventId: this.selectedEventId,
+                    cursorEventId: this.cursorEventId,
+                };
             } catch (error) {
                 if (this.runId !== runId || this.runRequestEpoch !== runRequestEpoch) return;
+                if (previousSelection) {
+                    this.runId = previousSelection.runId;
+                    this.manifest = previousSelection.manifest;
+                    this.selectedEventId = previousSelection.selectedEventId;
+                    this.cursorEventId = previousSelection.cursorEventId;
+                    $('run-select').value = previousSelection.runId;
+                    this.canvas.setSelected(previousSelection.selectedEventId);
+                    this.showEmpty(false);
+                    this.renderRunSummary();
+                    this.renderSyntheticBanner();
+                    this.renderTimeline();
+                    this.setConnection('loading', 'RESTORING LEDGER');
+                    this.openStream();
+                    if (this.currentView === 'compare') {
+                        this.populateCompareRuns();
+                        this.openCompareStream();
+                        await this.loadComparison(this.compareProgress);
+                    }
+                    this.flashError(`Run selection failed; restored ${identityField(
+                        this.runIdLabels.get(previousSelection.runId)
+                            || shortId(previousSelection.runId),
+                    )}: ${error.message}`);
+                    return;
+                }
                 this.setConnection('error', 'RUN LOAD FAILED');
+                this.showEmpty(true, error.message, 'RUN LOAD FAILED');
+                if (this.currentView === 'compare') {
+                    const banner = $('comparability-banner');
+                    banner.className = 'comparability-banner warning';
+                    banner.textContent = `RUN LOAD FAILED · ${textField(error.message, 180) || 'UNKNOWN ERROR'}`;
+                }
                 this.flashError(error.message);
             }
         }
@@ -954,7 +1136,9 @@
 
         renderRunSummary() {
             const state = this.world;
-            $('run-title').textContent = this.manifest?.title || shortId(this.runId);
+            $('run-title').textContent = formatRunTitle(
+                this.manifest || { run_id: this.runId }, this.runIdLabels.get(this.runId),
+            );
             $('run-status').textContent = String(state.run_status || 'unknown').toUpperCase();
             $('run-status').dataset.status = state.run_status || 'unknown';
             $('event-count').textContent = humanNumber(state.event_count);
@@ -1248,7 +1432,10 @@
             this.canvas.setSelected(eventId);
             let event = this.eventsById.get(eventId);
             try {
-                if (!event) event = await this.fetchJson(`${API}/runs/${encodeURIComponent(this.runId)}/events/${encodeURIComponent(eventId)}`);
+                if (!event) {
+                    const query = new URLSearchParams({ event_id: eventId });
+                    event = await this.fetchJson(`${API}/runs/${encodeURIComponent(this.runId)}/event?${query}`);
+                }
                 this.eventsById.set(eventId, event);
                 this.renderEventDetail(event);
                 this.renderEventFeed();
@@ -1297,7 +1484,12 @@
             $('causal-graph').className = 'causal-graph empty-detail';
             $('causal-graph').textContent = '正在构建显式因果切片…';
             try {
-                const graph = await this.fetchJson(`${API}/runs/${encodeURIComponent(runId)}/causal/${encodeURIComponent(eventId)}?direction=${direction}&max_depth=20`);
+                const query = new URLSearchParams({
+                    event_id: eventId,
+                    direction,
+                    max_depth: '20',
+                });
+                const graph = await this.fetchJson(`${API}/runs/${encodeURIComponent(runId)}/causal?${query}`);
                 if (
                     requestId !== this.causalRequestId
                     || this.runId !== runId
@@ -1367,8 +1559,12 @@
             if (comparing) {
                 this.stopPlayback();
                 this.populateCompareRuns();
+                this.openCompareStream();
+                this.scheduleManifestRefresh(0);
                 this.loadComparison(this.compareProgress);
             } else {
+                this.closeCompareStream();
+                this.cancelComparisonRequest();
                 this.renderTimeline();
             }
         }
@@ -1379,8 +1575,11 @@
             const candidates = this.runs.filter(run => run.run_id !== this.runId);
             select.innerHTML = '';
             candidates.forEach(run => {
-                const marker = run.synthetic ? '[DEMO] ' : '';
-                select.append(new Option(`${marker}${run.title || shortId(run.run_id)}`, run.run_id));
+                select.append(new Option(
+                    formatRunOption(
+                        run, this.runIdLabels.get(run.run_id), this.staleRunIds.has(run.run_id),
+                    ), run.run_id,
+                ));
             });
             if (!candidates.length) {
                 select.append(new Option('需要另一条 run', ''));
@@ -1393,28 +1592,72 @@
             select.value = this.compareRunId;
         }
 
+        cancelComparisonRequest() {
+            this.compareRequestId += 1;
+            if (this.compareRequestController) this.compareRequestController.abort();
+            this.compareRequestController = null;
+        }
+
+        showComparisonLoading(message) {
+            this.compareData = null;
+            for (const id of ['compare-left', 'compare-right', 'compare-delta']) {
+                $(id).replaceChildren();
+            }
+            const banner = $('comparability-banner');
+            banner.className = 'comparability-banner';
+            banner.textContent = message;
+        }
+
         async loadComparison(progress = this.compareProgress) {
+            this.cancelComparisonRequest();
             if (!this.runId || !this.compareRunId || this.runId === this.compareRunId) {
                 $('comparability-banner').className = 'comparability-banner warning';
                 $('comparability-banner').textContent = '需要至少两条不同的 run。可再创建一个展品或导入 OTLP trace。';
                 this.renderTimeline();
                 return;
             }
+            const leftRunId = this.runId;
+            const rightRunId = this.compareRunId;
             this.compareProgress = clamp(progress, 0, 1);
-            const requestId = ++this.compareRequestId;
+            const requestedProgress = this.compareProgress;
+            const requestId = this.compareRequestId;
+            const controller = new AbortController();
+            this.compareRequestController = controller;
+            const banner = $('comparability-banner');
+            banner.className = 'comparability-banner';
+            banner.textContent = 'REFRESHING COMPARISON AT CURRENT PROGRESS…';
             try {
                 const query = new URLSearchParams({
-                    left_run_id: this.runId,
-                    right_run_id: this.compareRunId,
-                    progress: String(this.compareProgress),
+                    left_run_id: leftRunId,
+                    right_run_id: rightRunId,
+                    progress: String(requestedProgress),
                 });
-                const result = await this.fetchJson(`${API}/compare?${query}`);
-                if (this.currentView !== 'compare' || requestId !== this.compareRequestId) return;
+                const result = await this.fetchJson(
+                    `${API}/compare?${query}`, { signal: controller.signal },
+                );
+                if (
+                    controller.signal.aborted
+                    || this.currentView !== 'compare'
+                    || requestId !== this.compareRequestId
+                    || this.runId !== leftRunId
+                    || this.compareRunId !== rightRunId
+                ) return;
                 this.compareData = result;
                 this.renderComparison(result);
                 this.renderTimeline();
             } catch (error) {
+                if (
+                    error.name === 'AbortError'
+                    || this.currentView !== 'compare'
+                    || requestId !== this.compareRequestId
+                    || this.runId !== leftRunId
+                    || this.compareRunId !== rightRunId
+                ) return;
+                banner.className = 'comparability-banner warning';
+                banner.textContent = 'COMPARISON REFRESH FAILED · RETRY OR CHOOSE ANOTHER RUN';
                 this.flashError(error.message);
+            } finally {
+                if (requestId === this.compareRequestId) this.compareRequestController = null;
             }
         }
 
@@ -1455,6 +1698,10 @@
         renderCompareSide(container, side, label, color) {
             const manifest = this.runs.find(run => run.run_id === side.run_id);
             const summary = side.summary;
+            const runIdLabel = this.runIdLabels.get(side.run_id);
+            const title = formatRunTitle(manifest || { run_id: side.run_id }, runIdLabel);
+            const displayId = identityField(runIdLabel || shortId(side.run_id)) || 'UNKNOWN';
+            const status = textField(summary.run_status, 32).toUpperCase() || 'UNKNOWN';
             const mechanisms = Object.entries(summary.mechanisms || {});
             const metrics = summary.metrics || {};
             const metricKeys = [
@@ -1468,9 +1715,9 @@
             container.style.setProperty('--side-color', color);
             container.innerHTML = `
                 <header class="compare-run-head">
-                    <span>${esc(label)} · ${esc(summary.run_status.toUpperCase())}</span>
-                    <h2>${esc(manifest?.title || shortId(side.run_id))}</h2>
-                    <p>${esc((summary.frameworks || []).join(', ') || 'framework not declared')} · ${esc(shortId(side.run_id))}</p>
+                    <span>${esc(label)} · ${esc(status)}</span>
+                    <h2>${esc(title)}</h2>
+                    <p>${esc(textField((summary.frameworks || []).join(', '), 160) || 'framework not declared')} · ${esc(displayId)}</p>
                 </header>
                 <div class="compare-mechanisms">
                     ${mechanisms.map(([name, enabled]) => `<div class="mechanism-cell ${enabled ? 'on' : ''}"><i></i><span>${esc(name.toUpperCase())}</span></div>`).join('')}
@@ -1553,6 +1800,12 @@
                     this.events.push(event);
                     this.events.sort((a, b) => (a.clock.ingest_seq ?? 0) - (b.clock.ingest_seq ?? 0));
                     this.headSeq = Math.max(this.headSeq, event.clock.ingest_seq ?? -1);
+                    if (
+                        this.currentView === 'compare'
+                        || RUN_LIFECYCLE_EVENT_TYPES.has(event.event_type)
+                    ) {
+                        this.scheduleManifestRefresh();
+                    }
                     if (this.followLive) this.scheduleHeadRefresh();
                     else this.renderTimelineTicks();
                 } catch (error) {
@@ -1562,6 +1815,38 @@
             this.eventSource.addEventListener('gap', () => this.reloadCurrentRun());
             this.eventSource.onopen = () => this.setConnection('connected', 'LEDGER CONNECTED');
             this.eventSource.onerror = () => this.setConnection('error', 'STREAM RETRYING');
+        }
+
+        openCompareStream() {
+            this.closeCompareStream();
+            if (
+                STATIC_CAPTURE
+                || this.currentView !== 'compare'
+                || !this.compareRunId
+                || !window.EventSource
+            ) return;
+            const runId = this.compareRunId;
+            const manifest = this.runs.find(run => run.run_id === runId);
+            const afterSeq = Math.max(Number(manifest?.event_count || 0) - 1, -1);
+            const source = new EventSource(
+                `${API}/runs/${encodeURIComponent(runId)}/stream?after_seq=${afterSeq}`,
+            );
+            this.compareEventSource = source;
+            source.addEventListener('runtime-event', message => {
+                if (this.currentView !== 'compare' || this.compareRunId !== runId) return;
+                try {
+                    const event = JSON.parse(message.data);
+                    if (event?.event_type) this.scheduleManifestRefresh();
+                } catch (error) {
+                    console.warn('Invalid Compare SSE event', error);
+                }
+            });
+            source.addEventListener('gap', () => this.scheduleManifestRefresh(0));
+        }
+
+        closeCompareStream() {
+            if (this.compareEventSource) this.compareEventSource.close();
+            this.compareEventSource = null;
         }
 
         scheduleHeadRefresh() {
@@ -1597,6 +1882,89 @@
             }, 90);
         }
 
+        cancelManifestRefresh() {
+            clearTimeout(this.manifestRefreshTimer);
+            this.manifestRefreshTimer = null;
+            this.manifestRefreshRequestId += 1;
+            if (this.manifestRefreshController) this.manifestRefreshController.abort();
+            this.manifestRefreshController = null;
+        }
+
+        scheduleManifestRefresh(delay = 90) {
+            clearTimeout(this.manifestRefreshTimer);
+            if (this.manifestRefreshController) this.manifestRefreshController.abort();
+            const runId = this.runId;
+            const requestId = ++this.manifestRefreshRequestId;
+            this.manifestRefreshTimer = setTimeout(async () => {
+                this.manifestRefreshTimer = null;
+                if (
+                    !runId
+                    || this.runId !== runId
+                    || this.manifestRefreshRequestId !== requestId
+                ) return;
+                const controller = new AbortController();
+                this.manifestRefreshController = controller;
+                try {
+                    const response = await this.fetchJson(
+                        `${API}/runs?limit=500`,
+                        { signal: controller.signal },
+                    );
+                    if (
+                        controller.signal.aborted
+                        || this.runId !== runId
+                        || this.manifestRefreshRequestId !== requestId
+                    ) return;
+                    const nextRuns = response.items || [];
+                    const requiredRunIds = [
+                        runId,
+                        this.currentView === 'compare' ? this.compareRunId : null,
+                    ].filter(Boolean);
+                    const missingRunIds = requiredRunIds.filter(
+                        id => !nextRuns.some(run => run.run_id === id),
+                    );
+                    if (missingRunIds.length) {
+                        this.markRunLabelsStale(missingRunIds);
+                        console.warn('Run manifest refresh omitted an active selector; keeping prior labels');
+                        return;
+                    }
+                    this.staleRunIds.clear();
+                    this.runs = nextRuns;
+                    this.renderRunOptions(runId);
+                    if (this.currentView === 'compare') {
+                        await this.loadComparison(this.compareProgress);
+                    }
+                } catch (error) {
+                    if (
+                        error.name !== 'AbortError'
+                        && this.runId === runId
+                        && this.manifestRefreshRequestId === requestId
+                    ) {
+                        this.markRunLabelsStale([
+                            runId, this.currentView === 'compare' ? this.compareRunId : null,
+                        ]);
+                        console.warn('Run manifest refresh failed', error);
+                    }
+                } finally {
+                    if (this.manifestRefreshRequestId === requestId) {
+                        this.manifestRefreshTimer = null;
+                        this.manifestRefreshController = null;
+                    }
+                }
+            }, delay);
+        }
+
+        markRunLabelsStale(runIds) {
+            (runIds || []).filter(Boolean).forEach(runId => this.staleRunIds.add(runId));
+            if (this.runId && this.runs.some(run => run.run_id === this.runId)) {
+                this.renderRunOptions(this.runId);
+            }
+            if (this.currentView === 'compare') {
+                const banner = $('comparability-banner');
+                banner.className = 'comparability-banner warning';
+                banner.textContent = 'RUN IDENTITY SNAPSHOT STALE · RETRYING ON THE NEXT RUNTIME EVENT OR REFRESH';
+            }
+        }
+
         closeStream() {
             if (this.eventSource) this.eventSource.close();
             this.eventSource = null;
@@ -1611,9 +1979,13 @@
             $('connection-label').textContent = label;
         }
 
-        showEmpty(value, message = null) {
-            $('world-empty').hidden = !value;
-            if (message) $('world-empty').querySelector('p').textContent = message;
+        showEmpty(value, message = null, title = null) {
+            const empty = $('world-empty');
+            empty.hidden = !value;
+            if (!value) return;
+            if (title !== null) empty.querySelector('h1').textContent = title;
+            if (message !== null) empty.querySelector('p').textContent = message;
+            empty.querySelector('.empty-actions').hidden = title !== null;
         }
 
         relativeTime(event) {

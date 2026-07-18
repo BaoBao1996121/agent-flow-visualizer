@@ -74,7 +74,7 @@ def test_snapshot_api_is_versioned_and_inspectable(tmp_path):
     created = client.post(f"/api/anthill/runs/{run_id}/snapshots")
     assert created.status_code == 201
     assert created.json()["seq"] == 43
-    assert created.json()["reducer_version"] == "0.2.0"
+    assert created.json()["reducer_version"] == "0.3.0"
 
     listing = client.get(f"/api/anthill/runs/{run_id}/snapshots")
     assert listing.status_code == 200

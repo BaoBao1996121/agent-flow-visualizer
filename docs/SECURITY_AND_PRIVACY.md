@@ -26,7 +26,8 @@ Agent telemetry commonly contains:
 - source code and file paths;
 - personal, health, financial, or customer data;
 - tool arguments/results and side-effect details;
-- proprietary model/provider metadata.
+- proprietary model/provider metadata;
+- run, event, trace, span, thread, task, message, and checkpoint identifiers.
 
 ## Defaults
 
@@ -36,6 +37,9 @@ Agent telemetry commonly contains:
 - OTLP, AG-UI, and LangGraph importers remove prompt/message/state/tool/task/checkpoint/custom/result/error/interrupt values by default while retaining structural counts, field names, lineage, and correlation metadata.
 - AG-UI encrypted reasoning values are treated as content and are never persisted by the default import path.
 - LangGraph run/thread/task/message/checkpoint IDs, namespaces, node names, state keys, model metadata, and source references may remain visible. Oversized external interrupt IDs are hashed deterministically and their original length is recorded.
+- Newly written run IDs must be display-stable single API path segments. This prevents ambiguous routing and control/bidi delimiter spoofing; it does not anonymize the identifier or make it safe to disclose.
+- Event IDs are opaque 1–256 character source identities, not secrets. Canonical lookup places them in a query string because path normalization cannot preserve every legal value. Browsers, servers, proxies, and APM systems may retain query strings; percent-encoding is not encryption.
+- Validation, conflict, and not-found response bodies use stable generic text and do not reflect a rejected or missing event ID. Successful event responses still contain the stored ID.
 - The synthetic exhibit is labelled in manifest, payload, source adapter, and UI.
 - The UI escapes event content before inserting it into HTML.
 - Private chain-of-thought is outside the schema; use observable plans or reasoning summaries.
@@ -46,15 +50,24 @@ Metadata-only does not mean anonymous. Tool names, step/node names, run/thread/t
 
 ## Hash chain limitations
 
-The JSONL SHA-256 chain detects accidental or malicious modification after recording. It does not provide:
+The JSONL event chain, whole-ledger append-index digest, and manifest cache
+checksum use unkeyed SHA-256. They detect accidental or uncoordinated changes.
+A checksum-valid non-empty manifest also lets discovery quarantine a shortened,
+emptied, or missing ledger without recreating it. They do not prove authenticity
+against a writer who can rewrite the ledger and recompute every hash.
+
+They do not provide:
 
 - encryption;
 - user authentication;
-- non-repudiation against an attacker who can rewrite the entire ledger;
+- non-repudiation or tamper proof against an actor who can rewrite the entire ledger;
 - secure timestamping;
 - off-host backup.
 
-Production integrity needs authenticated storage, access logs, key management, and signed checkpoints.
+Production integrity needs authenticated storage, access logs, key management,
+and externally anchored signed checkpoints. The lightweight `/runs` response is
+explicitly `not_checked`; use the per-run integrity endpoint for full local-chain
+verification.
 
 ## Replay and side effects
 

@@ -147,6 +147,22 @@ def test_world_projection_exposes_truth_context_memory_and_compaction():
     assert round(state.compactions["cmp-1"].reduction_ratio, 3) == 0.544
 
 
+def test_resuming_a_terminal_run_clears_the_current_completion_time():
+    state = project_world(
+        stamp(
+            [
+                event("resume-1", "run.started"),
+                event("resume-2", "run.completed", payload={"status": "success"}),
+                event("resume-3", "run.resumed"),
+            ]
+        ),
+        run_id="run-world",
+    )
+
+    assert state.run_status == "running"
+    assert state.completed_at is None
+
+
 def test_time_travel_stops_at_the_requested_ingest_sequence():
     events = rich_run()
     before_compaction = project_world(events, run_id="run-world", at_seq=6)
