@@ -308,6 +308,31 @@ def test_every_tracked_or_untracked_workspace_path_has_an_explicit_impact_rule()
     assert unmapped == []
 
 
+def test_phase0_visual_lab_has_a_dedicated_one_test_browser_and_syntax_path():
+    policy = load_policy(POLICY)
+    plan = build_plan(
+        policy,
+        ["static/js/labs/phase0/bootstrap.mjs"],
+        change_source="contract",
+    )
+
+    assert plan["required_stage"] == "S1"
+    assert plan["feedback_coverage"] == "complete"
+    assert [check["id"] for check in plan["checks"]] == [
+        "browser-visual-lab-s0",
+        "frontend-contracts",
+        "node-visual-lab",
+    ]
+
+
+def test_server_entrypoint_runs_both_production_and_visual_lab_browser_smokes():
+    plan = build_plan(load_policy(POLICY), ["server.py"], change_source="contract")
+    check_ids = {check["id"] for check in plan["checks"]}
+
+    assert "browser-s0" in check_ids
+    assert "browser-visual-lab-s0" in check_ids
+
+
 def test_policy_rejects_duplicate_rules_and_unknown_check_references(tmp_path):
     policy = json.loads(POLICY.read_text(encoding="utf-8"))
     policy["rules"].append(

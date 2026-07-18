@@ -280,3 +280,86 @@ Design review: 5/5 passed. External tools and versions are already pinned or
 hosted-proven; performance values above are explicit observations; missing tools,
 unknown paths, stale input, limited visibility, and rollback remain fail-closed;
 the 30-second threshold remains provisional; S1/S2 protection is unchanged.
+
+## 2026-07-19 — orthographic visual-lab preimplementation spikes
+
+Three bounded spikes gate the isolated visual-lab vertical slice. They validate
+the existing fixture/projection/browser seam; they do not select an art direction
+or prove a future PixiJS renderer.
+
+| Assumption | Spike and observation | Result |
+|---|---|---|
+| The frozen exhibit has stable incident, recovery, compaction, and terminal cursors for a visible time-travel slice. | `scripts/spikes/visual_lab_fixture_contract.py` built the exhibit and checked all 44 events plus exact event types at indices 24, 30, 37, and 43. | PASS. The lab can use those four named presets without inventing story state. |
+| The current projection exposes a bounded entity/evidence seam without introducing a renderer-owned domain model. | `scripts/spikes/visual_lab_projection_shape.py` store-stamped and projected the exhibit, then checked all 12 entities for ID, kind, name, zone, status, truth, event count, and a last-event route. | PASS for this fixture. This is not future virtualization, LOD, or canonical `VisualModel` parity evidence. |
+| Current Chromium can render the proposed SVG/clip-path grammar and completely stop ambient CSS animation under reduced motion. | `scripts/spikes/visual_lab_browser.mjs` checked SVG semantics, polygon clip-path support, and running animations under reduced motion. The first two attempts failed because the reduced-motion rule preceded an equal-specificity base animation rule; moving the media override after the base rule produced zero animations. | PASS after two visible failures. Production CSS must keep reduced-motion overrides after animated declarations and browser tests must check the result. |
+
+All three spike files contain fewer than 20 lines. No renderer package, remote
+asset, global npm setting, or production Canvas path was changed.
+
+## 2026-07-19 — visual-lab truth and accessibility hardening
+
+T4 reused three bounded preimplementation spikes, each under 20 lines. Direct
+path invocation first failed because `scripts/spikes` replaced the repository
+root on `sys.path`; the supported module-form invocations then passed.
+
+| Assumption | Executable evidence | Result |
+|---|---|---|
+| Opaque event and entity IDs survive schema validation without whitespace normalization. | `python -m scripts.spikes.visual_lab_opaque_id_contract` | PASS with exact `' event  id '` and `' agent  id '`. |
+| The frozen exhibit fits the VA0 maximum of four visible entities per chamber. | `python -m scripts.spikes.visual_lab_density_contract` | PASS; the observed fixture maximum is two. The browser now rejects any addressed projection above four instead of overlapping it. |
+| Full-chain integrity and the loaded fixture count agree before the lab makes visual truth claims. | `python -m scripts.spikes.visual_lab_integrity_contract` | PASS with `valid=true` and 44 events. |
+
+RED/GREEN browser evidence was kept vertical:
+
+| Behavior | RED observation | GREEN observation |
+|---|---|---|
+| Entity evidence reconciliation | A forged `last_seq=0` still rendered `READY`. | The scene fails closed unless every entity `lastEventId` resolves to an event at exactly `lastSeq` and not beyond the cursor. An attempted `event.subject.id == entity.id` rule was rejected: legitimate actor/run updates can own an entity's latest projection without using that entity as the event subject. |
+| Query and cursor identity | Repeated query keys silently selected the first value; `cursor_seq=99` silently sought HEAD 0. | Repeated `run_id`, `cursor_seq`, `static`, or `timeout_ms` fails before fetch; an explicit cursor beyond HEAD fails instead of being clamped. |
+| Provenance | Mixed input displayed `RECORDED RUN`; loading displayed a synthetic claim. | Initial state is `PENDING`; complete ledgers display `SYNTHETIC RUN`, `CONTAINS SYNTHETIC EVENTS`, or `RECORDED RUN`. |
+| Revalidation | A failed HEAD integrity refresh left the old entities visible and the chip `VERIFIED`. | Old SVG, entities, cursor facts, and Evidence are invalidated while HEAD remains the retry path. Integrity becomes `FAILED` only when the integrity endpoint explicitly proves invalid; other display failures become `UNVERIFIED`. |
+| Truth vocabulary | The legend exposed three labels and no shared five-state style contract. | `observed`, `declared`, `inferred`, `counterfactual_verified`, and `unknown` have explicit text plus five distinct non-color border/pattern signatures. |
+| 1600×1000 readability | 22 of the 24 demo name/meta labels reported overflow, and the addressed run ID was ellipsized. | Zero demo name/meta labels report horizontal or vertical clipping; the full addressed run is directly visible with `scrollWidth == clientWidth == 482`. |
+| Evidence drawer | The first useful state was `Select an entity`; disabled Evidence retained `href="#"`. | The current cursor event is the default, entity selection overrides it, an independent polite live region announces changes, and unavailable Evidence has neither `href` nor a tab stop. |
+| Motion, density, and contrast | Reduced-motion used `static=1`; five entities could overlap; three small-label pairs were below 4.5:1. | The test first observes running animation with `static=false`, then zero under reduce; density above four fails closed; all three measured pairs are at least 4.5:1. |
+
+The final stable Chromium file passed 25/25 in 1.1 minutes (68.720 seconds of
+independent process wall time) at the configured
+1600×1000 viewport in an independent run. The exact final `@visual-lab-s0`
+selector passed 1/1 in 10.2 seconds of Playwright-reported time, and four Node
+syntax checks passed again after the final patch. These are local Chromium observations, not
+cross-browser or real assistive-technology evidence.
+
+The design review then found one uncovered exception path: an initial projection
+request could remain `LOADING` forever. A focused browser test delayed the world
+response for 300 ms while requesting `timeout_ms=100`; RED reached `READY`
+because the parameter was ignored. GREEN aborts the request after 100 ms,
+invalidates semantic output, shows the exact timeout in `ERROR`, exposes
+`RETRY LOAD`, and reaches `READY` after the delayed route is released. Runtime
+configuration is bounded to 100–30,000 ms with an initial 10,000 ms default;
+these are initial study values pending hosted latency calibration.
+
+The final truth-boundary review then found two misleading failure paths and one
+avoidable request-cost path. Each received an explicit RED before the fix:
+
+| Behavior | RED observation | GREEN observation |
+|---|---|---|
+| Display failure semantics | Timeout and projection failures rewrote run lifecycle to `INVALID` and ledger health to `STALE INVALID`. | The scene is cleared as `SCENE INVALIDATED`, run lifecycle is `UNAVAILABLE`, and integrity is `UNVERIFIED`; only an explicit invalid full-chain result may say `FAILED`. |
+| Superseded failure ordering | A transport deliberately ignoring abort returned a malformed old seek after a newer HEAD reached `READY`; the stale catch erased the verified scene and changed the page to `ERROR`. | Both success and exception branches check the request generation. The newer HEAD remains `READY`, `VERIFIED`, and at `run.completed`. |
+| Superseded HEAD cache ownership | A late old HEAD was blocked from the DOM but still replaced the shared cache; the next INCIDENT silently changed the head denominator from 2 to 1. | Each HEAD loads through an isolated candidate client. Only the winning generation commits it; after the late old load, INCIDENT remains `1 / 2`. |
+| Batch cancellation and caching | A bad world response left its parallel integrity request pending, and fetch used the default browser cache mode. | The load owns a batch controller, aborts sibling requests on failure, and every lab GET uses `cache: 'no-store'`. |
+| Unbound initial controls | Initial query/timeout errors displayed an enabled HEAD button even though controls had never bound. | HEAD is disabled until one successful initialization binds controls; after a successful retry it becomes available. |
+
+The final local screenshot was emitted directly from browser memory after these
+changes: 1600×1000, 249,107 bytes, SHA-256
+`07154927e9ab15980ba4596b50b2e8f7766de78b20388420fa26687709e176cd`,
+12 zones, 12 entities, zero entity-label clipping, and a fully visible addressed
+run ID. Hosted attachments remain the promotion evidence because materialized
+local PNGs are rewritten by endpoint protection.
+
+Final design review: 5/5 passed. External dependencies and exact ESM distribution
+measurements are reproducible; performance and effort values are labelled as
+observed or estimated; invalid identity, dirty/mismatched data, integrity,
+disconnect/HTTP failure, superseded success/failure, isolated HEAD-cache commit,
+timeout/retry, motion, and density paths are explicit; every threshold is
+identified as protocol-derived or an initial value pending calibration; public
+or sensitive-run response minimization remains a named later gate; the direction
+precursor remains outside the frozen study conditions and production Canvas.

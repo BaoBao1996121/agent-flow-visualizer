@@ -8,7 +8,7 @@
 > Alpha · application `0.7.0` · event protocol `0.2.0` · reducer `0.4.0` · measurement contract `1.0.0` · coverage contract `0.3.0`
 > Python runtime tracing plus OTLP/OpenInference, AG-UI, and LangGraph StreamPart v2 offline import work today. Framework-native live bridges remain the next expansion, not a claim hidden behind the UI.
 
-[Release v0.7.0](https://github.com/BaoBao1996121/agent-flow-visualizer/releases/tag/v0.7.0) · [protected-main verification: 9/9](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639913312) · [Phase 0 evidence plan](docs/PHASE0_VISUAL_EVIDENCE_PLAN.md) · [public roadmap](https://github.com/BaoBao1996121/agent-flow-visualizer/milestones)
+[Release v0.7.0](https://github.com/BaoBao1996121/agent-flow-visualizer/releases/tag/v0.7.0) · [protected-main verification: 9/9](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639913312) · [Phase 0 evidence plan](docs/PHASE0_VISUAL_EVIDENCE_PLAN.md) · [experimental Visual Lab](docs/PHASE0_VISUAL_LAB.md) · [public roadmap](https://github.com/BaoBao1996121/agent-flow-visualizer/milestones)
 
 Most agent visualizers answer “what looks busy?” Agent Anthill is built to answer harder questions:
 
@@ -88,6 +88,24 @@ python server.py
 ```
 
 Open <http://127.0.0.1:8765> and click **一键展品**. The fixture is marked `SYNTHETIC FIXTURE` in both its manifest and every event.
+
+### Experimental orthographic Visual Lab
+
+An isolated VA0 direction precursor tests a denser orthographic cutaway without
+replacing the production Canvas. It requires an explicitly addressed run and
+never creates one on page load:
+
+```powershell
+$demo = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8765/api/anthill/demo
+Start-Process "http://127.0.0.1:8765/labs/phase0-cutaway?run_id=$($demo.run_id)&cursor_seq=43"
+```
+
+The lab reconciles cursor projection, ledger events, and full-chain integrity;
+every entity remains keyboard inspectable through a canonical evidence route.
+It is an exploration prototype, not a frozen study stimulus, production
+renderer, or Phase 0 winner.
+See [the Visual Lab record](docs/PHASE0_VISUAL_LAB.md) for its truth boundary,
+asset pipeline, engine benchmark, validation stages, and explicit limits.
 
 For a real local Python trace, open <http://127.0.0.1:8765/graph>, analyze `samples`, select an entry point, and run **实时运行**. The trace endpoint persists a metadata-only Anthill run by default.
 
