@@ -3,7 +3,8 @@
 Status: staged migration in progress, tracked by
 [issue #12](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/12).
 This document is the normative contract for validation depth. Dated measurements
-belong in [VERIFICATION.md](VERIFICATION.md).
+belong in [VERIFICATION.md](VERIFICATION.md); bounded progress is recorded in the
+append-only [stage breakthrough log](STAGE_LOG.md).
 
 ## Goal contract
 
@@ -23,12 +24,15 @@ adapters, projections, frontend behavior, or documentation.
 - visual goldens are reviewed artifacts and are never auto-promoted;
 - unknown impact escalates to the safer stage;
 - failed first attempts remain visible even when a retry succeeds;
+- every small-stage breakthrough records its time, action, observed effect, and
+  evidence; frontend stages also attach the exercised UI state as a screenshot;
 - repository-owned rules, not generated code or model output, select validation.
 
 **Done for the first migration:** a fixed-subset S1 loop, an enforced aggregate
 gate, both Draft/Ready transition directions, and protected-main S2 are proven.
-The deterministic S0 runner, historical-regression replay, failure canaries, and
-rollback drill remain explicitly pending.
+A deterministic S0 runner plus two historical mutation replays now pass locally
+as an advisory candidate. Hosted candidate evidence, dependency/matrix canaries,
+the observation window, and the rollback drill remain explicitly pending.
 
 **Rollback:** pause merging whenever a required context can be skipped, duplicated,
 or satisfied without its expected evidence.
@@ -55,18 +59,23 @@ account; organization ownership should be reconsidered before adopting that path
 
 ## Stage contract
 
-| Stage | Trigger and purpose | Required evidence | Blocking boundary | Status on 2026-07-18 |
+| Stage | Trigger and purpose | Required evidence | Blocking boundary | Status on 2026-07-19 |
 |---|---|---|---|---|
-| S0 — exploration | Local/on-demand loop while shaping one idea | Syntax/schema plus changed-module tests and one deterministic vertical smoke | Developer feedback only | Planned; no canonical runner or manifest yet |
-| S1 — PR fast | Every PR commit; reject obvious cross-layer regressions quickly | Integrity/version contracts, affected contracts, bounded observatory smoke, stage manifest | Enforced transitively by the required aggregate | Fixed conservative subset implemented; observed at 13–20s across eight hosted runs; impact selection and manifest pending |
+| S0 — exploration | Local/on-demand loop while shaping one idea | Syntax/schema plus changed-module tests and one deterministic vertical smoke | Developer feedback only | Advisory branch candidate implemented: versioned impact map, atomic run manifest, bounded vertical domains, and `@s0` browser path; hosted promotion evidence pending |
+| S1 — PR fast | Every PR commit; reject obvious cross-layer regressions quickly | Integrity/version contracts, affected contracts, bounded observatory smoke, stage manifest | Enforced transitively by the required aggregate | The former five-file subset observed 13–20s across eight hosted runs; the expanded eight-file candidate and local impact runner need new hosted timing |
 | S2 — protected merge | Ready PR and protected-main candidate | Python 3.11–3.13, LangGraph floor/supported, frontend, full Chromium, pinned visual compare, container, S1 | Must pass on the current PR candidate against the latest protected base; the resulting main commit reruns S2 | Aggregate is the tenth required context; two Draft skips, two Ready restores, and resulting-main S2 passed; original nine remain required |
 | S3 — deep | Scheduled/manual breadth and repetition | Repeat/order isolation, long-run and burst cases, optional browser/device/security matrices, owned quarantines | Does not block ordinary edits; failures block affected promotion until classified | Planned |
 | S4 — release | Exact release candidate/tag | Complete S2 plus provenance, asset, compatibility, benchmark, and reproducibility checks | Blocks release | Planned; no stale nightly may substitute |
 
-The current fixed-subset S1 runs Ruff over the repository, five focused Python
+The current S0 implementation candidate adds a deterministic local runner,
+versioned impact map, atomic manifest, and one real browser vertical smoke. It
+remains advisory until hosted replay evidence is attached; the stage table's
+protected-main status is not upgraded by branch-local results.
+
+The current fixed-subset S1 runs Ruff over the repository, eight focused Python
 contract files, and syntax checks for the four primary frontend modules. It is
 enforced transitively by the required aggregate, but is not yet the final
-change-impact runner.
+change-impact runner. The 13–20-second hosted observations predate this expansion.
 
 ## Draft-to-Ready state machine
 
@@ -100,9 +109,10 @@ cannot inherit stale state.
 2. Draft is an explicit aggregate failure, never a skipped or neutral merge gate.
 3. CI/workflow, dependency, lock, container, browser-harness, golden-image, and
    unknown-impact changes escalate to S2 even after Draft optimization lands.
-4. A stage manifest must eventually record commit/base, selected rules, commands,
-   durations, attempts, results, skipped checks, and reasons. Until that exists,
-   no claim of impact-map completeness is allowed.
+4. The candidate stage manifest records commit/base input identity, selected rules,
+   commands, durations, attempts, results, deferred checks, and explicit failure
+   states. It remains advisory until hosted replay and protected-base policy
+   authority are proven; its existence alone cannot claim impact-map completeness.
 5. A retry appends evidence; it does not replace or hide the first result.
 6. Quarantine requires a linked issue, owner, reason, expiry, and visible
    non-blocking status.
@@ -110,6 +120,10 @@ cannot inherit stale state.
    update mode disabled.
 8. Failure artifacts can contain traces, DOM, requests, or screenshots and follow
    the repository privacy rules.
+9. A stage is not recorded as a breakthrough until [STAGE_LOG.md](STAGE_LOG.md)
+   states when it happened, what changed, what effect was observed, and where the
+   evidence lives. Frontend entries require a screenshot, but screenshots never
+   replace behavioral assertions.
 
 ## Falsifiable hypotheses
 
@@ -146,10 +160,11 @@ measured human threshold. Draft S1 targets of 45 seconds and 1.5 runner-minutes
 demand approximately 44% less wall time and 65% less executor time than the
 81-second / 4.33-runner-minute baseline. Shadow data must recalibrate all three.
 
-Historical replay begins with run `29570924390` (deep-NDJSON error classification)
-and run `29638437349` (visual job host/container pip-cache path mismatch). The
-first should be assigned to Python/adapter S1; workflow/visual-harness changes
-that could recreate the second must escalate to S2.
+Historical replay uses run `29570924390` (deep-NDJSON error classification) and
+run `29638437349` (visual job host/container pip-cache path mismatch). The first
+is assigned to Python/adapter S1 and the second to S2. Both current selectors
+killed an injected former fault locally; the hosted candidate run remains the
+cross-platform authority.
 
 ## Migration and rollback
 
@@ -196,6 +211,6 @@ remove the aggregate. This prevents a protection gap between old and new gates.
   of 81s wall and 4.33 runner-min. This is strong directional evidence, not a p95
   or long-window cost claim.
 - The workstation has no Docker CLI, so local execution cannot claim complete S2.
-- Eight hosted fast-gate samples are insufficient for p95/flake claims. Impact
-  selection, machine-readable manifests, vertical browser smoke, failure canaries,
+- Eight hosted fast-gate samples and the current local S0 timings are insufficient
+  for p95/flake claims. Hosted impact-runner evidence, dependency/matrix canaries,
   nightly breadth, and release-specific S4 remain pending.

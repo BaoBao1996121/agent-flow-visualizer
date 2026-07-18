@@ -1,0 +1,639 @@
+{
+  "schema_version": "anthill.validation-impact/1.0.0",
+  "policy_version": "2026-07-18.6",
+  "historical_replays": [
+    {
+      "id": "langgraph-deep-ndjson-29570924390",
+      "source_url": "https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29570924390",
+      "changed_paths": [
+        "anthill/adapters/langgraph.py"
+      ],
+      "minimum_stage": "S1",
+      "required_checks": [
+        "pytest-langgraph"
+      ],
+      "canary_targets": [
+        "tests/test_langgraph_adapter.py::test_langgraph_ndjson_parser_contains_non_decoder_value_errors",
+        "tests/test_langgraph_adapter.py::test_langgraph_ndjson_rejects_excessive_nesting_before_decoder_behavior_diverges"
+      ]
+    },
+    {
+      "id": "visual-container-pip-cache-29638437349",
+      "source_url": "https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29638437349",
+      "changed_paths": [
+        ".github/workflows/ci.yml"
+      ],
+      "minimum_stage": "S2",
+      "required_checks": [
+        "policy-contracts",
+        "s2-hosted",
+        "visual-contracts"
+      ],
+      "canary_targets": [
+        "tests/test_visual_baseline_contract.py::test_visual_regression_uses_an_exact_python_runtime_lock"
+      ]
+    }
+  ],
+  "checks": {
+    "browser-s0": {
+      "kind": "playwright",
+      "grep": "@s0",
+      "timeout_seconds": 30
+    },
+    "docs-contracts": {
+      "kind": "pytest",
+      "targets": [
+        "tests/test_documentation_contract.py",
+        "tests/test_version_contract.py"
+      ],
+      "timeout_seconds": 15
+    },
+    "frontend-contracts": {
+      "kind": "pytest",
+      "targets": [
+        "tests/test_frontend_contract.py"
+      ],
+      "timeout_seconds": 15
+    },
+    "node-anthill": {
+      "kind": "node-check",
+      "targets": [
+        "static/js/anthill.js"
+      ],
+      "timeout_seconds": 10
+    },
+    "node-evidence-tools": {
+      "kind": "node-check",
+      "targets": [
+        "scripts/cdp_capture.mjs"
+      ],
+      "timeout_seconds": 10
+    },
+    "node-source-xray": {
+      "kind": "node-check",
+      "targets": [
+        "static/js/app.js",
+        "static/js/graph.js",
+        "static/js/simulation.js"
+      ],
+      "timeout_seconds": 10
+    },
+    "policy-contracts": {
+      "kind": "pytest",
+      "targets": [
+        "tests/test_ci_staging_contract.py",
+        "tests/test_validation_cli.py",
+        "tests/test_validation_runner.py",
+        "tests/test_version_contract.py"
+      ],
+      "timeout_seconds": 20
+    },
+    "pytest-all": {
+      "kind": "pytest",
+      "targets": [],
+      "timeout_seconds": 30
+    },
+    "pytest-adapters": {
+      "kind": "pytest",
+      "targets": [
+        "tests/test_adapters.py",
+        "tests/test_agui_adapter.py",
+        "tests/test_api.py",
+        "tests/test_coverage.py",
+        "tests/test_otlp_adapter.py",
+        "tests/test_projections.py",
+        "tests/test_server_analysis.py"
+      ],
+      "timeout_seconds": 25
+    },
+    "pytest-analysis": {
+      "kind": "pytest",
+      "targets": [
+        "tests/test_adapters.py",
+        "tests/test_server_analysis.py"
+      ],
+      "timeout_seconds": 15
+    },
+    "pytest-api": {
+      "kind": "pytest",
+      "targets": [
+        "tests/test_api.py"
+      ],
+      "timeout_seconds": 25
+    },
+    "pytest-server": {
+      "kind": "pytest",
+      "targets": [
+        "tests/test_server_analysis.py"
+      ],
+      "timeout_seconds": 15
+    },
+    "pytest-api-vertical": {
+      "kind": "pytest",
+      "targets": [
+        "tests/test_api.py::test_ingest_query_world_replay_causality_and_integrity"
+      ],
+      "timeout_seconds": 15
+    },
+    "pytest-projections": {
+      "kind": "pytest",
+      "targets": [
+        "tests/test_branching.py",
+        "tests/test_compare.py",
+        "tests/test_coverage.py",
+        "tests/test_projections.py",
+        "tests/test_snapshots.py"
+      ],
+      "timeout_seconds": 20
+    },
+    "pytest-schema": {
+      "kind": "pytest",
+      "targets": [
+        "tests/test_measurements.py",
+        "tests/test_schema.py"
+      ],
+      "timeout_seconds": 15
+    },
+    "pytest-storage": {
+      "kind": "pytest",
+      "targets": [
+        "tests/test_run_lifecycle.py",
+        "tests/test_snapshots.py",
+        "tests/test_store.py"
+      ],
+      "timeout_seconds": 20
+    },
+    "pytest-langgraph": {
+      "kind": "pytest",
+      "targets": [
+        "tests/test_api.py",
+        "tests/test_langgraph_adapter.py"
+      ],
+      "timeout_seconds": 25
+    },
+    "ruff-all": {
+      "kind": "ruff",
+      "timeout_seconds": 10
+    },
+    "s2-hosted": {
+      "kind": "deferred",
+      "timeout_seconds": 0
+    },
+    "visual-contracts": {
+      "kind": "pytest",
+      "targets": [
+        "tests/test_visual_baseline_contract.py",
+        "tests/test_visual_fixtures.py"
+      ],
+      "timeout_seconds": 20
+    }
+  },
+  "rules": [
+    {
+      "id": "validation-control",
+      "match": {
+        "exact": [
+          "tests/test_validation_cli.py",
+          "tests/test_validation_runner.py"
+        ],
+        "prefix": [
+          "validation/"
+        ]
+      },
+      "minimum_stage": "S2",
+      "feedback_coverage": "partial",
+      "checks": [
+        "policy-contracts",
+        "ruff-all",
+        "s2-hosted"
+      ]
+    },
+    {
+      "id": "github-control",
+      "match": {
+        "exact": [
+          "tests/test_ci_staging_contract.py"
+        ],
+        "prefix": [
+          ".github/"
+        ]
+      },
+      "minimum_stage": "S2",
+      "feedback_coverage": "partial",
+      "checks": [
+        "policy-contracts",
+        "ruff-all",
+        "s2-hosted",
+        "visual-contracts"
+      ]
+    },
+    {
+      "id": "dependency-control",
+      "match": {
+        "exact": [
+          "package-lock.json",
+          "package.json",
+          "pyproject.toml",
+          "requirements-dev.txt",
+          "requirements-visual.txt",
+          "requirements.txt"
+        ]
+      },
+      "minimum_stage": "S2",
+      "feedback_coverage": "partial",
+      "checks": [
+        "policy-contracts",
+        "ruff-all",
+        "s2-hosted"
+      ]
+    },
+    {
+      "id": "container-control",
+      "match": {
+        "exact": [
+          ".dockerignore",
+          "Dockerfile",
+          "compose.yaml"
+        ]
+      },
+      "minimum_stage": "S2",
+      "feedback_coverage": "partial",
+      "checks": [
+        "docs-contracts",
+        "s2-hosted"
+      ]
+    },
+    {
+      "id": "git-control",
+      "match": {
+        "exact": [
+          ".gitattributes",
+          ".gitignore"
+        ]
+      },
+      "minimum_stage": "S2",
+      "feedback_coverage": "partial",
+      "checks": [
+        "policy-contracts",
+        "s2-hosted"
+      ]
+    },
+    {
+      "id": "browser-harness",
+      "match": {
+        "exact": [
+          "playwright.config.mjs"
+        ],
+        "prefix": [
+          "tests/browser/"
+        ]
+      },
+      "minimum_stage": "S2",
+      "feedback_coverage": "partial",
+      "checks": [
+        "browser-s0",
+        "frontend-contracts",
+        "s2-hosted"
+      ]
+    },
+    {
+      "id": "visual-harness",
+      "match": {
+        "exact": [
+          "playwright.visual.config.mjs",
+          "scripts/generate_visual_fixtures.py",
+          "tests/fixtures/visual_rich_v1.json",
+          "tests/test_visual_baseline_contract.py",
+          "tests/test_visual_fixtures.py"
+        ],
+        "prefix": [
+          "tests/visual/"
+        ]
+      },
+      "minimum_stage": "S2",
+      "feedback_coverage": "partial",
+      "checks": [
+        "ruff-all",
+        "s2-hosted",
+        "visual-contracts"
+      ]
+    },
+    {
+      "id": "langgraph-runtime-matrix",
+      "match": {
+        "exact": [
+          "tests/test_langgraph_runtime_compat.py"
+        ]
+      },
+      "minimum_stage": "S2",
+      "feedback_coverage": "partial",
+      "checks": [
+        "pytest-all",
+        "ruff-all",
+        "s2-hosted"
+      ]
+    },
+    {
+      "id": "adapter-langgraph",
+      "match": {
+        "exact": [
+          "anthill/adapters/langgraph.py",
+          "tests/fixtures/langgraph_stream_v2.json",
+          "tests/test_langgraph_adapter.py"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "complete",
+      "checks": [
+        "pytest-langgraph",
+        "ruff-all"
+      ]
+    },
+    {
+      "id": "adapter-other",
+      "match": {
+        "exact": [
+          "anthill/adapters/__init__.py",
+          "anthill/adapters/_common.py",
+          "anthill/adapters/agui.py",
+          "anthill/adapters/otlp.py",
+          "anthill/adapters/python_ast.py",
+          "anthill/adapters/python_trace.py",
+          "tests/fixtures/agui_events.json",
+          "tests/fixtures/otlp_openinference.json",
+          "tests/test_adapters.py",
+          "tests/test_agui_adapter.py",
+          "tests/test_otlp_adapter.py"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "complete",
+      "checks": [
+        "pytest-adapters",
+        "ruff-all"
+      ]
+    },
+    {
+      "id": "python-api",
+      "match": {
+        "exact": [
+          "anthill/api.py",
+          "tests/test_api.py"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "complete",
+      "checks": [
+        "pytest-api",
+        "ruff-all"
+      ]
+    },
+    {
+      "id": "python-server-entrypoint",
+      "match": {
+        "exact": [
+          "server.py"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "complete",
+      "checks": [
+        "browser-s0",
+        "pytest-server",
+        "ruff-all"
+      ]
+    },
+    {
+      "id": "python-storage",
+      "match": {
+        "exact": [
+          "anthill/run_lifecycle.py",
+          "anthill/snapshots.py",
+          "anthill/store.py",
+          "tests/test_run_lifecycle.py",
+          "tests/test_snapshots.py",
+          "tests/test_store.py"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "complete",
+      "checks": [
+        "pytest-api-vertical",
+        "pytest-storage",
+        "ruff-all"
+      ]
+    },
+    {
+      "id": "python-schema",
+      "match": {
+        "exact": [
+          "anthill/measurements.py",
+          "anthill/schema.py",
+          "tests/test_measurements.py",
+          "tests/test_schema.py"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "complete",
+      "checks": [
+        "pytest-api-vertical",
+        "pytest-schema",
+        "ruff-all"
+      ]
+    },
+    {
+      "id": "python-projections",
+      "match": {
+        "exact": [
+          "anthill/branching.py",
+          "anthill/coverage.py",
+          "anthill/demo.py",
+          "anthill/projection_service.py",
+          "anthill/projections/__init__.py",
+          "anthill/projections/causality.py",
+          "anthill/projections/compare.py",
+          "anthill/projections/world.py",
+          "tests/test_branching.py",
+          "tests/test_compare.py",
+          "tests/test_coverage.py",
+          "tests/test_projections.py"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "complete",
+      "checks": [
+        "pytest-api-vertical",
+        "pytest-projections",
+        "ruff-all"
+      ]
+    },
+    {
+      "id": "python-analysis",
+      "match": {
+        "exact": [
+          "analyzer/__init__.py",
+          "analyzer/ast_parser.py",
+          "analyzer/graph_builder.py",
+          "analyzer/pattern_detector.py",
+          "samples/sample_agent.py",
+          "tests/test_server_analysis.py",
+          "tracer/__init__.py",
+          "tracer/tracer.py"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "complete",
+      "checks": [
+        "pytest-analysis",
+        "ruff-all"
+      ]
+    },
+    {
+      "id": "python-public-surface",
+      "match": {
+        "exact": [
+          "anthill/__init__.py"
+        ]
+      },
+      "minimum_stage": "S2",
+      "feedback_coverage": "partial",
+      "checks": [
+        "pytest-api-vertical",
+        "ruff-all",
+        "s2-hosted"
+      ]
+    },
+    {
+      "id": "anthill-ui",
+      "match": {
+        "exact": [
+          "static/anthill.html",
+          "static/css/anthill.css",
+          "static/favicon.svg",
+          "static/js/anthill.js",
+          "tests/test_frontend_contract.py"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "complete",
+      "checks": [
+        "browser-s0",
+        "frontend-contracts",
+        "node-anthill"
+      ]
+    },
+    {
+      "id": "source-xray-ui",
+      "match": {
+        "exact": [
+          "static/css/style.css",
+          "static/index.html",
+          "static/js/app.js",
+          "static/js/graph.js",
+          "static/js/simulation.js",
+          "tests/test_frontend_contract.py"
+        ]
+      },
+      "minimum_stage": "S2",
+      "feedback_coverage": "partial",
+      "checks": [
+        "frontend-contracts",
+        "node-source-xray",
+        "s2-hosted"
+      ]
+    },
+    {
+      "id": "docs-assets",
+      "match": {
+        "prefix": [
+          "docs/assets/"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "partial",
+      "checks": [
+        "docs-contracts"
+      ]
+    },
+    {
+      "id": "docs-content",
+      "match": {
+        "suffix": [
+          ".md"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "complete",
+      "checks": [
+        "docs-contracts"
+      ]
+    },
+    {
+      "id": "repository-community",
+      "match": {
+        "exact": [
+          "CODE_OF_CONDUCT.md",
+          "CONTRIBUTING.md",
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "SECURITY.md",
+          "tests/test_documentation_contract.py",
+          "tests/test_version_contract.py"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "complete",
+      "checks": [
+        "docs-contracts"
+      ]
+    },
+    {
+      "id": "samples",
+      "match": {
+        "exact": [
+          "samples/canonical_event_batch.json"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "complete",
+      "checks": [
+        "pytest-schema",
+        "ruff-all"
+      ]
+    },
+    {
+      "id": "spike-tools",
+      "match": {
+        "prefix": [
+          "scripts/spikes/"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "partial",
+      "checks": [
+        "ruff-all"
+      ]
+    },
+    {
+      "id": "evidence-tools",
+      "match": {
+        "exact": [
+          "scripts/cdp_capture.mjs"
+        ]
+      },
+      "minimum_stage": "S1",
+      "feedback_coverage": "partial",
+      "checks": [
+        "node-evidence-tools"
+      ]
+    }
+  ],
+  "fallback": {
+    "minimum_stage": "S2",
+    "feedback_coverage": "none",
+    "checks": [
+      "s2-hosted"
+    ]
+  }
+}

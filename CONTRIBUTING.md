@@ -45,6 +45,19 @@ workflow, dependency, container, browser-harness, and visual-golden changes must
 wait for hosted S2; run the broad local preflight below before publishing. See
 [validation stages](docs/VALIDATION_STAGES.md) for current versus planned behavior.
 
+The advisory S0 candidate can produce a deterministic plan or run manifest:
+
+```bash
+python -m validation plan --base-ref origin/main
+python -m validation run --base-ref origin/main --report output/validation/s0.json
+```
+
+An explicit repeated `--path` is useful for a caller-scoped local check, but it
+does not claim complete Git discovery or merge evidence. Exit code `2` means the
+feedback is incomplete or requires hosted S2; it is not a green promotion signal.
+Reports written inside the repository must be Git-ignored; the CLI rejects a
+tracked or unignored destination so its own output cannot alter validated input.
+
 Run the broad local preflight toward S2; authoritative complete S2 remains hosted:
 
 ```bash
@@ -77,6 +90,16 @@ does not reuse or modify a developer's `8765` service.
 Browser fixtures must be synthetic, public, or explicitly licensed/approved.
 Failure traces, screenshots, and HTML reports can retain DOM, page, and request
 data, so never run the committed suite against a private real trace.
+
+## Breakthrough records
+
+Every bounded stage breakthrough must be appended to
+[the stage log](docs/STAGE_LOG.md) in the same working session. Record the ISO
+timestamp, evidence level, action, measured effect, evidence link, and important
+limit, plus the machine-audited screenshot-status field. Frontend or interaction
+stages must also attach a screenshot of the exact state under test, preferably as
+a hosted Playwright attachment. A screenshot is supporting evidence, never a
+replacement for semantic and accessibility checks.
 
 ## Pull-request expectations
 

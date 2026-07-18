@@ -1,14 +1,14 @@
 # Environment checklist
 
-Last verified: 2026-07-18 (Asia/Shanghai).
+Last verified: 2026-07-19 (Asia/Shanghai).
 
 Published release reference: [GitHub Actions run 29639913312](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639913312) for protected-main commit `6b503a6`; all nine jobs passed, including the 49-contract Chromium lane, hardened container, and pinned-Linux visual comparison with updates disabled. `main` protection was read back with strict status checks, administrator enforcement, and all nine GitHub Actions contexts required. Release `v0.7.0` points to that exact commit.
 
 | Dependency / boundary | Required | Local current evidence | Hosted evidence / status |
 |---|---:|---|---|
-| Python | 3.11–3.13 | Local `Python 3.13.1`; `387 passed, 1 skipped` in 19.68s | Run 29639913312: 3.11, 3.12, and 3.13 PASS. |
+| Python | 3.11–3.13 | Local `Python 3.13.1`; current branch `455 passed, 1 skipped` in 46.86s | Run 29639913312: 3.11, 3.12, and 3.13 PASS for protected `v0.7.0`; the S0 candidate still needs its own hosted matrix. |
 | PyYAML test parser | `>=6.0.3,<7` | Local `6.0.3`; semantic staged-workflow contract tests pass | PyPI lists 6.0.3 wheels/classifiers for Python 3.11–3.13; protected-main run [29645305313](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29645305313) installed `requirements-dev.txt` and passed the semantic contract. |
-| FastAPI | `>=0.115,<1` | Imported locally as `0.136.0`; the 387-test suite and browser suite pass | Run 29639913312: Python, browser, visual regression, and container jobs PASS. |
+| FastAPI | `>=0.115,<1` | Imported locally as `0.136.0`; the current 455-test branch suite and `@s0` browser vertical pass | Run 29639913312: Python, browser, visual regression, and container jobs PASS for protected `v0.7.0`; Phase C hosted evidence is pending. |
 | Pydantic | `>=2.8,<3` | Imported locally as `2.12.5`; schema/API suite passes | Run 29639913312: Python matrix PASS. |
 | Uvicorn | `>=0.30,<1` | Imported locally as `0.38.0`; isolated loopback browser server passes | Run 29639913312: browser, visual regression, and container jobs PASS. |
 | Node.js / npm | Node 22+ for project tooling | Node `v22.14.0`, npm `10.9.2`; nine syntax checks, Chromium 49/49, and repeat 98/98 pass | Run 29639913312: frontend and 49-contract browser jobs PASS with project Node 22. |
@@ -25,7 +25,7 @@ Published release reference: [GitHub Actions run 29639913312](https://github.com
 | JSONL reference store | Single process | Content-digest reuse, full changed-content validation, truncation anchors, and event-loop offload regressions pass | Run 29639913312: Python, browser, visual regression, and container jobs PASS. Not a production throughput or multi-process claim. |
 | Docker / Compose | Optional local deployment | Docker CLI unavailable on this workstation | Run 29639913312: Compose, build, non-root/read-only, health, and ledger write PASS. |
 | External network/model | Not required after install for core demo/replay/tests | Synthetic exhibit, projection, Compare, Fork, and browser tests use no model/network calls | First package/browser installation still requires package-source access. |
-| Staged validation runner | Python 3.12 and Node 22 for S1 | Exact fixed-subset command passed once in 5.50s on the warm Windows environment; focused semantic CI contracts pass; no canonical S0 runner or machine-readable stage manifest exists yet | Eight hosted fast-gate observations PASS in 13–20s. Draft child-skip runs completed in 26s/32s wall and approximately 0.30/0.38 runner-min; this is not a p95. |
+| Staged validation runner | Python 3.12+ and Node 22 for local S0/S1 | Advisory candidate has a versioned impact map, NUL-safe Git discovery, protected-base and loaded-policy attestation, input fingerprint, atomic manifest, and bounded browser/Python verticals. Focused contracts passed 93/93 in 33.44s; domain command-time observations span 5.683–17.072s; one concurrent Windows launch caused Git DLL initialization failures and passed unchanged when isolated. | Eight pre-expansion fast-gate observations PASS in 13–20s. Draft child-skip runs completed in 26s/32s wall and approximately 0.30/0.38 runner-min; candidate hosted evidence is pending and these values are not p95. |
 | GitHub validation control plane | Strict status checks, admin enforcement, GitHub Actions app contexts | Personal-account repository; no ruleset/merge queue | Live API readback after protected-main run [29646265724](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29646265724): strict/admin enabled; original nine plus aggregate required; all ten bound to app `15368`; unrelated protection fields unchanged. |
 
 Runtime caveats:

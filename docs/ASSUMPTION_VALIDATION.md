@@ -247,8 +247,11 @@ Sources checked before implementation:
 | Assumption | Validation | Result |
 |---|---|---|
 | Hosted full-CI wall time is the present exploration bottleneck. | Inspected seven successful PR runs across three correlated branch families: total wall median 81 seconds; time to first completed job median 13 seconds. | REJECTED for current hosted wall time. Runner work and future matrix growth remain valid reasons to stage validation. The sample is too small and correlated for a stable p95 claim. |
-| A repository-owned impact map can safely select the smallest sufficient regression set. | No complete tracked-path census or held-out replay exists yet. | PENDING. Unknown/high-risk paths remain S2; no dynamic downgrade is implemented. |
-| One vertical smoke can cover startup, deterministic fixture load, seek, Evidence, and semantic snapshot. | The current 49-contract Chromium suite contains the components, but no independent stable smoke exists. | PENDING. A future RED→GREEN smoke cannot replace the complete suite before replay evidence. |
+| A repository-owned impact map can safely select the smallest sufficient regression set. | The local candidate maps every tracked and non-ignored untracked workspace path, versions two historical selectors and their exact canary nodes, sends unmatched/control-plane paths to S2, and killed both former faults under in-memory mutation. Hosted candidate evidence remains pending. | PARTIAL. The selector is advisory and cannot downgrade protected checks. Two seeded replays are evidence, not proof against every future regression. |
+| A feature branch cannot silently ignore a stronger protected-base impact policy. | Created diverged `main`/feature histories where only `main` strengthened the policy. Discovery recorded distinct base/worktree policy SHA-256 values and the plan added `protected-base-policy-mismatch`. | PASS for advisory automatic discovery: the plan escalates to S2. A future promotion-capable runner still needs CI-injected trusted-base authority. |
+| A validation report cannot make the post-run repository differ from the validated input. | Reproduced an unignored in-repository report that previously returned exit 0 and created a new source path; then required Git-ignore proof both before execution and immediately before atomic replacement. | PASS. Unignored/tracked repository destinations now return configuration exit 3 without writing; ignored or out-of-repository reports remain allowed. |
+| One vertical smoke can cover startup, deterministic fixture load, seek, Evidence, and semantic snapshot. | A dedicated `@s0` test went from “No tests found” to one pass in 9.84 seconds, covering fixed fixture → history `seq 0` → Objects → keyboard Evidence with browser-error capture; the candidate freeze repeated it in 8.5 seconds with an attached screenshot. | PASS for the bounded local path. It cannot replace complete hosted Chromium, and DLP prevents the local attachment from serving as durable image evidence. |
+| Full Python pytest remains inside the provisional 30-second S0 budget. | A real CLI attempt timed out at 30.043 seconds before Ruff. The revised LangGraph + public API vertical set ran 217 tests in 14.019 seconds and Ruff in 0.279 seconds. | REJECTED. S0 uses bounded domain checks; complete Python remains S1/S2. |
 | The aggregate can preserve an explicit Draft failure and accept a later Ready run on the same PR candidate. | Draft run 29645134489 failed only the aggregate; `ready_for_review` created run 29645207017 on the same head SHA and passed every dependency plus the aggregate; protected-main run 29645305313 repeated the full path. | PASS for Draft→Ready and resulting-main success. The first failure remains in history. The aggregate is now the tenth required context; the original nine remain required. |
 | Job-level conditions can skip complete S2 in Draft and reliably restore it on Ready/main/manual events. | Draft runs 29645940777 and 29646051103 skipped all six S2 definitions and failed the aggregate; Ready runs 29645986711 and 29646089291 restored every S2 context on the same candidate; protected-main run 29646265724 restored complete S2 after squash. `workflow_dispatch` remains covered semantically, not by a hosted sample. | PASS for Draft/Ready/main hosted behavior and manual-event contract. Keep the original nine contexts during the observation window; manual dispatch remains a residual hosted sample. |
 | A personal-account repository can use merge queue as the first migration mechanism. | Live repository owner type is `User`; current repository settings expose no merge queue or ruleset. | REJECTED for the current repository. Reassess after organization transfer and add `merge_group` support before enabling. |
@@ -256,4 +259,24 @@ Sources checked before implementation:
 
 Historical replay seeds are run `29570924390` for the deep-NDJSON classification
 regression and run `29638437349` for the pinned-visual host/container pip-cache
-path regression. They are selected evidence seeds, not completed replay results.
+path regression. Their current selectors were replayed locally: the LangGraph
+set passed 217 tests before an injected former classification produced the exact
+RED, and restoring the visual job's former `cache: pip` setting produced the
+exact visual-contract RED. Cross-platform execution of the new candidate remains
+hosted S2 evidence.
+
+## 2026-07-18 — S0 impact-runner preimplementation spikes
+
+Three critical assumptions were checked with repository scripts under 20 nonblank
+lines before production implementation:
+
+| Assumption | Spike and observation | Result |
+|---|---|---|
+| NUL-safe Git discovery can union committed, staged, unstaged, and untracked changes while retaining both rename paths. | `scripts/spikes/s0_git_union.py` created a temporary repository and recovered exactly `old.txt`, `new.txt`, `staged.txt`, `work.txt`, and `odd ; name.txt` using argv-only Git calls with `--no-renames --no-ext-diff -z`. Production tests now reject conflict/type/unknown status and changed gitlinks, bound untracked input, preserve special names, and mark skip-worktree visibility incomplete. | PASS for the implemented local contract. Shallow-history and hosted cross-platform replay remain pending. |
+| A compact explicit census can cover the current repository without treating future paths as known. | The first `scripts/spikes/s0_path_census.py` run failed because `.gitattributes` was absent from the proposed control-plane set. After adding it, the script classified all 125 then-tracked paths, kept five high-risk examples explicit, and left `future/new-boundary.bin` unmatched for S2 fallback. | PASS after one visible failed attempt. The production contract now includes tracked plus non-ignored untracked workspace paths and fails whenever a future path lacks an explicit rule. |
+| A real browser-level demo, time-travel, and Evidence signal fits the provisional warm S0 budget. | The first `npx` attempt failed before test execution because this worktree lacked the lock-installed `@playwright/test`; `npm ci` was required. After two non-matching filter failures, existing probes passed in 11.61s and 11.94s. The dedicated `@s0` path later passed in 9.84s; a CLI-selected UI run completed browser, syntax, and frontend checks in about 13.9s. | PASS as warm directional evidence only. Missing dependencies are explicit failures; cold/repeat samples are still insufficient for p95 or SLA claims. |
+
+Design review: 5/5 passed. External tools and versions are already pinned or
+hosted-proven; performance values above are explicit observations; missing tools,
+unknown paths, stale input, limited visibility, and rollback remain fail-closed;
+the 30-second threshold remains provisional; S1/S2 protection is unchanged.

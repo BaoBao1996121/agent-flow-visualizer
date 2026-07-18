@@ -18,9 +18,14 @@ Published `v0.7.0` / protected-`main` verified baseline:
 - latest-code manual Chromium verification of LangGraph JSON import; NDJSON, AG-UI, Demo, sequence-20 seek, Fork, and Compare remain earlier same-day manual evidence;
 - real LangGraph `1.1.0` and `1.2.9` runtime probes across `tasks`, `messages`, `updates`, `values`, `checkpoints`, and `custom`.
 
+The current Phase C branch adds an advisory S0 impact runner and chronological
+[stage log](STAGE_LOG.md). Its local preflight is `455 passed, 1 skipped`, Ruff,
+seven fixed Node syntax checks, and one 8.9-second screenshot-attaching Chromium
+vertical. These are candidate facts, not protected-main evidence.
+
 ## Next milestones
 
-1. Complete the [staged-validation contract](VALIDATION_STAGES.md) tracked in [issue #12](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/12): collect observation-window samples, prove the remaining failure/skip/cancel and matrix-member paths fail closed, add a deterministic S0 runner and impact manifest, replay known regressions, then simplify protection only after the evidence window.
+1. Promote the advisory S0 runner through Draft, Ready, and protected-main evidence; then continue the [staged-validation contract](VALIDATION_STAGES.md) tracked in [issue #12](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/12) with the observation window plus remaining failure/skip/cancel and matrix-member canaries. Simplify protection only after that evidence window.
 2. Execute the [Phase 0 visual evidence plan](PHASE0_VISUAL_EVIDENCE_PLAN.md) tracked in [issue #10](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/10); then build the renderer-independent `VisualModel`, deterministic animation contract, PixiJS 8 vertical slice, and same-scene Phaser 4.2.1 benchmark. Publish measurements before selecting the migration path.
 3. Add standard live OTLP collection plus AG-UI and LangGraph stream bridges with bounded ingestion/backpressure.
 4. Add native Claude Code and Codex hooks with published capability contracts.
@@ -120,7 +125,7 @@ Published `v0.7.0` / protected-`main` verified baseline:
 - Design review: 5/5 passed for verified external dependencies, source-labelled performance observations, failure/rollback paths, provisional thresholds, and unchanged Phase 0/product boundaries.
 - Working-branch local gates passed: `387 passed, 1 skipped` in 19.68 seconds, full-repository Ruff, four primary JavaScript syntax checks, semantic workflow parsing, and `git diff --check`.
 - Kept all nine strict, administrator-enforced required contexts and their every-PR execution unchanged during Phase A. After hosted Draft-to-Ready and protected-main evidence passed, the aggregate was added as a tenth required context without removing any original context.
-- S0 commands/manifests, impact-map replay, Draft suppression of S2, S3, and S4 remain pending. No staged-validation completion or CI speedup is claimed from local contract tests alone.
+- At that milestone, S0 commands/manifests, impact-map replay, Draft suppression of S2, S3, and S4 remained pending. No staged-validation completion or CI speedup was claimed from local contract tests alone.
 
 ### 2026-07-18 — staged-validation aggregate promotion and Draft optimization
 
@@ -133,4 +138,16 @@ Published `v0.7.0` / protected-`main` verified baseline:
 - Squash-merged PR #14 to `9a74764`; protected-main run 29646265724 passed fast, every original S2 context, and the aggregate. API readback again retained strict/admin protection and all ten app-bound contexts.
 - The two hosted Draft samples used approximately 0.30/0.38 runner-min and 26s/32s wall time. These beat the provisional Draft thresholds but are observations, not p95 or long-window claims.
 - Post-canary design review: 5/5 passed. External/event behavior is hosted-proven; measurements are run-linked; failure and rollback boundaries remain explicit; thresholds remain provisional; product scope is unchanged.
-- Failure/skip/cancel and matrix-member canaries, historical replay, impact manifests, deterministic S0, S3, and S4 remain pending. The original nine contexts remain required; no 9→1 collapse occurred.
+- At that milestone, failure/skip/cancel and matrix-member canaries, historical replay, impact manifests, deterministic S0, S3, and S4 remained pending. The original nine contexts remain required; no 9→1 collapse occurred.
+
+### 2026-07-18 — advisory S0 impact runner candidate
+
+- Design review: 5/5 passed for exercised dependencies, source-labelled timings, explicit error/escalation paths, provisional thresholds, and unchanged advisory-versus-protected boundaries.
+- Added a versioned repository impact map, NUL-safe Git union discovery, bounded content/index fingerprints, fail-closed special-entry and visibility handling, stable plans, fixed command registry, global/per-command budgets, retained retries, and atomic machine-readable reports. The runner never grants promotion authority.
+- Added a JSON-only `python -m validation plan/run` interface with explicit exit codes for pass, failure/stale input, incomplete/S2 evidence, and discovery/configuration errors. Policy-selected targets are separated from tool options and run with `shell=False`.
+- Mapped all tracked and non-ignored untracked workspace paths, sent unknown and control-plane paths to S2, added a canonical-sample schema contract, and put the runner/CLI/documentation contracts into the fixed Draft fast gate without allowing PR content to choose whether S2 runs.
+- Added a fixture-driven `@s0` Chromium path through run truth, historical `seq 0`, Objects, keyboard Evidence activation, and browser-error capture. It attaches the exact exercised screenshot; local DLP rewrites persisted PNGs, so an in-memory 1600×1000 view was reviewed and an unmodified hosted attachment remains required.
+- Rejected “full pytest fits 30 seconds” after a 30.043-second timeout. Bounded LangGraph, storage, schema, projections, analysis, and API verticals instead measured 5.683–17.072 seconds of local command time; the complete suite remains S1/S2.
+- Replayed the deep-NDJSON and visual pip-cache incidents against versioned selectors. Each current set passed, and each injected former fault produced the expected RED. Hosted cross-platform evidence still governs promotion.
+- Local candidate re-freeze passed 93/93 focused contracts in 33.44 seconds, `455 passed, 1 skipped` in 46.86 seconds, Ruff, seven fixed Node syntax checks, and `@s0` in 8.9 seconds. It includes loaded-policy digest attestation, skipped-browser rejection, and HTTP 5xx capture. A concurrent Windows launch produced Git DLL initialization exits; the unchanged focused command passed when isolated, so local Git-heavy tests remain serialized.
+- Added the append-only [stage breakthrough log](STAGE_LOG.md): every bounded gain records time, action, measured effect, and evidence/limit; frontend stages also require the exercised screenshot. Draft/Ready/protected-main evidence for this branch remains pending.

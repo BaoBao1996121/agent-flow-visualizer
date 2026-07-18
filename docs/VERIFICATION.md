@@ -1,11 +1,14 @@
 # Verification record
 
-Last verified: 2026-07-18 (Asia/Shanghai).
+Last verified: 2026-07-19 (Asia/Shanghai).
 
 This is a dated evidence record, not a permanent quality claim. Hosted results
 must be linked from the repository's current Actions page after publication.
 
-## Current-code release gates
+## Protected-main pre-Phase-C baseline
+
+These values describe the published/protected baseline before the advisory S0
+branch. Current branch-only evidence is recorded separately below.
 
 | Boundary | Command / method | Result |
 |---|---|---|
@@ -333,12 +336,32 @@ Demo, historical seek, Fork, and Compare. They predate reducer `0.3.0`, schema
 not validate current HEAD. They remain useful only as historical interaction
 evidence.
 
+## Advisory S0 candidate evidence
+
+These 2026-07-18/19 results belong to the Phase C branch. They do not claim hosted
+or protected-main promotion:
+
+| Boundary | Command/evidence | Result |
+|---|---|---|
+| Selector/CLI/docs/CI/schema contracts | focused pytest slice | 93/93 passed in 33.44s after serialization; one earlier concurrent Windows launch produced Git DLL-initialization exits rather than assertion failures |
+| Complete Python preflight | `python -m pytest -q` | 455 passed, one documented LangGraph compatibility skip, in 46.86s |
+| UI vertical | Playwright `--grep '@s0'` | One pass in 8.9s through fixture load, history `seq 0`, Objects, keyboard Evidence, console/page/HTTP-5xx capture, and screenshot attachment; runner rejects skipped or non-exact execution even when the child exits zero |
+| Python impact domains | CLI-selected pytest plus Ruff | LangGraph, storage, schema, projections, analysis, and API command-time observations all below 18s; these are warm local samples, not p95/SLA values |
+| Historical mutation replay | runs 29570924390 and 29638437349 as provenance | Current selected sets passed; injecting each former fault produced the exact expected RED |
+| Static gates | Ruff plus fixed Node syntax set | PASS |
+
+The complete suite's 46.86-second result rejects full pytest as S0. Local persisted
+PNG files are rewritten by endpoint DLP, so the browser screenshot shown from
+memory in the development task is illustrative only; an unmodified hosted
+attachment is required before promotion. Detailed chronological evidence is in
+[STAGE_LOG.md](STAGE_LOG.md).
+
 ## Explicitly pending
 
-- Staged validation still needs representative observation-window samples, a
-  deterministic S0/impact-manifest runner, historical-regression replay,
-  failure/skip/cancel canaries, S3 nightly breadth, S4 exact-release-commit
-  evidence, rollback drill, and an escaped-defect observation window.
+- Staged validation still needs hosted Draft/Ready/protected-main evidence for
+  the advisory S0 candidate, representative observation-window samples,
+  dependency and matrix-member failure/skip/cancel canaries, S3 nightly breadth,
+  S4 exact-release-commit evidence, rollback drill, and an escaped-defect window.
 - Measured comprehension, information-density, and recognition studies have not
   run. Automated cross-browser, screen-reader, high-contrast-mode, and real
   assistive-technology verification is not implemented.
