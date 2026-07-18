@@ -9,7 +9,7 @@ must be linked from the repository's current Actions page after publication.
 
 | Boundary | Command / method | Result |
 |---|---|---|
-| Core Python suite | `python -m pytest -q` | 385 passed in 20.28s; one optional real-runtime test skipped because the ambient LangGraph exposes the unsupported pre-1.1 tuple boundary |
+| Core Python suite | `python -m pytest -q` | 387 passed in 19.71s; one optional real-runtime test skipped because the ambient LangGraph exposes the unsupported pre-1.1 tuple boundary |
 | Schema and world contract | API, snapshot, lifecycle, storage, and reducer regressions | Event protocol `0.2.0`; reducer `0.4.0`; measurement extension `1.0.0`; coverage contract `0.3.0`; old snapshots remain isolated by reducer version; legacy `0.1.0` read compatibility is storage-only |
 | Python lint | `python -m ruff check --no-cache .` | Full repository PASS |
 | Frontend syntax | `node --check` over four application files, two Playwright configs, two specs, and the motion spike | 9/9 PASS |
@@ -21,8 +21,46 @@ must be linked from the repository's current Actions page after publication.
 | Structured fixtures/config | Python JSON parsing for LangGraph, canonical-ingest, and deterministic visual fixtures; PyYAML parse for `.github/workflows/ci.yml` | PASS |
 | Patch hygiene | `git diff --check` | PASS |
 
-The optional runtime test is not counted among the 385 passes. Its two
+The optional runtime test is not counted among the 387 passes. Its two
 supported runtime executions are recorded separately below.
+
+## Staged-validation baseline and shadow evidence
+
+The pre-change Actions API baseline contains seven successful PR runs across
+three correlated branch families: `29629916726`, `29630097193`, `29638437349`,
+`29638608292`, `29639244683`, `29639799405`, and `29643593709`. It is enough to
+size the first shadow loop, but not enough to claim a stable p95 or service level:
+
+| Observation | Result |
+|---|---|
+| Time to first completed job | median 13s; mean 14.3s; observed sample maximum 25s |
+| Total workflow wall time | median 81s; mean 80.9s; observed sample maximum 93s |
+| Summed executor time | median 4.33 runner-min; observed sample maximum 4.68 runner-min |
+| Parallelism cost | 28.8 total runner-min versus 9.43 total workflow-wall minutes across the seven runs, or 3.05× |
+| Current critical tail | Chromium contract: median 77s; observed sample maximum 89s |
+
+The evidence therefore rejects “hosted full CI wall time is presently slow” as
+the main premise. The maintained hypothesis is narrower: repeated Draft pushes
+spend avoidable runner time, and future renderer/browser/performance matrices
+need room to grow.
+
+Working-branch shadow evidence:
+
+- one sequential Windows execution of the exact shadow fast command (full Ruff,
+  five focused Pytest files, and four primary JavaScript syntax checks) passed in
+  5.50 seconds; this is one warm local sample, not hosted timing or a p95;
+- `python -m pytest tests/test_ci_staging_contract.py -q`: `2 passed` after
+  separate RED failures proved the missing fast job, transition triggers, and
+  aggregate were observable;
+- PyYAML `6.0.3` semantically parses the workflow and verifies exact aggregate
+  dependencies, Draft failure, `always()`, `toJSON(needs)`, and the absence of
+  job-level Draft conditions on the six existing S2 job definitions;
+- all existing nine protected contexts remain configured for every PR; no branch
+  protection change has been made from local evidence.
+
+Hosted S1 timing, Draft-to-Ready transitions, matrix-member failure propagation,
+dependency skip/cancel behavior, historical replay, manifest completeness,
+branch-protection readback, and rollback drill remain pending publication.
 
 ## Automated Chromium observatory contract
 
@@ -270,6 +308,10 @@ evidence.
 
 ## Explicitly pending
 
+- Staged validation still needs representative shadow samples, a deterministic
+  S0/impact-manifest runner, historical-regression replay, aggregate protection
+  migration, S3 nightly breadth, S4 exact-release-commit evidence, and an
+  escaped-defect observation window.
 - Measured comprehension, information-density, and recognition studies have not
   run. Automated cross-browser, screen-reader, high-contrast-mode, and real
   assistive-technology verification is not implemented.

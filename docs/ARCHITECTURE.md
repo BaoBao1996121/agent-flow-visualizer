@@ -248,6 +248,12 @@ all nine jobs. `main` protection uses strict status checks with administrator
 enforcement and requires those nine GitHub Actions contexts, including the
 digest-pinned visual regression.
 
+The current staged-validation change adds a small shadow fast job and a fail-closed
+aggregate without suppressing those jobs or weakening protection. Draft-to-Ready
+and protection migration rules live in [VALIDATION_STAGES.md](VALIDATION_STAGES.md);
+hosted shadow evidence is required before the aggregate becomes a protected
+context or any Draft S2 child is skipped.
+
 This reduces accidental host exposure; it does not add authentication, tenant isolation, TLS, or a sandbox around Python trace execution. The container is therefore a reproducible local deployment, not evidence of hosted-service readiness.
 
 ## Compatibility strategy

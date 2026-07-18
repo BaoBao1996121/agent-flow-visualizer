@@ -1,11 +1,24 @@
 from pathlib import Path
 
+import yaml
+
 
 ROOT = Path(__file__).resolve().parents[1]
 IMAGE = (
     "mcr.microsoft.com/playwright:v1.61.1-noble-amd64@"
     "sha256:cf0daee9b994042e011bc29f20cdff1a9f682a039b43fcd738f7d8a9d3bcd9d6"
 )
+
+
+def _visual_job() -> dict:
+    workflow = yaml.safe_load(
+        (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+    )
+    return workflow["jobs"]["visual-regression"]
+
+
+def _commands(job: dict) -> str:
+    return "\n".join(step.get("run", "") for step in job["steps"])
 
 
 def test_visual_baseline_has_an_isolated_deterministic_playwright_contract():
@@ -35,40 +48,43 @@ def test_visual_baseline_has_an_isolated_deterministic_playwright_contract():
 
 
 def test_visual_regression_job_is_pinned_and_blocking():
-    workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
-    visual_job = workflow.split("  visual-regression:\n", 1)[1].split(
-        "\n  container:\n", 1
-    )[0]
+    visual_job = _visual_job()
+    diagnostics = next(
+        step
+        for step in visual_job["steps"]
+        if step.get("name") == "Upload visual-regression diagnostics"
+    )
 
-    assert "continue-on-error:" not in visual_job
-    assert f'image: "{IMAGE}"' in visual_job
-    assert "options: --ipc=host --init" in visual_job
-    assert 'ANTHILL_UPDATE_VISUALS: "0"' in visual_job
-    assert "npm run test:visual" in visual_job
-    assert "visual-regression-diagnostics" in visual_job
-    assert "failure() && !cancelled()" in visual_job
+    assert "continue-on-error" not in visual_job
+    assert visual_job["container"]["image"] == IMAGE
+    assert visual_job["container"]["options"] == "--ipc=host --init"
+    assert visual_job["env"]["ANTHILL_UPDATE_VISUALS"] == "0"
+    assert "npm run test:visual" in _commands(visual_job)
+    assert diagnostics["with"]["name"] == "visual-regression-diagnostics"
+    assert "failure() && !cancelled()" in diagnostics["if"]
 
 
 def test_visual_regression_job_requires_all_four_reviewed_pngs():
-    workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+    commands = _commands(_visual_job())
 
-    assert "Verify reviewed visual baselines exist" in workflow
     for scene in ("overview.png", "evidence.png", "coverage.png", "compare.png"):
-        assert f"test -s tests/visual/goldens/chromium-noble/{scene}" in workflow
+        assert f"test -s tests/visual/goldens/chromium-noble/{scene}" in commands
         assert (ROOT / "tests/visual/goldens/chromium-noble" / scene).stat().st_size > 0
 
 
 def test_visual_regression_uses_an_exact_python_runtime_lock():
-    workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     requirements = (ROOT / "requirements-visual.txt").read_text(encoding="utf-8")
-    visual_job = workflow.split("  visual-regression:\n", 1)[1].split(
-        "\n  container:\n", 1
-    )[0]
+    visual_job = _visual_job()
+    setup_python = next(
+        step
+        for step in visual_job["steps"]
+        if step.get("uses") == "actions/setup-python@v6"
+    )
 
-    assert "python -m pip install -r requirements-visual.txt" in visual_job
-    assert "cache: pip" not in visual_job
-    assert "cache-dependency-path: requirements-visual.txt" not in visual_job
-    assert 'python-version: "3.12.13"' in visual_job
+    assert "python -m pip install -r requirements-visual.txt" in _commands(visual_job)
+    assert "cache" not in setup_python["with"]
+    assert "cache-dependency-path" not in setup_python["with"]
+    assert setup_python["with"]["python-version"] == "3.12.13"
     for requirement in (
         "fastapi==0.136.0",
         "pydantic==2.12.5",

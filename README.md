@@ -221,6 +221,13 @@ Compare mode synchronizes two ledgers by normalized progress and reports mechani
 
 ## Development
 
+The commands below are a broad local preflight toward S2, not complete S2 and not
+the intended loop for every exploratory edit. Authoritative complete S2 remains
+hosted. The staged-validation migration keeps protected-main evidence complete
+while adding faster S0/S1 feedback; its current status,
+escalation rules, and Draft behavior are defined in
+[validation stages](docs/VALIDATION_STAGES.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ```bash
 python -m pip install -r requirements-dev.txt
 npm ci
@@ -260,13 +267,14 @@ The renderer migration is governed by the [visual-system decision](docs/VISUAL_S
 
 Near-term, in order:
 
-1. Execute the [preregistered Phase 0 visual evidence plan](docs/PHASE0_VISUAL_EVIDENCE_PLAN.md): measure comprehension, information density, recognition, accessibility, and equal-information art-direction candidates; publish the results rather than judging the interface by screenshots alone.
-2. Introduce a renderer-independent `VisualModel` and deterministic animation-intent contract; build the bounded PixiJS 8 vertical slice and same-scene Phaser 4.2.1 benchmark before choosing a migration path.
-3. Add OTLP protobuf/live collection plus AG-UI and LangGraph live stream bridges with bounded ingestion and backpressure.
-4. Add native Claude Code and Codex hook providers with published capability contracts.
-5. Add reference-based branch DAG storage, snapshot compaction, queryable monitoring exports, and very-long-run pagination.
-6. Add sandboxed stub replay before considering any real rerun.
-7. Add PostgreSQL/outbox storage for multi-process deployment and a contributor gallery of reproducible Agent exhibits.
+1. Complete the [staged-validation migration](docs/VALIDATION_STAGES.md): measure S0/S1, prove Draft-to-Ready fail-closed behavior, replay known regressions, and retain full S2 on the current PR candidate plus the resulting protected-main commit before changing branch protection.
+2. Execute the [preregistered Phase 0 visual evidence plan](docs/PHASE0_VISUAL_EVIDENCE_PLAN.md): measure comprehension, information density, recognition, accessibility, and equal-information art-direction candidates; publish the results rather than judging the interface by screenshots alone.
+3. Introduce a renderer-independent `VisualModel` and deterministic animation-intent contract; build the bounded PixiJS 8 vertical slice and same-scene Phaser 4.2.1 benchmark before choosing a migration path.
+4. Add OTLP protobuf/live collection plus AG-UI and LangGraph live stream bridges with bounded ingestion and backpressure.
+5. Add native Claude Code and Codex hook providers with published capability contracts.
+6. Add reference-based branch DAG storage, snapshot compaction, queryable monitoring exports, and very-long-run pagination.
+7. Add sandboxed stub replay before considering any real rerun.
+8. Add PostgreSQL/outbox storage for multi-process deployment and a contributor gallery of reproducible Agent exhibits.
 
 See [product principles](docs/PRODUCT.md) for success criteria and explicit non-goals, and [visual system](docs/VISUAL_SYSTEM.md) for renderer gates, accessibility, provenance, costs, and exit conditions.
 
