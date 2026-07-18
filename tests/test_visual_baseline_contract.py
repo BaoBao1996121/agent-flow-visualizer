@@ -34,30 +34,34 @@ def test_visual_baseline_has_an_isolated_deterministic_playwright_contract():
     assert "?static=1" in spec
 
 
-def test_visual_candidate_job_is_pinned_and_cannot_block_browser_contracts():
+def test_visual_regression_job_is_pinned_and_blocking():
+    workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+    visual_job = workflow.split("  visual-regression:\n", 1)[1].split(
+        "\n  container:\n", 1
+    )[0]
+
+    assert "continue-on-error:" not in visual_job
+    assert f'image: "{IMAGE}"' in visual_job
+    assert "options: --ipc=host --init" in visual_job
+    assert 'ANTHILL_UPDATE_VISUALS: "0"' in visual_job
+    assert "npm run test:visual" in visual_job
+    assert "visual-regression-diagnostics" in visual_job
+    assert "failure() && !cancelled()" in visual_job
+
+
+def test_visual_regression_job_requires_all_four_reviewed_pngs():
     workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
 
-    assert "visual-baseline-canary:" in workflow
-    assert "continue-on-error: true" in workflow
-    assert f'image: "{IMAGE}"' in workflow
-    assert "options: --ipc=host --init" in workflow
-    assert 'ANTHILL_UPDATE_VISUALS: "1"' in workflow
-    assert "npm run test:visual" in workflow
-    assert "visual-baseline-candidate" in workflow
-
-
-def test_visual_candidate_job_requires_all_four_non_empty_pngs():
-    workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
-
-    assert "Verify all visual candidates exist" in workflow
+    assert "Verify reviewed visual baselines exist" in workflow
     for scene in ("overview.png", "evidence.png", "coverage.png", "compare.png"):
         assert f"test -s tests/visual/goldens/chromium-noble/{scene}" in workflow
+        assert (ROOT / "tests/visual/goldens/chromium-noble" / scene).stat().st_size > 0
 
 
-def test_visual_candidate_uses_an_exact_python_runtime_lock():
+def test_visual_regression_uses_an_exact_python_runtime_lock():
     workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     requirements = (ROOT / "requirements-visual.txt").read_text(encoding="utf-8")
-    visual_job = workflow.split("  visual-baseline-canary:\n", 1)[1].split(
+    visual_job = workflow.split("  visual-regression:\n", 1)[1].split(
         "\n  container:\n", 1
     )[0]
 

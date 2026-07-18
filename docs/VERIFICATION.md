@@ -91,10 +91,11 @@ Only synthetic fixtures were used. HTML reports, traces, and screenshots may
 retain page/request data; introducing real traces requires a fresh artifact
 privacy review.
 
-## Deterministic visual-baseline candidate
+## Deterministic visual-regression promotion
 
-Reproducible candidate generation is implemented; enforced visual-regression
-comparison is not. The isolated suite in `tests/visual/` fixes a synthetic
+Reproducible candidate generation and reviewed baseline promotion are
+implemented; the first enforced visual-regression comparison is pending. The
+isolated suite in `tests/visual/` fixes a synthetic
 44-event fixture, Playwright `1.61.1`, a digest-pinned Noble container,
 Python `3.12.13`, exact server dependencies, `1600x1000` at device scale factor
 1, `en-US`, UTC, dark scheme, reduced motion, static capture, and font readiness.
@@ -108,18 +109,19 @@ tests plus `4/4` scenes reaching their screenshot boundary with
 `--ignore-snapshots`. The latter deliberately bypasses pixel comparison: it
 proves scene setup and capture flow, not image stability or acceptance.
 
-The workflow currently sets `ANTHILL_UPDATE_VISUALS=1` and
-`continue-on-error: true`. It is therefore a candidate producer, not a required
-check, although it verifies that all four named candidate PNGs exist and are
-non-empty. No Linux PNG has been reviewed or committed, and the initial pixel
-thresholds remain configurable values pending repeat calibration. Windows
-screenshots are diagnostic only and cannot be promoted. The promotion procedure
-and pinned image identity are recorded in
-[VISUAL_BASELINES.md](VISUAL_BASELINES.md).
+[Run 29638608292](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29638608292)
+passed all nine jobs and generated the four Linux candidates. Its artifact digest
+and the reviewed per-file hashes are recorded in
+[VISUAL_BASELINES.md](VISUAL_BASELINES.md). All four PNGs were inspected and are
+included in the current promotion change; reports and traces were not promoted.
+The workflow now sets `ANTHILL_UPDATE_VISUALS=0`, has no
+`continue-on-error`, and uploads diagnostics only after a failed comparison.
+The initial pixel thresholds remain configurable values pending repeat
+calibration. Windows screenshots are diagnostic only and cannot be promoted.
 
-The next evidence gate is a published pinned-Linux run, human review of all four
-candidate images, commit of only the accepted PNGs, conversion of the job to
-blocking compare mode, and a clean rerun that does not update the baselines.
+The next evidence gate is the first published required-mode run comparing the
+committed PNGs without updating them. Until it passes, this record does not claim
+that pixel-regression protection or the Phase -1 release gate is complete.
 
 ## Measurement truth and projection regressions
 
@@ -193,11 +195,12 @@ statement, not a throughput benchmark.
 |---|---|---|
 | [29570924390](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29570924390), `55fae916…` | Initial published workflow; 13 browser contracts; before schema `0.2.0`, reducer `0.3.0`, NDJSON depth fix, store hardening, and Node 24 action majors | Overall FAIL. PASS: browser 13/13, container, frontend, Python 3.11. FAIL: Python 3.12/3.13 and both LangGraph jobs, all from the same deep-NDJSON error-classification assertion. |
 | [29629916726](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29629916726), `c39c70a…` | `actions/checkout@v6`, `setup-python@v6`, `setup-node@v6`, `upload-artifact@v7`; action runtime Node 24, project test runtime Node 22; 29 browser contracts | Overall PASS: Python 3.11/3.12/3.13, LangGraph 1.1.0/supported 1.x, frontend, Chromium, and hardened container. |
+| [29638437349](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29638437349), `ce6511f…` | First current-contract run with the non-blocking pinned-Linux candidate lane | Eight required jobs PASS. The tolerated candidate lane failed before screenshot generation because `setup-python` tried to spawn the container-only `/__t/.../pip` path while initializing its optional pip cache. |
+| [29638608292](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29638608292), `a3b2a7e…` | Current reducer/measurement/coverage contracts; 49 browser contracts; deterministic pinned-Linux candidate generation | Overall PASS across all nine jobs. The visual candidate job generated the reviewed artifact; this run predates the switch to required compare mode. |
 
-Both rows are historical evidence. Run 29629916726 is the newest published
-all-green run, but it predates reducer `0.4.0`, measurement contract `1.0.0`,
-coverage contract `0.3.0`, the local 49-contract browser suite, and the visual
-candidate job. No hosted result is yet claimed for the current working branch.
+Run 29638608292 is current-branch hosted evidence for the product contracts and
+all ordinary CI lanes. It is candidate-generation evidence, not proof of the
+new required comparison job introduced by the current promotion change.
 
 The workflow currently follows action major tags, not immutable commit-SHA pins.
 SHA pinning plus automated dependency updates remains a supply-chain hardening
@@ -253,9 +256,10 @@ evidence.
 
 ## Explicitly pending
 
-- The pinned-Linux visual job is still non-blocking update mode. Four reviewed
-  goldens must be promoted and the job must pass in required compare mode before
-  visual-regression protection or Phase -1 release completion is claimed.
+- Four reviewed pinned-Linux goldens and a required comparison job are included
+  in the current promotion change. The first hosted required-mode run must pass
+  without rewriting them before visual-regression protection or Phase -1 release
+  completion is claimed.
 - Measured comprehension, information-density, and recognition studies have not
   run. Automated cross-browser, screen-reader, high-contrast-mode, and real
   assistive-technology verification is not implemented.
@@ -263,9 +267,8 @@ evidence.
   slice, and same-scene Phaser 4.2.1 benchmark are planned work, not current
   product capabilities.
 - The local workstation has no Docker CLI, so local container execution remains
-  unavailable. Historical run 29629916726 passed Compose validation, image
-  build, non-root identity, read-only root, health, and a real ledger write;
-  current-branch hosted container verification remains pending.
+  unavailable. Current-branch run 29638608292 passed Compose validation, image
+  build, non-root identity, read-only root, health, and a real ledger write.
 - OTLP protobuf/live collection, AG-UI live subscription, and a LangGraph live
   capture bridge are not implemented.
 - Hosted/untrusted ingestion still needs benchmark-derived body, structure,

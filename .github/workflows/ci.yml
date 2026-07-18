@@ -116,17 +116,16 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  visual-baseline-canary:
-    name: Pinned Chromium visual-baseline candidate
+  visual-regression:
+    name: Pinned Chromium visual regression
     runs-on: ubuntu-24.04
-    continue-on-error: true
     timeout-minutes: 20
     container:
       image: "mcr.microsoft.com/playwright:v1.61.1-noble-amd64@sha256:cf0daee9b994042e011bc29f20cdff1a9f682a039b43fcd738f7d8a9d3bcd9d6"
       options: --ipc=host --init
     env:
       CI: "true"
-      ANTHILL_UPDATE_VISUALS: "1"
+      ANTHILL_UPDATE_VISUALS: "0"
       ANTHILL_VISUAL_IMAGE: "mcr.microsoft.com/playwright:v1.61.1-noble-amd64@sha256:cf0daee9b994042e011bc29f20cdff1a9f682a039b43fcd738f7d8a9d3bcd9d6"
     steps:
       - uses: actions/checkout@v6
@@ -144,21 +143,20 @@ jobs:
         run: python -m pip install -r requirements-visual.txt
       - name: Install exact frontend test dependencies
         run: npm ci
-      - name: Generate visual-baseline candidates
-        run: npm run test:visual
-      - name: Verify all visual candidates exist
+      - name: Verify reviewed visual baselines exist
         run: |
           test -s tests/visual/goldens/chromium-noble/overview.png
           test -s tests/visual/goldens/chromium-noble/evidence.png
           test -s tests/visual/goldens/chromium-noble/coverage.png
           test -s tests/visual/goldens/chromium-noble/compare.png
-      - name: Upload visual candidates and diagnostics
-        if: ${{ !cancelled() }}
+      - name: Compare reviewed visual baselines
+        run: npm run test:visual
+      - name: Upload visual-regression diagnostics
+        if: ${{ failure() && !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: visual-baseline-candidate
+          name: visual-regression-diagnostics
           path: |
-            tests/visual/goldens/
             output/playwright/visual-report/
             output/playwright/visual-results/
           if-no-files-found: warn

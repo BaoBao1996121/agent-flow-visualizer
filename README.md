@@ -256,7 +256,7 @@ The renderer migration is governed by the [visual-system decision](docs/VISUAL_S
 
 Near-term, in order:
 
-1. Finish the Phase -1 release gate: review the four digest-pinned Linux candidates, commit only accepted goldens, switch CI from non-blocking update mode to required comparison mode, and prove it passes without rewriting them. All eight semantic corrections in [VISUAL_SYSTEM.md](docs/VISUAL_SYSTEM.md) have implementation coverage; pixel-regression protection is not claimed until this promotion succeeds.
+1. Finish the Phase -1 release gate by proving the new required pinned-Linux job compares the four reviewed committed goldens without rewriting them. Candidate generation, human review, and the switch from update mode are complete in the current promotion change; pixel-regression protection is not claimed until the required comparison passes.
 2. Introduce a renderer-independent `VisualModel` and deterministic animation-intent contract; build the bounded PixiJS 8 vertical slice and same-scene Phaser 4.2.1 benchmark before choosing a migration path.
 3. Add OTLP protobuf/live collection plus AG-UI and LangGraph live stream bridges with bounded ingestion and backpressure.
 4. Add native Claude Code and Codex hook providers with published capability contracts.

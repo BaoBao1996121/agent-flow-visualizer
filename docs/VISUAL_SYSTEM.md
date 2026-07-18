@@ -120,14 +120,15 @@ visual hierarchy improves comprehension for real users, that every assistive
 technology works, or that a future renderer preserves the same semantics; those
 remain measured Phase 0 and renderer-parity obligations.
 
-Phase -1 is not yet a release-complete visual gate. The pinned-Linux job still
-generates four non-blocking review candidates and no reviewed goldens are
-committed. The next gate is to inspect those images, promote only accepted Linux
-PNGs, switch the job from update mode to blocking comparison mode, and pass it
-without rewriting the goldens. See [VISUAL_BASELINES.md](VISUAL_BASELINES.md).
-The 44 ordinary browser contracts and their two-repeat run protect semantic
-behavior in the meantime, but they are not pixel-regression protection. These
-same semantic assertions become renderer-parity tests for PixiJS and Phaser.
+Phase -1 is not yet a release-complete visual gate. Run 29638608292 generated
+four pinned-Linux candidates; each image was reviewed, accepted, and added to the
+current promotion change. The job is now configured as a required comparison
+with update mode disabled. The remaining gate is its first hosted pass against
+the committed PNGs without rewriting them. See
+[VISUAL_BASELINES.md](VISUAL_BASELINES.md). The 49 ordinary browser contracts and
+their two-repeat run protect semantic behavior in the meantime, but they are not
+pixel-regression protection. These same semantic assertions become
+renderer-parity tests for PixiJS and Phaser.
 
 ## Phase 0 art-direction spike and Phase 2 representative slice
 

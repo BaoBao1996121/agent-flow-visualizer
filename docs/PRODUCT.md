@@ -97,18 +97,21 @@ integrity authority. Full per-run integrity remains an explicit operation.
 
 The current local evidence is 384 passing Python tests in 19.87 seconds (plus
 one optional skip), 49/49 Chromium contracts in 2.0 minutes, and 98/98 browser
-executions in 4.4 minutes under two repeats. Full-repository Ruff, six
+executions in 4.4 minutes under two repeats. Full-repository Ruff, nine
 JavaScript syntax checks, and patch hygiene pass. Visual fixture/contract tests
 pass 7/7, and all four scenes reach their screenshot boundary with
-`--ignore-snapshots`; that is functional scene evidence, not golden comparison.
+`--ignore-snapshots`; that is local functional scene evidence, not Linux golden
+comparison.
 
-The newest published all-green evidence remains historical GitHub Actions run
-29629916726 at commit `c39c70a`, whose eight jobs predate reducer `0.4.0`, the
-49-contract suite, and the visual candidate job. Hosted verification for the
-current working branch is pending. The earlier failed run remains recorded for
-provenance in [the verification record](VERIFICATION.md), as do the exact dated
-commands, timings, and limitations. No reviewed pinned-Linux goldens are yet
-committed.
+Current-branch GitHub Actions run
+[29638608292](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29638608292)
+at commit `a3b2a7e` passed all nine then-configured jobs, including the current
+49-contract suite, hardened container, and pinned-Linux candidate generator. Its
+four PNGs were reviewed and added to the current promotion change, which also
+switches the visual lane to required compare mode. The first required comparison
+is pending, so pixel-regression protection is not yet claimed. The earlier failed
+run remains recorded for provenance in [the verification record](VERIFICATION.md),
+as do the exact dated commands, timings, and limitations.
 
 It does not yet prove:
 

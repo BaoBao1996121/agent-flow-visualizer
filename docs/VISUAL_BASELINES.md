@@ -2,10 +2,12 @@
 
 ## Status
 
-The pinned Linux job currently **generates review candidates**. It is deliberately
-non-blocking and does not yet claim visual-regression protection because no Linux
-goldens have been reviewed and committed. Windows output is diagnostic only and
-must not be promoted as the Linux baseline.
+The first four pinned-Linux goldens have been generated, reviewed, and added to
+the current promotion change. The workflow is now configured as a required
+compare job with update mode disabled. Visual-regression protection is not
+claimed until that required job passes against the committed files without
+rewriting them. Windows output remains diagnostic only and must not be promoted
+as the Linux baseline.
 
 ## Reproducibility contract
 
@@ -62,26 +64,27 @@ The image digest was read from the MCR Registry v2 manifest endpoint on
 `--ipc=host` for Chromium. Sources: [Playwright Docker](https://playwright.dev/docs/docker),
 [GitHub job containers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/run-jobs-in-a-container).
 
-## Bootstrap the first Linux goldens
+## Reviewed baseline provenance
 
-1. Push the branch, open or update its pull request, and let
-   `Pinned Chromium visual-baseline candidate` finish. Feature-branch pushes
-   alone do not trigger this workflow; its `push` filter is `main` only.
-   The job fails its own candidate outcome unless all four named PNG files exist
-   and are non-empty, although the candidate job remains non-blocking for the PR.
-2. In that Actions run, download the `visual-baseline-candidate` artifact. GitHub
-   validates downloaded artifact integrity and exposes its SHA-256 digest in the
-   run UI/logs.
-3. Review all four images under
-   `tests/visual/goldens/chromium-noble/`; also inspect the report and traces if a
-   scene failed before screenshot capture.
-4. Copy only the reviewed PNG files into the same repository path and commit them.
-   Do not copy reports, traces, ledgers, or Windows screenshots.
-5. In the same promotion change, set `ANTHILL_UPDATE_VISUALS` to `"0"` and remove
-   `continue-on-error: true` from the canary job. Rename it from candidate to the
-   required visual-regression job.
-6. Rerun CI. Promotion is complete only after the pinned job compares against the
-   committed PNGs and passes without updating them.
+[GitHub Actions run 29638608292](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29638608292)
+at commit `a3b2a7e` passed all nine jobs and generated the
+`visual-baseline-candidate` artifact with digest
+`sha256:b8fb562de19ecd32ef449505e0178395abf6e68b4559708c6124ea7e15467c71`.
+All four 1600 x 1000 images were reviewed before promotion. The plaintext PNG
+hashes read from that artifact are:
+
+| Scene | SHA-256 |
+|---|---|
+| `overview.png` | `daf0013ed457e3f7e826a63b7eb8916fd3c51b16af1432bf3efff76627f9598a` |
+| `evidence.png` | `cb2900851940a0b44072d8d9d1001b7a994af80960fb361150e05d16b19674c6` |
+| `coverage.png` | `00e2c2e6550529b09a2e6f22bc302209eb871ef5467d2fbe4abaa623590f2a53` |
+| `compare.png` | `54a78b72a9bb56ceb8f3f0de60c5a56573cd428d19cf3d2c4ab7fb3477e8309e` |
+
+The artifact contains only synthetic fixture output. Reports and traces were not
+promoted. The remaining first-baseline gate is a published required-mode run
+that compares these committed files and passes without updating them.
+
+## Intentional baseline updates
 
 For an intentional later UI change, temporarily generate a candidate in a review
 PR, inspect the artifact, commit only accepted PNGs, and return the job to compare
@@ -103,7 +106,7 @@ node --check tests/visual/anthill.visual.spec.mjs
 npx playwright test --config=playwright.visual.config.mjs --list
 ```
 
-`npm run test:visual` is the compare-mode command. Before the first Linux goldens
-are committed it is expected to fail with “snapshot doesn't exist”; it still
-proves that each scene reaches its screenshot boundary. Candidate generation is
-reserved for the pinned CI environment through `ANTHILL_UPDATE_VISUALS=1`.
+`npm run test:visual` is the compare-mode command. The authoritative result is
+the required pinned-Linux CI job. Candidate generation is reserved for an
+explicit review change in the digest-pinned CI environment through
+`ANTHILL_UPDATE_VISUALS=1`; it must never remain enabled in a mergeable change.
