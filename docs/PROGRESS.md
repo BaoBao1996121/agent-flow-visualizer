@@ -20,7 +20,7 @@ Published `v0.7.0` / protected-`main` verified baseline:
 
 ## Next milestones
 
-1. Complete the [staged-validation contract](VALIDATION_STAGES.md) tracked in [issue #12](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/12): finish the Phase B Draft child-skip canary, prove all remaining fail-closed transitions, add a deterministic S0 runner and impact manifest, replay known regressions, then simplify protection only after an observation window.
+1. Complete the [staged-validation contract](VALIDATION_STAGES.md) tracked in [issue #12](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/12): collect observation-window samples, prove the remaining failure/skip/cancel and matrix-member paths fail closed, add a deterministic S0 runner and impact manifest, replay known regressions, then simplify protection only after the evidence window.
 2. Execute the [Phase 0 visual evidence plan](PHASE0_VISUAL_EVIDENCE_PLAN.md) tracked in [issue #10](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/10); then build the renderer-independent `VisualModel`, deterministic animation contract, PixiJS 8 vertical slice, and same-scene Phaser 4.2.1 benchmark. Publish measurements before selecting the migration path.
 3. Add standard live OTLP collection plus AG-UI and LangGraph stream bridges with bounded ingestion/backpressure.
 4. Add native Claude Code and Codex hooks with published capability contracts.
@@ -129,4 +129,8 @@ Published `v0.7.0` / protected-`main` verified baseline:
 - Added `Protected main validation gate` as a tenth required context only after that main evidence. API readback retained strict/admin protection, all original nine contexts, app ID `15368`, and every unrelated protection field. The rejected HTTP-400 stdin attempt caused no mutation and remains recorded.
 - On the next branch, developed the exact six-job Draft condition RED→GREEN: complete S2 skips only for Draft PR events, while Ready, main push, and manual events still run. The aggregate remains an explicit required failure in Draft.
 - Design review: 5/5 passed for official dependency/event semantics, run-linked measurements, skip/failure/rollback paths, provisional threshold rationale, and unchanged Phase 0/product boundaries.
-- Phase B hosted Draft/Ready/main evidence, failure/skip/cancel canaries, historical replay, impact manifests, S0, S3, and S4 remain pending. The original nine contexts remain required; no 9→1 collapse occurred.
+- PR #14 exercised Draft → Ready → Draft → Ready on unchanged candidate `aa0afb7`: Draft runs 29645940777/29646051103 executed only fast plus the explicit failing aggregate, while Ready runs 29645986711/29646089291 restored and passed complete S2.
+- Squash-merged PR #14 to `9a74764`; protected-main run 29646265724 passed fast, every original S2 context, and the aggregate. API readback again retained strict/admin protection and all ten app-bound contexts.
+- The two hosted Draft samples used approximately 0.30/0.38 runner-min and 26s/32s wall time. These beat the provisional Draft thresholds but are observations, not p95 or long-window claims.
+- Post-canary design review: 5/5 passed. External/event behavior is hosted-proven; measurements are run-linked; failure and rollback boundaries remain explicit; thresholds remain provisional; product scope is unchanged.
+- Failure/skip/cancel and matrix-member canaries, historical replay, impact manifests, deterministic S0, S3, and S4 remain pending. The original nine contexts remain required; no 9→1 collapse occurred.

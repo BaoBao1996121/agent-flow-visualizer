@@ -25,9 +25,10 @@ adapters, projections, frontend behavior, or documentation.
 - failed first attempts remain visible even when a retry succeeds;
 - repository-owned rules, not generated code or model output, select validation.
 
-**Done for the first migration:** a measured S0/S1 loop, an enforced aggregate
-gate, a proven Draft-to-Ready transition, historical-regression replay, and a
-verified rollback path all exist while S2 remains mandatory before merge.
+**Done for the first migration:** a fixed-subset S1 loop, an enforced aggregate
+gate, both Draft/Ready transition directions, and protected-main S2 are proven.
+The deterministic S0 runner, historical-regression replay, failure canaries, and
+rollback drill remain explicitly pending.
 
 **Rollback:** pause merging whenever a required context can be skipped, duplicated,
 or satisfied without its expected evidence.
@@ -46,7 +47,7 @@ and [job-condition documentation](https://docs.github.com/en/actions/how-tos/wri
 | Approach | Benefit | Cost / failure mode | Decision |
 |---|---|---|---|
 | Shadow fast gate while all existing jobs run | Safest way to measure signal quality | Temporarily adds runner work | Phase A complete |
-| Draft runs S1; Ready runs S2 behind one aggregate | Fast repeated exploration without weakening merge evidence | Requires proven event transitions and aggregate semantics | Phase B in progress; hosted child-skip canary pending |
+| Draft runs S1; Ready runs S2 behind one aggregate | Fast repeated exploration without weakening merge evidence | Requires proven event transitions and aggregate semantics | Phase B complete; observation window active |
 | Separate integration branch | Batches full regression | Adds drift, merge risk, and contributor complexity | Rejected for the current repository |
 
 Merge queue is not the current mechanism. The repository is owned by a personal
@@ -57,8 +58,8 @@ account; organization ownership should be reconsidered before adopting that path
 | Stage | Trigger and purpose | Required evidence | Blocking boundary | Status on 2026-07-18 |
 |---|---|---|---|---|
 | S0 — exploration | Local/on-demand loop while shaping one idea | Syntax/schema plus changed-module tests and one deterministic vertical smoke | Developer feedback only | Planned; no canonical runner or manifest yet |
-| S1 — PR fast | Every PR commit; reject obvious cross-layer regressions quickly | Integrity/version contracts, affected contracts, bounded observatory smoke, stage manifest | Enforced transitively by the required aggregate | Fixed conservative subset implemented; observed at 13–18s across three hosted runs; impact selection and manifest pending |
-| S2 — protected merge | Ready PR and protected-main candidate | Python 3.11–3.13, LangGraph floor/supported, frontend, full Chromium, pinned visual compare, container, S1 | Must pass on the current PR candidate against the latest protected base; the resulting main commit reruns S2 | Aggregate is the tenth required context; Draft child suppression is implemented and awaiting hosted canary; original nine remain required |
+| S1 — PR fast | Every PR commit; reject obvious cross-layer regressions quickly | Integrity/version contracts, affected contracts, bounded observatory smoke, stage manifest | Enforced transitively by the required aggregate | Fixed conservative subset implemented; observed at 13–20s across eight hosted runs; impact selection and manifest pending |
+| S2 — protected merge | Ready PR and protected-main candidate | Python 3.11–3.13, LangGraph floor/supported, frontend, full Chromium, pinned visual compare, container, S1 | Must pass on the current PR candidate against the latest protected base; the resulting main commit reruns S2 | Aggregate is the tenth required context; two Draft skips, two Ready restores, and resulting-main S2 passed; original nine remain required |
 | S3 — deep | Scheduled/manual breadth and repetition | Repeat/order isolation, long-run and burst cases, optional browser/device/security matrices, owned quarantines | Does not block ordinary edits; failures block affected promotion until classified | Planned |
 | S4 — release | Exact release candidate/tag | Complete S2 plus provenance, asset, compatibility, benchmark, and reproducibility checks | Blocks release | Planned; no stale nightly may substitute |
 
@@ -84,10 +85,13 @@ stateDiagram-v2
 
 Phase A ran S2 in Draft and proved the aggregate's explicit failure, Ready success,
 and resulting-main success before adding the aggregate as the tenth required
-context. Phase B suppresses the six S2 job definitions only in Draft; its hosted
-canary remains required before promotion. `opened`, `synchronize`, `reopened`,
-`ready_for_review`, and `converted_to_draft` are explicit workflow activities so
-the same PR candidate cannot inherit stale Draft state.
+context. Phase B then proved, on the same candidate `aa0afb7`, that both Draft
+events skip the six S2 definitions and fail the aggregate, while both Ready events
+restore complete S2 and pass the aggregate. Resulting-main run
+[29646265724](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29646265724)
+repeated complete S2. `opened`, `synchronize`, `reopened`, `ready_for_review`, and
+`converted_to_draft` remain explicit workflow activities so the same PR candidate
+cannot inherit stale state.
 
 ## Safety invariants
 
@@ -153,13 +157,16 @@ Migration order and status:
 
 1. **COMPLETE:** run the fast and aggregate jobs in shadow while retaining the
    existing required contexts.
-2. **PARTIAL:** prove Draft failure, Draft-to-Ready success, and resulting-main
-   success. Converted-to-Draft, dependency skip/cancel, first/last matrix-member
-   failures, and retry behavior remain canaries.
+2. **PARTIAL:** Draft failure, Draft-to-Ready success, converted-to-Draft failure,
+   Ready restoration, and resulting-main success are proven. Dependency
+   skip/cancel, first/last matrix-member failures, and retry behavior remain
+   canaries.
 3. **COMPLETE:** after protected-main run 29645305313, add the aggregate as a
    tenth required context and read strict/admin/app bindings back from the API.
-4. **IN PROGRESS:** suppress S2 children only in Draft; the required aggregate
-   remains explicitly failing there. Hosted Draft/Ready/main evidence is pending.
+4. **COMPLETE:** suppress S2 children only in Draft; runs 29645940777 and
+   29646051103 failed closed without executing S2, runs 29645986711 and
+   29646089291 restored complete S2 on the same candidate, and resulting-main run
+   29646265724 passed complete S2 plus the aggregate.
 5. **PENDING:** only after a stable observation window may protection be
    simplified from child contexts to the fast gate plus aggregate.
 
@@ -184,9 +191,11 @@ remove the aggregate. This prevents a protection gap between old and new gates.
   win is lower runner consumption across repeated Draft pushes and enough capacity
   for future renderer/browser/performance matrices.
 - Phase A temporarily added one small runner job plus the aggregate to every run.
-  Phase B is expected to remove complete-S2 runner work from repeated Draft pushes;
-  its actual savings remain unmeasured until the hosted canary completes.
+  Two Phase B Draft observations completed in 26s/32s wall time with approximately
+  0.30/0.38 runner-min of executed work, versus the seven-run pre-migration medians
+  of 81s wall and 4.33 runner-min. This is strong directional evidence, not a p95
+  or long-window cost claim.
 - The workstation has no Docker CLI, so local execution cannot claim complete S2.
-- Three hosted fast-gate samples are insufficient for p95/flake claims. Impact
+- Eight hosted fast-gate samples are insufficient for p95/flake claims. Impact
   selection, machine-readable manifests, vertical browser smoke, failure canaries,
   nightly breadth, and release-specific S4 remain pending.
