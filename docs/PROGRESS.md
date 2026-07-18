@@ -10,9 +10,9 @@ Current verified baseline:
 - metadata-only default with explicit truth/fidelity levels;
 - 12 semantic chambers plus Source Archive, Quality Gate, and Unknown Fog;
 - live SSE, gap recovery, time travel, compare, snapshot fallback, branch provenance, and hash verification;
-- Apache-2.0 community files, multi-version CI configuration, and a hardened Docker/Compose definition; the initial hosted container job passed, while the current branch still requires a fresh hosted matrix;
+- Apache-2.0 community files, multi-version CI configuration, and a hardened Docker/Compose definition; all eight current hosted jobs passed in [run 29629916726](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29629916726);
 - 326 tests passed locally; one optional real-LangGraph runtime test was skipped because the ambient environment exposes the unsupported pre-1.1 tuple boundary, while isolated LangGraph `1.1.0` and `1.2.9` probes passed separately;
-- 29 local Chromium observatory contracts passed, with all 58 executions passing under a two-repeat order-isolation run; the initial hosted 13-contract browser job passed, while the current 29-contract branch remains pending hosted verification;
+- 29 local Chromium observatory contracts passed, with all 58 executions passing under a two-repeat order-isolation run; the current hosted 29-contract job also passed;
 - latest-code manual Chromium verification of LangGraph JSON import; NDJSON, AG-UI, Demo, sequence-20 seek, Fork, and Compare remain earlier same-day manual evidence;
 - real LangGraph `1.1.0` and `1.2.9` runtime probes across `tasks`, `messages`, `updates`, `values`, `checkpoints`, and `custom`.
 
@@ -55,7 +55,7 @@ Current verified baseline:
 
 ### 2026-07-17 — Phase -1 observatory contract milestone
 
-- Added an isolated Playwright 1.61.1 Chromium harness on `127.0.0.1:8878`, an official-registry exact lock file, and an independent GitHub Actions browser job. Hosted execution remains pending.
+- Added an isolated Playwright 1.61.1 Chromium harness on `127.0.0.1:8878`, an official-registry exact lock file, and an independent GitHub Actions browser job. At that milestone hosted execution was pending; the current 29-contract job is recorded in the 2026-07-18 milestone below.
 - Established an explicit `1600x1000` viewport after a RED test proved the device descriptor had silently produced `1280x720`.
 - Split transport connection from timeline head/history and follow/pause: terminal runs no longer show or blink as `LIVE`.
 - Marked completed, failed, interrupted, and cancelled worlds as terminal; unresolved chamber activity is static and explicit, while terminal Canvas/ticker motion is frozen.
@@ -81,6 +81,7 @@ Current verified baseline:
 - Added canonical query-form event-detail and causal routes for opaque IDs, deprecated path-form compatibility, and removed event-ID reflection from 404/409/422 errors. Fork target creation now performs its empty-ledger check and complete batch write under one run lock: a competing direct write cannot create a second origin, and concurrent same-ID forks return one `201` plus one stable `409`.
 - Made failed run selection restore the last successfully committed run even across an intervening in-flight selection; the frontend now uses the canonical query routes so exact `.`/`..` IDs cannot be rewritten by browser path normalization.
 - Added a quote/escape-aware NDJSON nesting guard at 256 levels. This is an initial conservative validation limit, not a measured ingestion budget.
-- Upgraded workflow action major tags to checkout/setup Python/setup Node `v6` and upload-artifact `v7`; these actions use a Node 24 action runtime while project tests remain Node 22. Hosted verification of the upgraded workflow is still pending.
+- Upgraded workflow action major tags to checkout/setup Python/setup Node `v6` and upload-artifact `v7`; these actions use a Node 24 action runtime while project tests remain Node 22. The upgraded workflow passed all eight jobs in run 29629916726.
 - Current local gates: `326 passed, 1 skipped`; Ruff and JavaScript syntax checks pass; Playwright `29/29` and repeated `58/58` pass on the isolated `8878` service.
+- Current hosted gates: run 29629916726 passed Python 3.11/3.12/3.13, LangGraph 1.1.0/supported 1.x, frontend, Chromium, and hardened container jobs for commit `c39c70a`.
 - Initial hosted run [29570924390](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29570924390) is retained as historical evidence: browser 13/13, container, frontend, and Python 3.11 passed; Python 3.12/3.13 and both LangGraph jobs failed on the same now-fixed deep-NDJSON error classification. It predates every current-branch claim above.

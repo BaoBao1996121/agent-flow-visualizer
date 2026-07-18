@@ -2,22 +2,24 @@
 
 Last verified: 2026-07-18 (Asia/Shanghai).
 
+Current hosted reference: [GitHub Actions run 29629916726](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29629916726) for commit `c39c70a`; all eight jobs passed.
+
 | Dependency / boundary | Required | Local current evidence | Hosted evidence / status |
 |---|---:|---|---|
-| Python | 3.11–3.13 | Local `Python 3.13.1`; `326 passed, 1 skipped` | Initial run: 3.11 PASS, 3.12/3.13 old-code FAIL on one shared NDJSON assertion. Current branch pending. |
-| FastAPI | `>=0.115,<1` | Imported locally as `0.136.0`; API and browser suites pass | Exercised by initial browser/container jobs; current branch pending. |
-| Pydantic | `>=2.8,<3` | Imported locally as `2.12.5`; schema/API suite passes | Covered by Python matrix; current branch pending. |
-| Uvicorn | `>=0.30,<1` | Imported locally as `0.38.0`; isolated loopback browser server passes | Initial browser/container jobs PASS; current branch pending. |
-| Node.js / npm | Node 22+ for project tooling | Node `v22.14.0`, npm `10.9.2`; syntax and Playwright pass | Project runtime remains Node 22. Current branch pending. |
-| GitHub action runtime | Current major tags | Workflow uses checkout/setup-python/setup-node `v6` and upload-artifact `v7`; these action majors use Node 24 | Initial run predates the upgrade; current workflow pending hosted verification. Tags are not immutable SHA pins. |
-| npm lock provenance | Exact package lock with integrity | `package-lock.json` resolves through `https://registry.npmjs.org/`; no npmmirror entry | Browser job uses `npm ci`; initial old-code job PASS. |
-| Playwright / Chromium | `@playwright/test 1.61.1`, Chromium | Local Chromium `149.0.7827.55`; 29/29 at `1600x1000`, 58/58 under two repeats | Initial 13-contract job PASS. Current 29-contract job pending. |
-| AG-UI semantic input | Version retained per payload | Golden JSON/NDJSON and API tests pass | Covered indirectly by Python matrix; current branch pending. |
-| LangGraph StreamPart v2 | Floor `1.1.0`; supported lane `>=1.2,<2`; optional dependency | Isolated `1.1.0` and `1.2.9` `StateGraph` probes emit all six supported modes and pass normalization | Initial two jobs reached tests but failed on the same now-fixed shared NDJSON assertion; no current green hosted result yet. |
-| NDJSON structure guard | Maximum nesting 256 | Quote/escape-aware lexical guard and regressions pass | Initial conservative limit, not benchmark-derived; current matrix pending. |
-| OTLP JSON/OpenInference | Explicit JSON export | Golden fixture, adapter, encoded-URL, and API tests pass | Covered indirectly by Python matrix; current branch pending. |
-| JSONL reference store | Single process | Content-digest reuse, full changed-content validation, truncation anchors, and event-loop offload regressions pass | Not a production throughput or multi-process claim. Current matrix pending. |
-| Docker / Compose | Optional local deployment | Docker CLI unavailable on this workstation | Initial hosted container job PASS, including non-root/read-only/health/ledger write. Current branch pending. |
+| Python | 3.11–3.13 | Local `Python 3.13.1`; `326 passed, 1 skipped` | Current run: 3.11, 3.12, and 3.13 PASS. |
+| FastAPI | `>=0.115,<1` | Imported locally as `0.136.0`; API and browser suites pass | Current Python, browser, and container jobs PASS. |
+| Pydantic | `>=2.8,<3` | Imported locally as `2.12.5`; schema/API suite passes | Current Python matrix PASS. |
+| Uvicorn | `>=0.30,<1` | Imported locally as `0.38.0`; isolated loopback browser server passes | Current browser and container jobs PASS. |
+| Node.js / npm | Node 22+ for project tooling | Node `v22.14.0`, npm `10.9.2`; syntax and Playwright pass | Current frontend and browser jobs PASS with project Node 22. |
+| GitHub action runtime | Current major tags | Workflow uses checkout/setup-python/setup-node `v6` and upload-artifact `v7`; these action majors use Node 24 | Current workflow PASS. Tags are not immutable SHA pins. |
+| npm lock provenance | Exact package lock with integrity | `package-lock.json` resolves through `https://registry.npmjs.org/`; no npmmirror entry | Current browser job completed `npm ci` and PASS. |
+| Playwright / Chromium | `@playwright/test 1.61.1`, Chromium | Local Chromium `149.0.7827.55`; 29/29 at `1600x1000`, 58/58 under two repeats | Current hosted 29-contract job PASS. |
+| AG-UI semantic input | Version retained per payload | Golden JSON/NDJSON and API tests pass | Current Python matrix PASS. |
+| LangGraph StreamPart v2 | Floor `1.1.0`; supported lane `>=1.2,<2`; optional dependency | Isolated `1.1.0` and `1.2.9` `StateGraph` probes emit all six supported modes and pass normalization | Current `1.1.0` floor and supported-1.x jobs PASS. |
+| NDJSON structure guard | Maximum nesting 256 | Quote/escape-aware lexical guard and regressions pass | Current Python and both LangGraph jobs PASS; limit remains initial, not benchmark-derived. |
+| OTLP JSON/OpenInference | Explicit JSON export | Golden fixture, adapter, encoded-URL, and API tests pass | Current Python matrix PASS. |
+| JSONL reference store | Single process | Content-digest reuse, full changed-content validation, truncation anchors, and event-loop offload regressions pass | Current Python, browser, and container jobs PASS; not a production throughput or multi-process claim. |
+| Docker / Compose | Optional local deployment | Docker CLI unavailable on this workstation | Current container job PASS: Compose, build, non-root/read-only, health, and ledger write. |
 | External network/model | Not required after install for core demo/replay/tests | Synthetic exhibit, projection, Compare, Fork, and browser tests use no model/network calls | First package/browser installation still requires package-source access. |
 
 Runtime caveats:

@@ -201,7 +201,7 @@ The current UI queries at most 5,000 events per page. Large-run pagination, serv
 
 ## Container boundary
 
-The repository includes a local hardened container profile: non-root UID/GID `10001`, read-only root filesystem, dropped Linux capabilities, `no-new-privileges`, bounded PIDs/logs, loopback-only host binding, and a dedicated writable ledger volume. The container job passed in the first hosted workflow run, [GitHub Actions run 29570924390](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29570924390), although that workflow was red overall for a separate shared NDJSON assertion. The workstation still has no local Docker CLI. Current execution evidence and remaining checks belong in [the dated verification record](VERIFICATION.md) and [environment checklist](ENVIRONMENT_CHECKLIST.md).
+The repository includes a local hardened container profile: non-root UID/GID `10001`, read-only root filesystem, dropped Linux capabilities, `no-new-privileges`, bounded PIDs/logs, loopback-only host binding, and a dedicated writable ledger volume. The current container job passed in [GitHub Actions run 29629916726](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29629916726), including build, non-root/read-only startup, health, and a real ledger write. The workstation still has no local Docker CLI. Current execution evidence and remaining checks belong in [the dated verification record](VERIFICATION.md) and [environment checklist](ENVIRONMENT_CHECKLIST.md).
 
 The [current workflow](../.github/workflows/ci.yml) uses the mutable v6/v7 major
 tags
@@ -213,9 +213,8 @@ Those JavaScript action majors use the Node 24 action runtime; the project test
 runtime remains Node 22 as configured by `setup-node`. Major tags are not
 immutable dependency pins; commit-SHA pinning with a reviewed Dependabot update
 path remains follow-up supply-chain hardening. Run 29570924390 predates these
-upgrades, so it does not verify the current action/runtime combination. A hosted
-run of the upgraded workflow remains required before marking that dependency
-boundary verified.
+upgrades; run 29629916726 passed the current action/runtime combination across
+all eight jobs.
 
 This reduces accidental host exposure; it does not add authentication, tenant isolation, TLS, or a sandbox around Python trace execution. The container is therefore a reproducible local deployment, not evidence of hosted-service readiness.
 
@@ -223,4 +222,4 @@ This reduces accidental host exposure; it does not add authentication, tenant is
 
 OpenTelemetry GenAI semantic conventions, OpenInference, and AG-UI are valuable inputs but still evolve. Agent Anthill aligns through versioned adapters and stores the input convention/version; none of them is the immutable internal contract.
 
-LangGraph StreamPart v2 uses the same strategy. The adapter requires the discriminated `{type, ns, data}` boundary introduced in LangGraph `1.1`; legacy mode tuples are rejected rather than guessed. Real runtime probes cover LangGraph `1.1.0` and `1.2.9`, and the configured supported lane is `>=1.2,<2`. Both hosted compatibility jobs reached test execution in run 29570924390, but each job was red because of the same shared deep-NDJSON error-classification assertion; that is hosted evidence, not a green compatibility claim. Visual projection and renderer evolution follow [VISUAL_SYSTEM.md](VISUAL_SYSTEM.md); no unmeasured performance claim is part of this architecture.
+LangGraph StreamPart v2 uses the same strategy. The adapter requires the discriminated `{type, ns, data}` boundary introduced in LangGraph `1.1`; legacy mode tuples are rejected rather than guessed. Real runtime probes cover LangGraph `1.1.0` and `1.2.9`, and the configured supported lane is `>=1.2,<2`. The current hosted `1.1.0` floor and supported-1.x jobs passed in run 29629916726. Visual projection and renderer evolution follow [VISUAL_SYSTEM.md](VISUAL_SYSTEM.md); no unmeasured performance claim is part of this architecture.

@@ -116,7 +116,7 @@ statement, not a throughput benchmark.
 | Run / commit | Workflow generation | Result |
 |---|---|---|
 | [29570924390](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29570924390), `55fae916…` | Initial published workflow; 13 browser contracts; before schema `0.2.0`, reducer `0.3.0`, NDJSON depth fix, store hardening, and Node 24 action majors | Overall FAIL. PASS: browser 13/13, container, frontend, Python 3.11. FAIL: Python 3.12/3.13 and both LangGraph jobs, all from the same deep-NDJSON error-classification assertion. |
-| Current `agent/run-identity-contract` worktree | `actions/checkout@v6`, `setup-python@v6`, `setup-node@v6`, `upload-artifact@v7`; action runtime Node 24, project test runtime Node 22 | PENDING push. The historical run above cannot verify this workflow or current code. |
+| [29629916726](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29629916726), `c39c70a…` | `actions/checkout@v6`, `setup-python@v6`, `setup-node@v6`, `upload-artifact@v7`; action runtime Node 24, project test runtime Node 22; 29 browser contracts | Overall PASS: Python 3.11/3.12/3.13, LangGraph 1.1.0/supported 1.x, frontend, Chromium, and hardened container. |
 
 The workflow currently follows action major tags, not immutable commit-SHA pins.
 SHA pinning plus automated dependency updates remains a supply-chain hardening
@@ -172,12 +172,9 @@ evidence.
 
 ## Explicitly pending
 
-- The local workstation has no Docker CLI. The initial hosted container job
-  passed Compose validation, image build, non-root identity, read-only root,
-  health, and a real ledger write; the current branch still needs a fresh hosted
-  container result.
-- The current 29-contract Chromium job and Node 24 action-major combination
-  remain pending a hosted run on the current branch.
+- The local workstation has no Docker CLI, so local container execution remains
+  unavailable. The current hosted container job passed Compose validation,
+  image build, non-root identity, read-only root, health, and a real ledger write.
 - Automated cross-browser and assistive-technology CI is not implemented.
 - OTLP protobuf/live collection, AG-UI live subscription, and a LangGraph live
   capture bridge are not implemented.

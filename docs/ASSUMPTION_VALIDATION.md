@@ -59,7 +59,7 @@ boundary and passed metadata-only normalization. The adapter rejects legacy
 tuples rather than silently mis-mapping them. This proves the tested runtime
 boundary, not every future `1.x` release. The optional compatibility matrix is
 configured to keep that claim executable. The first hosted matrix ran in
-[GitHub Actions run 29570924390](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29570924390): both LangGraph jobs reached test execution but were red because the same shared deep-NDJSON error-classification assertion failed. That is hosted evidence, not a green compatibility result or validation of the current fix.
+[GitHub Actions run 29570924390](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29570924390): both LangGraph jobs reached test execution but were red because the same shared deep-NDJSON error-classification assertion failed. The corrected `1.1.0` floor and supported-1.x jobs both passed in [run 29629916726](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29629916726).
 
 The current NDJSON guard rejects structural nesting deeper than 256 before
 decoder behavior can diverge across supported Python versions, while ignoring
