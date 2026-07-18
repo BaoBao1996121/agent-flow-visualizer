@@ -1,4 +1,6 @@
 from datetime import datetime
+import json
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -13,6 +15,9 @@ from anthill.schema import (
     EventLink,
     SourceFidelity,
 )
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def make_event(**updates) -> AgentRuntimeEvent:
@@ -31,6 +36,18 @@ def make_event(**updates) -> AgentRuntimeEvent:
     }
     values.update(updates)
     return AgentRuntimeEvent(**values)
+
+
+def test_canonical_sample_batch_parses_as_current_runtime_events():
+    payload = json.loads(
+        (ROOT / "samples" / "canonical_event_batch.json").read_text(encoding="utf-8")
+    )
+
+    events = [AgentRuntimeEvent.model_validate(item) for item in payload["events"]]
+
+    assert events
+    assert all(event.schema_version == "0.2.0" for event in events)
+    assert [event.event_id for event in events] == ["evt-tool-start"]
 
 
 def test_core_enum_and_namespaced_extensions_are_supported():

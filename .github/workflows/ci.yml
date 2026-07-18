@@ -40,7 +40,10 @@ jobs:
             tests/test_frontend_contract.py \
             tests/test_visual_fixtures.py \
             tests/test_visual_baseline_contract.py \
-            tests/test_ci_staging_contract.py
+            tests/test_ci_staging_contract.py \
+            tests/test_validation_runner.py \
+            tests/test_validation_cli.py \
+            tests/test_documentation_contract.py
       - name: Check primary frontend modules
         run: |
           node --check static/js/anthill.js

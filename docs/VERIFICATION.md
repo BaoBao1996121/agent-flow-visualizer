@@ -1,11 +1,14 @@
 # Verification record
 
-Last verified: 2026-07-18 (Asia/Shanghai).
+Last verified: 2026-07-19 (Asia/Shanghai).
 
 This is a dated evidence record, not a permanent quality claim. Hosted results
 must be linked from the repository's current Actions page after publication.
 
-## Current-code release gates
+## Protected-main pre-Phase-C baseline
+
+These values describe the published/protected baseline before the advisory S0
+branch. Current branch-only evidence is recorded separately below.
 
 | Boundary | Command / method | Result |
 |---|---|---|
@@ -333,12 +336,46 @@ Demo, historical seek, Fork, and Compare. They predate reducer `0.3.0`, schema
 not validate current HEAD. They remain useful only as historical interaction
 evidence.
 
+## Advisory S0 candidate evidence
+
+These 2026-07-18/19 local results belong to the Phase C branch. They do not claim
+protected-main promotion:
+
+| Boundary | Command/evidence | Result |
+|---|---|---|
+| Selector/CLI/docs/CI/schema contracts | focused pytest slice | 93/93 passed in 33.44s after serialization; one earlier concurrent Windows launch produced Git DLL-initialization exits rather than assertion failures |
+| Complete Python preflight | `python -m pytest -q` | 455 passed, one documented LangGraph compatibility skip, in 46.86s |
+| UI vertical | Playwright `--grep '@s0'` | One pass in 8.9s through fixture load, history `seq 0`, Objects, keyboard Evidence, console/page/HTTP-5xx capture, and screenshot attachment; runner rejects skipped or non-exact execution even when the child exits zero |
+| Python impact domains | CLI-selected pytest plus Ruff | LangGraph, storage, schema, projections, analysis, and API command-time observations all below 18s; these are warm local samples, not p95/SLA values |
+| Historical mutation replay | runs 29570924390 and 29638437349 as provenance | Current selected sets passed; injecting each former fault produced the exact expected RED |
+| Static gates | Ruff plus fixed Node syntax set | PASS |
+
+The complete suite's 46.86-second result rejects full pytest as S0. Local persisted
+PNG files are rewritten by endpoint DLP, so the earlier manually driven screenshot
+was illustrative only. Ready run
+[29653151908](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29653151908)
+then uploaded the exact test attachment. Its GitHub artifact digest is
+`sha256:de170e4e77f60c222ade477b2f186fcf678e655f32dfeb947f62274d0cbdc54e`;
+the 257,419-byte screenshot plaintext was reviewed in memory at `1600×1000` with
+SHA-256 `9a6258ca12880407a85551c021add998dbad8e1a7db7cb1b9a966321f0127437`
+before DLP rewrote the disk copy. It shows `HISTORY · SEQ 0`, `run.started`,
+observed evidence, and the fixture Agent selected. Detailed chronological evidence
+is in [STAGE_LOG.md](STAGE_LOG.md).
+
+Hosted Phase C candidate evidence:
+
+| Run / candidate | Transition | Result |
+|---|---|---|
+| [29652870258](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29652870258), `757d241…` | First Draft | RED: fast contracts exposed an ambient local `node_modules` test prerequisite; aggregate also failed as designed. |
+| [29653112545](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29653112545), `1335e71…` | Final Draft candidate | Fast PASS; six S2 definitions SKIPPED; aggregate explicit FAIL with Ready instruction. |
+| [29653151908](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29653151908), same `1335e71…` | Draft → Ready | All 11 jobs PASS in 100s wall, including three Python versions, both LangGraph lanes, Chromium, pinned visual comparison, hardened container, and aggregate; Playwright artifact uploaded. |
+
 ## Explicitly pending
 
-- Staged validation still needs representative observation-window samples, a
-  deterministic S0/impact-manifest runner, historical-regression replay,
-  failure/skip/cancel canaries, S3 nightly breadth, S4 exact-release-commit
-  evidence, rollback drill, and an escaped-defect observation window.
+- Staged validation still needs protected-main evidence for the advisory S0
+  candidate, representative observation-window samples,
+  dependency and matrix-member failure/skip/cancel canaries, S3 nightly breadth,
+  S4 exact-release-commit evidence, rollback drill, and an escaped-defect window.
 - Measured comprehension, information-density, and recognition studies have not
   run. Automated cross-browser, screen-reader, high-contrast-mode, and real
   assistive-technology verification is not implemented.
