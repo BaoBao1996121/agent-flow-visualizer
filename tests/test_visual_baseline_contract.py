@@ -57,10 +57,14 @@ def test_visual_candidate_job_requires_all_four_non_empty_pngs():
 def test_visual_candidate_uses_an_exact_python_runtime_lock():
     workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     requirements = (ROOT / "requirements-visual.txt").read_text(encoding="utf-8")
+    visual_job = workflow.split("  visual-baseline-canary:\n", 1)[1].split(
+        "\n  container:\n", 1
+    )[0]
 
-    assert "pip install -r requirements-visual.txt" in workflow
-    assert "cache-dependency-path: requirements-visual.txt" in workflow
-    assert 'python-version: "3.12.13"' in workflow
+    assert "python -m pip install -r requirements-visual.txt" in visual_job
+    assert "cache: pip" not in visual_job
+    assert "cache-dependency-path: requirements-visual.txt" not in visual_job
+    assert 'python-version: "3.12.13"' in visual_job
     for requirement in (
         "fastapi==0.136.0",
         "pydantic==2.12.5",
