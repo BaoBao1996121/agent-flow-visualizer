@@ -269,7 +269,7 @@ The renderer migration is governed by the [visual-system decision](docs/VISUAL_S
 
 Near-term, in order:
 
-1. Promote the advisory S0 impact runner through Draft, Ready, and protected-main evidence; then finish the [staged-validation migration](docs/VALIDATION_STAGES.md) observation window and remaining failure canaries before collapsing any legacy required context.
+1. Observe the advisory S0 impact runner now proven through Draft, Ready, and protected main; finish the [staged-validation migration](docs/VALIDATION_STAGES.md) observation window and remaining failure canaries before changing any legacy required context.
 2. Execute the [preregistered Phase 0 visual evidence plan](docs/PHASE0_VISUAL_EVIDENCE_PLAN.md): measure comprehension, information density, recognition, accessibility, and equal-information art-direction candidates; publish the results rather than judging the interface by screenshots alone.
 3. Introduce a renderer-independent `VisualModel` and deterministic animation-intent contract; build the bounded PixiJS 8 vertical slice and same-scene Phaser 4.2.1 benchmark before choosing a migration path.
 4. Add OTLP protobuf/live collection plus AG-UI and LangGraph live stream bridges with bounded ingestion and backpressure.
