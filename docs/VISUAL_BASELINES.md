@@ -2,12 +2,12 @@
 
 ## Status
 
-The first four pinned-Linux goldens have been generated, reviewed, and added to
-the current promotion change. The workflow is now configured as a required
-compare job with update mode disabled. Visual-regression protection is not
-claimed until that required job passes against the committed files without
-rewriting them. Windows output remains diagnostic only and must not be promoted
-as the Linux baseline.
+The first four pinned-Linux goldens are reviewed, committed, and protected by a
+required compare job with update mode disabled. The first required comparison
+passed without rewriting them in
+[run 29639244683](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639244683).
+The same check is required by `main` branch protection. Windows output remains
+diagnostic only and must not be promoted as the Linux baseline.
 
 ## Reproducibility contract
 
@@ -81,8 +81,11 @@ hashes read from that artifact are:
 | `compare.png` | `54a78b72a9bb56ceb8f3f0de60c5a56573cd428d19cf3d2c4ab7fb3477e8309e` |
 
 The artifact contains only synthetic fixture output. Reports and traces were not
-promoted. The remaining first-baseline gate is a published required-mode run
-that compares these committed files and passes without updating them.
+promoted. At commit `6a96011`, run 29639244683 passed all nine jobs; its
+`Pinned Chromium visual regression` lane compared the committed files with
+`ANTHILL_UPDATE_VISUALS=0`. Repository protection was then verified with
+`strict=true`, administrator enforcement enabled, and that check registered as
+the ninth required context.
 
 ## Intentional baseline updates
 

@@ -5,7 +5,7 @@
 
 ![Agent Anthill overview](docs/assets/anthill-overview.png)
 
-> Alpha · application `0.6.0` · event protocol `0.2.0` · reducer `0.4.0` · measurement contract `1.0.0` · coverage contract `0.3.0`
+> Alpha · application `0.7.0` · event protocol `0.2.0` · reducer `0.4.0` · measurement contract `1.0.0` · coverage contract `0.3.0`
 > Python runtime tracing plus OTLP/OpenInference, AG-UI, and LangGraph StreamPart v2 offline import work today. Framework-native live bridges remain the next expansion, not a claim hidden behind the UI.
 
 Most agent visualizers answer “what looks busy?” Agent Anthill is built to answer harder questions:
@@ -256,7 +256,7 @@ The renderer migration is governed by the [visual-system decision](docs/VISUAL_S
 
 Near-term, in order:
 
-1. Finish the Phase -1 release gate by proving the new required pinned-Linux job compares the four reviewed committed goldens without rewriting them. Candidate generation, human review, and the switch from update mode are complete in the current promotion change; pixel-regression protection is not claimed until the required comparison passes.
+1. Measure Phase 0 comprehension, information density, recognition, accessibility, and art-direction candidates; publish the results rather than judging the interface by screenshots alone.
 2. Introduce a renderer-independent `VisualModel` and deterministic animation-intent contract; build the bounded PixiJS 8 vertical slice and same-scene Phaser 4.2.1 benchmark before choosing a migration path.
 3. Add OTLP protobuf/live collection plus AG-UI and LangGraph live stream bridges with bounded ingestion and backpressure.
 4. Add native Claude Code and Codex hook providers with published capability contracts.

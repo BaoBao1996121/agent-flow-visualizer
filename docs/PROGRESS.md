@@ -2,7 +2,7 @@
 
 ## Current state
 
-Agent Anthill `0.6.0` is a runnable local alpha with event protocol `0.2.0`, a tamper-evident JSONL reference ledger, deterministic projection/snapshots under reducer `0.4.0`, explicit causal inspection, historical playback, no-side-effect materialized forks, normalized run comparison, Python/OTLP/OpenInference/AG-UI/LangGraph v2 inputs, cursor-specific instrumentation visibility, and a Canvas + semantic-DOM observatory UI.
+Agent Anthill `0.7.0` is a runnable local alpha with event protocol `0.2.0`, a tamper-evident JSONL reference ledger, deterministic projection/snapshots under reducer `0.4.0`, explicit causal inspection, historical playback, no-side-effect materialized forks, normalized run comparison, Python/OTLP/OpenInference/AG-UI/LangGraph v2 inputs, cursor-specific instrumentation visibility, and a Canvas + semantic-DOM observatory UI.
 
 Current working-branch verified baseline:
 
@@ -10,22 +10,21 @@ Current working-branch verified baseline:
 - metadata-only default with explicit truth/fidelity levels;
 - 12 semantic chambers plus Source Archive, Quality Gate, and Unknown Fog;
 - live SSE, gap recovery, time travel, compare, snapshot fallback, branch provenance, and hash verification;
-- Apache-2.0 community files, multi-version CI configuration, and a hardened Docker/Compose definition; current-branch [run 29638608292](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29638608292) at commit `a3b2a7e` passed all nine jobs, including the 49-contract Chromium lane and pinned-Linux candidate generation;
-- 384 tests passed locally in 19.87 seconds; one optional real-LangGraph runtime test was skipped because the ambient environment exposes the unsupported pre-1.1 tuple boundary, while isolated LangGraph `1.1.0` and `1.2.9` probes passed separately;
+- Apache-2.0 community files, multi-version CI configuration, and a hardened Docker/Compose definition; Phase -1 release-gate [run 29639244683](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639244683) at commit `6a96011` passed all nine jobs, including the 49-contract Chromium lane and required pinned-Linux visual comparison;
+- 385 tests passed locally in 20.28 seconds; one optional real-LangGraph runtime test was skipped because the ambient environment exposes the unsupported pre-1.1 tuple boundary, while isolated LangGraph `1.1.0` and `1.2.9` probes passed separately;
 - 49/49 local Chromium observatory contracts passed in 2.0 minutes, with all 98/98 executions passing in 4.4 minutes under a two-repeat order-isolation run;
 - full-repository Ruff, nine JavaScript syntax checks, and `git diff --check` passed;
-- the deterministic visual fixture/contract tests passed 7/7, all four scenes reached their screenshot boundary with `--ignore-snapshots`, and run 29638608292 generated the four reviewed Linux goldens now included in the promotion change; the required comparison job is configured, but visual-regression protection is not claimed until its first hosted comparison passes;
+- the deterministic visual fixture/contract tests passed 7/7, all four scenes reached their screenshot boundary with `--ignore-snapshots`, and run 29639244683 compared the four reviewed Linux goldens with updates disabled; strict, administrator-enforced `main` protection requires that visual check;
 - latest-code manual Chromium verification of LangGraph JSON import; NDJSON, AG-UI, Demo, sequence-20 seek, Fork, and Compare remain earlier same-day manual evidence;
 - real LangGraph `1.1.0` and `1.2.9` runtime probes across `tasks`, `messages`, `updates`, `values`, `checkpoints`, and `custom`.
 
 ## Next milestones
 
-1. Prove the new required pinned-Linux comparison job passes against the four reviewed committed goldens without rewriting them. This is the remaining Phase -1 release gate in [VISUAL_BASELINES.md](VISUAL_BASELINES.md).
-2. Measure Phase 0 comprehension, density, recognition, accessibility, and art-direction candidates; then build the renderer-independent `VisualModel`, deterministic animation contract, PixiJS 8 vertical slice, and same-scene Phaser 4.2.1 benchmark. Publish measurements before selecting the migration path.
-3. Add standard live OTLP collection plus AG-UI and LangGraph stream bridges with bounded ingestion/backpressure.
-4. Add native Claude Code and Codex hooks with published capability contracts.
-5. Add queryable monitoring exports, very-long-run pagination, and reference-based parent snapshot + tail DAG storage.
-6. Add sandboxed stub replay before considering any real rerun.
+1. Measure Phase 0 comprehension, density, recognition, accessibility, and art-direction candidates; then build the renderer-independent `VisualModel`, deterministic animation contract, PixiJS 8 vertical slice, and same-scene Phaser 4.2.1 benchmark. Publish measurements before selecting the migration path.
+2. Add standard live OTLP collection plus AG-UI and LangGraph stream bridges with bounded ingestion/backpressure.
+3. Add native Claude Code and Codex hooks with published capability contracts.
+4. Add queryable monitoring exports, very-long-run pagination, and reference-based parent snapshot + tail DAG storage.
+5. Add sandboxed stub replay before considering any real rerun.
 
 ## Session log
 
@@ -95,7 +94,8 @@ Current working-branch verified baseline:
 - Reconciled Meter, Memory, Context, and Compare: Meter reads only safe backend aggregates; Memory exposes recorded layer operations with evidence routes; absent cognition remains `NOT OBSERVED`; Compare separates model chunks from completed calls and emits numeric measurement deltas only for compatible contracts.
 - Made full cursor history authoritative for chamber counts, preserved selected/failed/unknown entities under the deterministic Canvas cap, printed evidence and tri-state Compare semantics (`ON`, explicit `OFF`, `NOT OBSERVED`), and added explicit no-signal/unknown patterns so color is redundant information.
 - Added a per-cursor semantic object mirror, keyboard evidence routes, bounded live announcements, tested ARIA state, application and OS motion controls, terminal/static RAF shutdown, 12 px core-label checks, and selected 4.5:1 contrast regressions. Real assistive-technology and comprehension testing remain pending.
-- Added a deterministic 44-event synthetic fixture and four pinned-Linux visual scenes: overview, explicit error evidence, coverage, and Compare. Run 29638608292 generated all four candidates; each PNG was reviewed, its artifact provenance was recorded, and only the accepted images were added to the current promotion change.
+- Added a deterministic 44-event synthetic fixture and four pinned-Linux visual scenes: overview, explicit error evidence, coverage, and Compare. Candidate-stage run 29638608292 generated all four images; each PNG was reviewed, its artifact provenance was recorded, and only the accepted files were promoted in commit `6a96011`.
 - Diagnosed run 29638437349's tolerated visual-lane failure as a `setup-python` pip-cache host/container path mismatch after Python 3.12.13 had installed successfully. Removed only that visual job's optional pip cache, retained the exact interpreter and dependency lock, added a regression contract, and proved the corrected candidate lane in run 29638608292.
-- Current local evidence: Python `384 passed, 1 skipped` in 19.87 seconds; ordinary Chromium `49/49` in 2.0 minutes; repeated Chromium `98/98` in 4.4 minutes; full-repository Ruff, nine JavaScript syntax checks, and `git diff --check` passed. Visual fixture/contract tests passed `7/7`, and four scenes passed functionally with `--ignore-snapshots`. Current-branch run 29638608292 passed all nine then-configured jobs; its visual lane generated candidates rather than comparing them.
-- Switched the pinned visual lane to required compare mode, disabled baseline updates, and added failure-only diagnostics. All eight Phase -1 semantic corrections have implementation coverage, but Phase -1 is not release-complete until the first required comparison passes without rewriting the reviewed goldens. Measured user comprehension and real assistive-technology validation remain later evidence gates.
+- Current local evidence: Python `385 passed, 1 skipped` in 20.28 seconds; ordinary Chromium `49/49` in 2.0 minutes; repeated Chromium `98/98` in 4.4 minutes; full-repository Ruff, nine JavaScript syntax checks, and `git diff --check` passed. Visual fixture/contract tests passed `7/7`, and four scenes passed functionally with `--ignore-snapshots`. Candidate-stage run 29638608292 passed all nine then-configured jobs before required comparison was enabled.
+- Switched the pinned visual lane to required compare mode, disabled baseline updates, and added failure-only diagnostics. Run 29639244683 passed all nine jobs without rewriting the reviewed goldens; `main` protection now requires that ninth check with strict and administrator enforcement. This completes the Phase -1 visual truth release gate. Measured user comprehension and real assistive-technology validation remain Phase 0 evidence gates.
+- Bumped the application release to `0.7.0` and added a synchronization contract across the Python package, FastAPI metadata, frontend package/lock, container label default, README, and progress record.

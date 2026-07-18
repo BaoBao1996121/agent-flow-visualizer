@@ -9,7 +9,7 @@ must be linked from the repository's current Actions page after publication.
 
 | Boundary | Command / method | Result |
 |---|---|---|
-| Core Python suite | `python -m pytest -q` | 384 passed in 19.87s; one optional real-runtime test skipped because the ambient LangGraph exposes the unsupported pre-1.1 tuple boundary |
+| Core Python suite | `python -m pytest -q` | 385 passed in 20.28s; one optional real-runtime test skipped because the ambient LangGraph exposes the unsupported pre-1.1 tuple boundary |
 | Schema and world contract | API, snapshot, lifecycle, storage, and reducer regressions | Event protocol `0.2.0`; reducer `0.4.0`; measurement extension `1.0.0`; coverage contract `0.3.0`; old snapshots remain isolated by reducer version; legacy `0.1.0` read compatibility is storage-only |
 | Python lint | `python -m ruff check --no-cache .` | Full repository PASS |
 | Frontend syntax | `node --check` over four application files, two Playwright configs, two specs, and the motion spike | 9/9 PASS |
@@ -17,10 +17,11 @@ must be linked from the repository's current Actions page after publication.
 | Browser order isolation | `npx playwright test --repeat-each=2` | 98/98 passed in 4.4m; the two complete executions are independent of prior test order |
 | Visual fixture and contract | Targeted visual fixture/contract Pytest files | 7/7 passed |
 | Visual scene functionality | `npx playwright test --config=playwright.visual.config.mjs --ignore-snapshots` | 4/4 passed; every scene reached its screenshot boundary, but snapshots were deliberately ignored and this is not golden comparison |
+| Pinned-Linux visual regression | Required `Pinned Chromium visual regression` job | Run 29639244683 PASS against all four reviewed committed goldens with update mode disabled; the context is required by `main` protection |
 | Structured fixtures/config | Python JSON parsing for LangGraph, canonical-ingest, and deterministic visual fixtures; PyYAML parse for `.github/workflows/ci.yml` | PASS |
 | Patch hygiene | `git diff --check` | PASS |
 
-The optional runtime test is not counted among the 384 passes. Its two
+The optional runtime test is not counted among the 385 passes. Its two
 supported runtime executions are recorded separately below.
 
 ## Automated Chromium observatory contract
@@ -84,8 +85,8 @@ to nor modifies the user-facing `8765` process. The workflow rejects focused or
 flaky tests and retains seven-day diagnostics. Feature branches run through the
 pull-request trigger instead of a duplicate push trigger, while superseded runs
 in the same concurrency group are cancelled. The latest hosted ordinary browser
-job covered 29 contracts and predates the current local 49-contract suite. This
-is Chromium coverage, not cross-browser or real assistive-technology evidence.
+job covered all 49 contracts in run 29639244683. This is Chromium coverage, not
+cross-browser or real assistive-technology evidence.
 
 Only synthetic fixtures were used. HTML reports, traces, and screenshots may
 retain page/request data; introducing real traces requires a fresh artifact
@@ -93,9 +94,9 @@ privacy review.
 
 ## Deterministic visual-regression promotion
 
-Reproducible candidate generation and reviewed baseline promotion are
-implemented; the first enforced visual-regression comparison is pending. The
-isolated suite in `tests/visual/` fixes a synthetic
+Reproducible candidate generation, reviewed baseline promotion, and enforced
+visual-regression comparison are implemented. The isolated suite in
+`tests/visual/` fixes a synthetic
 44-event fixture, Playwright `1.61.1`, a digest-pinned Noble container,
 Python `3.12.13`, exact server dependencies, `1600x1000` at device scale factor
 1, `en-US`, UTC, dark scheme, reduced motion, static capture, and font readiness.
@@ -110,18 +111,23 @@ tests plus `4/4` scenes reaching their screenshot boundary with
 proves scene setup and capture flow, not image stability or acceptance.
 
 [Run 29638608292](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29638608292)
-passed all nine jobs and generated the four Linux candidates. Its artifact digest
-and the reviewed per-file hashes are recorded in
-[VISUAL_BASELINES.md](VISUAL_BASELINES.md). All four PNGs were inspected and are
-included in the current promotion change; reports and traces were not promoted.
+passed all nine candidate-stage jobs and generated the four Linux images. Its
+artifact digest and the reviewed per-file hashes are recorded in
+[VISUAL_BASELINES.md](VISUAL_BASELINES.md). All four PNGs were inspected and
+promoted in commit `6a96011`; reports and traces were not promoted.
 The workflow now sets `ANTHILL_UPDATE_VISUALS=0`, has no
 `continue-on-error`, and uploads diagnostics only after a failed comparison.
 The initial pixel thresholds remain configurable values pending repeat
 calibration. Windows screenshots are diagnostic only and cannot be promoted.
 
-The next evidence gate is the first published required-mode run comparing the
-committed PNGs without updating them. Until it passes, this record does not claim
-that pixel-regression protection or the Phase -1 release gate is complete.
+[Run 29639244683](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639244683)
+passed all nine jobs at commit `6a96011`; the visual lane compared the four
+committed PNGs with update mode disabled. `main` protection was then read back
+with `strict=true`, administrator enforcement enabled, and
+`Pinned Chromium visual regression` present as the ninth required GitHub Actions
+context. This completes the Phase -1 visual truth release gate. It does not prove
+cross-browser rendering, real assistive-technology behavior, or user
+comprehension.
 
 ## Measurement truth and projection regressions
 
@@ -196,11 +202,11 @@ statement, not a throughput benchmark.
 | [29570924390](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29570924390), `55fae916…` | Initial published workflow; 13 browser contracts; before schema `0.2.0`, reducer `0.3.0`, NDJSON depth fix, store hardening, and Node 24 action majors | Overall FAIL. PASS: browser 13/13, container, frontend, Python 3.11. FAIL: Python 3.12/3.13 and both LangGraph jobs, all from the same deep-NDJSON error-classification assertion. |
 | [29629916726](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29629916726), `c39c70a…` | `actions/checkout@v6`, `setup-python@v6`, `setup-node@v6`, `upload-artifact@v7`; action runtime Node 24, project test runtime Node 22; 29 browser contracts | Overall PASS: Python 3.11/3.12/3.13, LangGraph 1.1.0/supported 1.x, frontend, Chromium, and hardened container. |
 | [29638437349](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29638437349), `ce6511f…` | First current-contract run with the non-blocking pinned-Linux candidate lane | Eight required jobs PASS. The tolerated candidate lane failed before screenshot generation because `setup-python` tried to spawn the container-only `/__t/.../pip` path while initializing its optional pip cache. |
-| [29638608292](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29638608292), `a3b2a7e…` | Current reducer/measurement/coverage contracts; 49 browser contracts; deterministic pinned-Linux candidate generation | Overall PASS across all nine jobs. The visual candidate job generated the reviewed artifact; this run predates the switch to required compare mode. |
+| [29638608292](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29638608292), `a3b2a7e…` | Candidate-stage reducer/measurement/coverage contracts; 49 browser contracts; deterministic pinned-Linux generation | Overall PASS across all nine jobs. The visual lane generated the reviewed artifact; this run predates the switch to required compare mode. |
+| [29639244683](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29639244683), `6a96011…` | Reviewed Linux goldens committed; visual job in blocking compare mode with updates disabled | Overall PASS across all nine jobs. The visual comparison passed without rewriting the baselines; the check was subsequently added to strict, administrator-enforced `main` protection. |
 
-Run 29638608292 is current-branch hosted evidence for the product contracts and
-all ordinary CI lanes. It is candidate-generation evidence, not proof of the
-new required comparison job introduced by the current promotion change.
+Run 29639244683 is the published Phase -1 release-gate evidence for the product
+contracts, all ordinary CI lanes, and the required visual comparison.
 
 The workflow currently follows action major tags, not immutable commit-SHA pins.
 SHA pinning plus automated dependency updates remains a supply-chain hardening
@@ -256,10 +262,6 @@ evidence.
 
 ## Explicitly pending
 
-- Four reviewed pinned-Linux goldens and a required comparison job are included
-  in the current promotion change. The first hosted required-mode run must pass
-  without rewriting them before visual-regression protection or Phase -1 release
-  completion is claimed.
 - Measured comprehension, information-density, and recognition studies have not
   run. Automated cross-browser, screen-reader, high-contrast-mode, and real
   assistive-technology verification is not implemented.
@@ -267,7 +269,7 @@ evidence.
   slice, and same-scene Phaser 4.2.1 benchmark are planned work, not current
   product capabilities.
 - The local workstation has no Docker CLI, so local container execution remains
-  unavailable. Current-branch run 29638608292 passed Compose validation, image
+  unavailable. Release-gate run 29639244683 passed Compose validation, image
   build, non-root identity, read-only root, health, and a real ledger write.
 - OTLP protobuf/live collection, AG-UI live subscription, and a LangGraph live
   capture bridge are not implemented.
