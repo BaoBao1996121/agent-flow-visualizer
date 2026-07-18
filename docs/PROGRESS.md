@@ -20,11 +20,12 @@ Published `v0.7.0` / protected-`main` verified baseline:
 
 ## Next milestones
 
-1. Execute the [Phase 0 visual evidence plan](PHASE0_VISUAL_EVIDENCE_PLAN.md) tracked in [issue #10](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/10); then build the renderer-independent `VisualModel`, deterministic animation contract, PixiJS 8 vertical slice, and same-scene Phaser 4.2.1 benchmark. Publish measurements before selecting the migration path.
-2. Add standard live OTLP collection plus AG-UI and LangGraph stream bridges with bounded ingestion/backpressure.
-3. Add native Claude Code and Codex hooks with published capability contracts.
-4. Add queryable monitoring exports, very-long-run pagination, and reference-based parent snapshot + tail DAG storage.
-5. Add sandboxed stub replay before considering any real rerun.
+1. Complete the [staged-validation contract](VALIDATION_STAGES.md) tracked in [issue #12](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/12): measure the shadow S1/aggregate jobs, prove fail-closed Draft-to-Ready transitions, add a deterministic S0 runner and impact manifest, replay known regressions, then migrate protection without a gap.
+2. Execute the [Phase 0 visual evidence plan](PHASE0_VISUAL_EVIDENCE_PLAN.md) tracked in [issue #10](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/10); then build the renderer-independent `VisualModel`, deterministic animation contract, PixiJS 8 vertical slice, and same-scene Phaser 4.2.1 benchmark. Publish measurements before selecting the migration path.
+3. Add standard live OTLP collection plus AG-UI and LangGraph stream bridges with bounded ingestion/backpressure.
+4. Add native Claude Code and Codex hooks with published capability contracts.
+5. Add queryable monitoring exports, very-long-run pagination, and reference-based parent snapshot + tail DAG storage.
+6. Add sandboxed stub replay before considering any real rerun.
 
 ## Session log
 
@@ -110,3 +111,13 @@ Published `v0.7.0` / protected-`main` verified baseline:
 - Official public documentation retrieved 2026-07-18 shows that [Langfuse already offers Agent Graphs](https://langfuse.com/docs/observability/features/agent-graphs), [Phoenix organizes Agent work around traces and spans](https://arize.com/docs/phoenix/tracing/concepts-tracing/what-are-traces), and [AgentOps exposes session waterfall views](https://docs.agentops.ai/v2/usage/dashboard-info). Therefore the maintained product-position inference is that generic trace graphs are not a moat; Anthill differentiates through causal proof, epistemic truth, capture blind spots, mechanism-level Compare, and evidence routes.
 - Reforecast Phase 0 after independent preregistration audit from 5–8 to 8–14 engineer-days, plus 4–7 artist/UX-days and 5–8 separate research/facilitation-days. Participant compensation, equipment, venue, and recruitment lead time remain unpriced until approved before recruitment.
 - Attempted built-in image generation for Phase 0 concept material twice. Both attempts failed at the service network layer and produced no artifact; no API-key CLI fallback or unreviewed asset entered the repository.
+
+### 2026-07-18 — staged-validation shadow implementation
+
+- Added [issue #12](https://github.com/BaoBao1996121/agent-flow-visualizer/issues/12) and the normative [S0–S4 validation contract](VALIDATION_STAGES.md), making exploration feedback time, runner cost, PR-candidate plus resulting-main evidence, and explicit rollback first-class project goals.
+- Added an unconditional, non-matrix `Exploration fast gate` with Ruff, five focused Python contract files, and four primary JavaScript syntax checks. It is a conservative shadow S1, not yet an impact-selected required gate.
+- Added explicit Draft/Ready workflow activities plus an `always()` aggregate that fails Draft pull requests and accepts only `success` from S1 and every existing S2 dependency. Semantic PyYAML contract tests were developed RED→GREEN.
+- Design review: 5/5 passed for verified external dependencies, source-labelled performance observations, failure/rollback paths, provisional thresholds, and unchanged Phase 0/product boundaries.
+- Working-branch local gates passed: `387 passed, 1 skipped` in 19.71 seconds, full-repository Ruff, four primary JavaScript syntax checks, semantic workflow parsing, and `git diff --check`.
+- Kept all nine strict, administrator-enforced required contexts and their every-PR execution unchanged. The new jobs are not protected contexts until real hosted Draft-to-Ready and failure-path evidence passes.
+- S0 commands/manifests, impact-map replay, Draft suppression of S2, S3, and S4 remain pending. No staged-validation completion or CI speedup is claimed from local contract tests alone.

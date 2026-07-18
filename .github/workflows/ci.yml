@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -13,6 +15,39 @@ permissions:
   contents: read
 
 jobs:
+  exploration-fast:
+    name: Exploration fast gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: Install focused validation dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Check Python and staged-validation contracts
+        run: |
+          ruff check --no-cache .
+          python -m pytest -q \
+            tests/test_version_contract.py \
+            tests/test_frontend_contract.py \
+            tests/test_visual_fixtures.py \
+            tests/test_visual_baseline_contract.py \
+            tests/test_ci_staging_contract.py
+      - name: Check primary frontend modules
+        run: |
+          node --check static/js/anthill.js
+          node --check static/js/app.js
+          node --check static/js/graph.js
+          node --check static/js/simulation.js
+
   python:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -202,3 +237,27 @@ jobs:
         run: |
           docker rm --force agent-anthill-ci || true
           docker volume rm agent-anthill-ci-data || true
+
+  protected-main-gate:
+    name: Protected main validation gate
+    if: ${{ always() }}
+    needs:
+      - exploration-fast
+      - python
+      - langgraph-compat
+      - frontend
+      - browser
+      - visual-regression
+      - container
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Keep draft pull requests outside the protected-main gate
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft }}
+        run: |
+          echo "::error::Mark this pull request ready for review to run protected-main validation."
+          exit 1
+      - name: Require every validation dependency to succeed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: jq -e 'length == 7 and all(.[]; .result == "success")' <<< "$NEEDS_JSON"

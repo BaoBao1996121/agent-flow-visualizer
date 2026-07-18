@@ -231,3 +231,28 @@ Executable evidence:
 The resolved versions are dependency preflight only, not performance or
 compatibility evidence. Installation remains blocked on the committed Phase 0
 information contract and the issue #3 `VisualModel` boundary.
+
+## 2026-07-18 — staged-validation preflight
+
+Sources checked before implementation:
+
+- GitHub required-check and job-condition documentation linked from
+  [VALIDATION_STAGES.md](VALIDATION_STAGES.md);
+- live `main` protection and recent Actions runs through the GitHub API;
+- [PyPI PyYAML 6.0.3](https://pypi.org/project/PyYAML/), released 2025-09-25
+  with Python 3.11–3.13 classifiers and verified publisher details;
+- the official [Ubuntu 24.04 runner inventory](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md),
+  which currently lists `jq 1.7`.
+
+| Assumption | Validation | Result |
+|---|---|---|
+| Hosted full-CI wall time is the present exploration bottleneck. | Inspected seven successful PR runs across three correlated branch families: total wall median 81 seconds; time to first completed job median 13 seconds. | REJECTED for current hosted wall time. Runner work and future matrix growth remain valid reasons to stage validation. The sample is too small and correlated for a stable p95 claim. |
+| A repository-owned impact map can safely select the smallest sufficient regression set. | No complete tracked-path census or held-out replay exists yet. | PENDING. Unknown/high-risk paths remain S2; no dynamic downgrade is implemented. |
+| One vertical smoke can cover startup, deterministic fixture load, seek, Evidence, and semantic snapshot. | The current 49-contract Chromium suite contains the components, but no independent stable smoke exists. | PENDING. A future RED→GREEN smoke cannot replace the complete suite before replay evidence. |
+| Draft-to-Ready plus an explicitly failing aggregate can prevent merge without S2. | Workflow semantics and event types have contract tests; live Draft/Ready/new-commit/failure/cancel transitions have not run yet. | PENDING hosted evidence. Current nine required checks remain unchanged. |
+| A personal-account repository can use merge queue as the first migration mechanism. | Live repository owner type is `User`; current repository settings expose no merge queue or ruleset. | REJECTED for the current repository. Reassess after organization transfer and add `merge_group` support before enabling. |
+| Semantic CI contract tests can use a maintained parser without narrowing supported Python versions. | Local PyYAML `6.0.3` parsed the workflow; PyPI metadata lists Python 3.11, 3.12, and 3.13 support. | PASS for the test boundary. GitHub Actions expression behavior still requires real hosted runs. |
+
+Historical replay seeds are run `29570924390` for the deep-NDJSON classification
+regression and run `29638437349` for the pinned-visual host/container pip-cache
+path regression. They are selected evidence seeds, not completed replay results.

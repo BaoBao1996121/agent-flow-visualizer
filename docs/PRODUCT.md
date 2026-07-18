@@ -111,7 +111,7 @@ projection. Cursor-specific world and Compare states remain the authority for
 availability around damaged ledgers; it reports `not_checked` and is not an
 integrity authority. Full per-run integrity remains an explicit operation.
 
-The current local evidence is 385 passing Python tests in 20.28 seconds (plus
+The current local evidence is 387 passing Python tests in 19.71 seconds (plus
 one optional skip), 49/49 Chromium contracts in 2.0 minutes, and 98/98 browser
 executions in 4.4 minutes under two repeats. Full-repository Ruff, nine
 JavaScript syntax checks, and patch hygiene pass. Visual fixture/contract tests

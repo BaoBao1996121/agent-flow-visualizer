@@ -35,7 +35,16 @@ Activate with one shell-appropriate command:
 source .venv/bin/activate
 ```
 
-Run the complete local gates:
+Validation depth is staged so exploration stays fast without weakening protected
+`main`. During S0 exploration, run the narrow test file and syntax check for the
+module being changed. Before publishing, use the shadow `Exploration fast gate`;
+before merge, the complete S2 matrix remains mandatory. The canonical runner,
+change-impact map, and manifests are still under development, so unknown-impact,
+workflow, dependency, container, browser-harness, and visual-golden changes must
+wait for hosted S2; run the broad local preflight below before publishing. See
+[validation stages](docs/VALIDATION_STAGES.md) for current versus planned behavior.
+
+Run the broad local preflight toward S2; authoritative complete S2 remains hosted:
 
 ```bash
 python -m pip install -r requirements-dev.txt
@@ -51,6 +60,13 @@ node --check playwright.config.mjs
 node --check tests/browser/anthill-phase1.spec.mjs
 npm run test:browser
 ```
+
+The hosted container and pinned-Linux visual jobs remain authoritative boundaries
+that this workstation may not reproduce. A Draft PR can therefore show a green
+`Exploration fast gate` and an intentionally red `Protected main validation gate`.
+The latter means full merge validation has not been requested yet; mark the PR
+Ready to trigger the complete matrix. A product-test failure remains a real
+failure and must not be relabelled as this expected Draft state.
 
 On Linux or CI, use `npx playwright install --with-deps chromium`. The browser
 suite owns `127.0.0.1:8878` and an ignored ledger under `output/playwright/`; it
@@ -97,5 +113,6 @@ The pixel world is an information projection. New animation must have an event/s
 - Do not rewrite unrelated user work.
 - Run the full test and lint commands.
 - Treat reviewer requests about evidence quality, privacy, and replay safety as release blockers.
+- Escalate unknown impact to the complete S2 matrix; never let generated code or model output choose its own validation depth.
 
 By contributing, you agree that your contribution is licensed under Apache-2.0.
