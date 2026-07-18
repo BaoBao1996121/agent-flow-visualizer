@@ -71,10 +71,23 @@ protection field. The first stdin-based PATCH attempt returned HTTP 400 before
 mutation; the reviewed-file retry succeeded and was read back. This is recorded
 because failed control-plane attempts must not disappear from evidence.
 
-Phase B's local RED→GREEN contract now skips the six complete S2 job definitions
-only for Draft PR events. Hosted skipped-child Draft/Ready/main behavior,
-matrix-member failure propagation, dependency skip/cancel canaries, historical
-replay, manifest completeness, and rollback drill remain pending.
+Phase B's local RED→GREEN contract skips the six complete S2 job definitions only
+for Draft PR events. The hosted state machine was then exercised on one unchanged
+candidate, `aa0afb7`:
+
+| Run | Transition | Result |
+|---|---|---|
+| [29645940777](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29645940777) | Open as Draft | Fast PASS 15s; six S2 definitions SKIPPED; aggregate explicit FAIL; wall 26s. |
+| [29645986711](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29645986711) | Draft → Ready | All original S2 contexts and aggregate PASS; PR became clean. |
+| [29646051103](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29646051103) | Ready → Draft | Fast PASS 19s; S2 SKIPPED; a new aggregate failure returned the PR to blocked. |
+| [29646089291](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29646089291) | Draft → Ready | Complete S2 and aggregate PASS on the final candidate. |
+| [29646265724](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29646265724) | Squash result on protected `main` | Commit `9a74764`; complete S2 plus aggregate PASS in 91s wall time. |
+
+Live protection readback after the main run retained strict status checks,
+administrator enforcement, the original nine contexts plus the aggregate, and
+GitHub Actions app ID `15368`. Matrix-member failure propagation, dependency
+skip/cancel canaries, historical replay, manifest completeness, and the rollback
+drill remain pending.
 
 ## Automated Chromium observatory contract
 
@@ -322,8 +335,8 @@ evidence.
 
 ## Explicitly pending
 
-- Staged validation still needs the Phase B hosted canary, representative samples,
-  a deterministic S0/impact-manifest runner, historical-regression replay,
+- Staged validation still needs representative observation-window samples, a
+  deterministic S0/impact-manifest runner, historical-regression replay,
   failure/skip/cancel canaries, S3 nightly breadth, S4 exact-release-commit
   evidence, rollback drill, and an escaped-defect observation window.
 - Measured comprehension, information-density, and recognition studies have not
