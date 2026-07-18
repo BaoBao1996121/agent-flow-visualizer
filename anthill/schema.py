@@ -11,15 +11,16 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import unicodedata
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
 
-SCHEMA_VERSION = "0.1.0"
+SCHEMA_VERSION = "0.2.0"
 _EVENT_TYPE_RE = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$")
 _SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$")
 
@@ -39,6 +40,23 @@ def new_event_id() -> str:
     """
 
     return f"evt_{uuid4().hex}"
+
+
+def is_visibly_stable_run_id(value: str) -> bool:
+    """Return whether a run ID is safe to expose as an unescaped identity key."""
+
+    return value == value.strip() and not any(
+        unicodedata.category(character) in {"Cc", "Cf"} for character in value
+    )
+
+
+def is_addressable_run_id(value: str) -> bool:
+    """Return whether a run ID is one stable HTTP path segment."""
+
+    reserved = {"/", "\\", "?", "#", "%"}
+    return is_visibly_stable_run_id(value) and value not in {".", ".."} and not any(
+        character in reserved for character in value
+    )
 
 
 class EvidenceLevel(str, Enum):
@@ -352,6 +370,23 @@ class AgentRuntimeEvent(StrictModel):
         if not _EVENT_TYPE_RE.fullmatch(normalized):
             raise ValueError("event_type must be a lowercase, namespaced identifier")
         return normalized
+
+    @model_validator(mode="after")
+    def new_ingest_run_id_is_visibly_stable(self, info: ValidationInfo) -> "AgentRuntimeEvent":
+        context = info.context or {}
+        legacy_storage_read = (
+            self.schema_version == "0.1.0"
+            and bool(context.get("allow_legacy_run_id"))
+        )
+        if legacy_storage_read:
+            return self
+        if self.run_id != self.run_id.strip():
+            raise ValueError("run_id cannot contain leading or trailing whitespace")
+        if any(unicodedata.category(character) in {"Cc", "Cf"} for character in self.run_id):
+            raise ValueError("run_id cannot contain control or format characters")
+        if not is_addressable_run_id(self.run_id):
+            raise ValueError("run_id must be one addressable API path segment")
+        return self
 
     @model_validator(mode="after")
     def causal_links_cannot_point_to_self(self) -> "AgentRuntimeEvent":

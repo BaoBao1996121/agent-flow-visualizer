@@ -38,6 +38,21 @@ Prefer the source event/span ID. If none exists, derive an opaque stable ID from
 
 Never use timestamp alone as an event ID. Retries, concurrent events, and clock skew make collisions likely.
 
+Opaque is an interpretation contract, not a secrecy guarantee. Event IDs may
+contain dot segments and URL-reserved characters, so clients must use the
+canonical query-form detail and causal endpoints. Query strings can be retained
+by browsers, access logs, proxies, and APM systems; if a source ID itself is
+sensitive, map it to a deterministic hash before creating the canonical event
+and do not place the raw value in a source reference.
+
+Under event schema `0.2.0`, a newly ingested `run_id` must also be display-stable:
+no leading/trailing whitespace and no Unicode `Cc`/`Cf` control or format
+characters. `/`, `\`, `?`, `#`, `%`, and the exact dot segments `.` and `..`
+are also rejected so the ID remains one stable API path segment. Storage can
+read an existing `0.1.0` ledger through a private, explicit compatibility
+context, but adapters must never request that context or use it to bypass
+validation for new events.
+
 ## Causality
 
 Set `causation_id` only when the source provides a real dependency or the adapter has a defensible deterministic mapping. Do not connect consecutive log lines merely because they are adjacent.
@@ -144,9 +159,16 @@ Runtime objects with a failing `model_dump()` or cyclic conversion are rejected 
 
 The strict boundary validator follows the official task start/result, checkpoint-task, message, debug-wrapper, interrupt, values, and usage-metadata shapes. It rejects contradictory result branches, duplicate task IDs, missing interrupt fields, conflicting run/thread/namespace identities, non-finite or oversized malformed NDJSON numbers, and invalid runtime-object conversions as controlled import errors rather than guessing.
 
-Real `StateGraph` probes exercised `tasks`, `messages`, `updates`, `values`, `checkpoints`, and `custom` under LangGraph `1.1.0` and `1.2.9`. The base application intentionally does not depend on LangGraph. A hosted compatibility matrix is configured; the current execution evidence is the two isolated local probes.
+Each non-empty NDJSON line is lexically scanned before `json.loads`; the
+quote/escape-aware guard ignores brackets inside strings and rejects structural
+nesting deeper than 256. The value 256 is an initial conservative validation
+limit introduced to keep decoder behavior controlled across supported Python
+versions. It is not benchmark-derived and does not replace pending body,
+cardinality, emitted-event, or backpressure budgets.
 
-Current limits: this is offline JSON/NDJSON normalization, not a LangGraph callback, live subscriber, or automatic capture bridge. The local alpha also has no application-level cardinality budget for parts, namespace segments, tasks, interrupts, or emitted events; a hosted deployment must add benchmark-derived body, structure, and output quotas plus backpressure before accepting untrusted captures.
+Real `StateGraph` probes exercised `tasks`, `messages`, `updates`, `values`, `checkpoints`, and `custom` under LangGraph `1.1.0` and `1.2.9`. The base application intentionally does not depend on LangGraph. The first hosted matrix ran in [GitHub Actions run 29570924390](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29570924390); both LangGraph jobs reached the suite but were red because the same shared deep-NDJSON error-classification assertion failed. This is hosted execution evidence, not a green compatibility result or proof for the current fix.
+
+Current limits: this is offline JSON/NDJSON normalization, not a LangGraph callback, live subscriber, or automatic capture bridge. The local alpha also has no application-level cardinality budget for parts, namespace segments, tasks, interrupts, or emitted events; a hosted deployment must calibrate the initial nesting limit and add benchmark-derived body, structure, and output quotas plus backpressure before accepting untrusted captures.
 
 ### Native framework hooks
 

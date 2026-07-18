@@ -1214,6 +1214,34 @@ def test_langgraph_ndjson_parser_contains_non_decoder_value_errors(payload, mess
         langgraph_ndjson_to_events(payload, run_id="invalid-ndjson-boundary")
 
 
+def test_langgraph_ndjson_rejects_excessive_nesting_before_decoder_behavior_diverges():
+    from anthill.adapters import langgraph_ndjson_to_events
+
+    payload = (
+        '{"type":"custom","ns":[],"data":'
+        + "[" * 256
+        + "0"
+        + "]" * 256
+        + "}"
+    )
+
+    with pytest.raises(LangGraphImportError, match="excessively nested"):
+        langgraph_ndjson_to_events(payload, run_id="bounded-ndjson-depth")
+
+
+def test_langgraph_ndjson_nesting_guard_ignores_brackets_inside_json_strings():
+    from anthill.adapters import langgraph_ndjson_to_events
+
+    payload = json.dumps(
+        {"type": "custom", "ns": [], "data": "[{}]\\\"" * 512},
+        separators=(",", ":"),
+    )
+
+    events = langgraph_ndjson_to_events(payload, run_id="string-brackets")
+
+    assert any(event.event_type == "langgraph.custom" for event in events)
+
+
 @pytest.mark.parametrize("message_type", ["", 1], ids=["empty", "non-string"])
 def test_langgraph_message_type_is_a_required_non_empty_string(message_type):
     part = {

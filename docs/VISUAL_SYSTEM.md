@@ -96,6 +96,27 @@ Blocking corrections:
 8. **Disambiguate run identity.** Run and Compare selectors include source,
    status, timestamp, and a short stable ID rather than title alone.
 
+Implementation status (2026-07-18):
+
+| Correction | Status | Current evidence / remaining boundary |
+|---|---|---|
+| 1. Split overloaded live states | Complete | Browser contracts separate ledger HEAD, follow/pause, transport connection, terminal state, and unresolved work. |
+| 2. Reconcile every projection | Partial | Missing cognition telemetry is explicit; Meter Room, per-field memory provenance, and all Compare semantics still require reconciliation. |
+| 3. Prioritize signal over wallpaper | Pending | No measured information-hierarchy or chamber-collapse contract yet. |
+| 4. Make causality one action away | Complete | Timeline selection is the default causal root and an open panel follows seek. |
+| 5. Separate color vocabularies | Pending | Truth, domain, health, and side still need a tested non-color-only grammar. |
+| 6. Repair accessible interaction | Partial | Inspector tabs have ARIA/keyboard behavior; bounded live status, complete keyboard equivalents, Canvas DOM mirrors, and user testing remain. |
+| 7. Implement complete reduced motion | Partial | Terminal decorative motion freezes; the full reduced-motion inventory and regression contract remain. |
+| 8. Disambiguate run identity | Complete | Run and Compare selectors share title, first-event `SRC`, ledger-HEAD status, first-event UTC `INGEST`, collision-aware ID, and explicit synthetic `[DEMO]`. |
+
+Identity labels keep absent or invalid facts `UNKNOWN`. Selector status describes
+ledger HEAD, while the world and Compare cards retain their historical
+cursor/progress projection. Main titles and Compare cards use the same
+control/bidi/delimiter neutralization. Request epochs, abortable Compare work,
+both-side runtime-event refresh, stale identity markers, and atomic
+run-selection rollback have browser regressions. Three corrections are complete,
+three are partial, and two are pending; Phase -1 as a whole is not complete.
+
 Phase -1 exits only when browser regression tests cover these semantics and a
 paused completed run can no longer be mistaken for a live external execution.
 The same assertions become renderer-parity tests for PixiJS and Phaser.

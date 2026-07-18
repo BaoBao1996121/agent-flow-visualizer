@@ -1,4 +1,4 @@
-# Agent Runtime Event protocol 0.1
+# Agent Runtime Event protocol 0.2
 
 ## Design goals
 
@@ -11,14 +11,30 @@
 
 The normative Python model is [`anthill/schema.py`](../anthill/schema.py).
 
+The current write schema is `0.2.0`. It rejects a `run_id` with leading or
+trailing whitespace or Unicode control/format characters in categories `Cc`
+and `Cf`. It also rejects `/`, `\`, `?`, `#`, `%`, and the exact dot segments
+`.` and `..`, so every new run ID is one stable API path segment. The JSONL
+store may read an existing `0.1.0` event only through an explicit storage-only
+compatibility context. That context is never enabled for new API input or
+append operations, and an unsafe legacy run ID is quarantined from normal run
+discovery.
+
+`event_id` has a different contract: it is an opaque 1–256 character
+idempotency key and may contain exact dot segments or URL-reserved characters.
+Canonical event-detail and causal HTTP lookups therefore carry it in the
+`event_id` query parameter; path-segment lookup is deprecated compatibility.
+Opaque means the server does not interpret the value. It does not mean the
+value is anonymous, secret, or safe for URL logs.
+
 ## Envelope
 
 | Field | Meaning |
 |---|---|
 | `schema_version` | Semantic version of this envelope |
-| `event_id` | Idempotency identity; ordering must not depend on it |
+| `event_id` | Opaque 1–256 character idempotency identity; ordering must not depend on it; canonical HTTP lookup uses a query parameter |
 | `event_type` | Lowercase namespace such as `tool.execution.started` |
-| `run_id` | Required run partition |
+| `run_id` | Required, display-stable API path segment; protocol `0.2.0` forbids edge whitespace, Unicode `Cc`/`Cf`, `/`, `\`, `?`, `#`, `%`, `.` and `..` on new writes |
 | `thread_id`, `session_id`, `project_id`, `task_id`, `agent_id` | Optional scopes |
 | `trace_id`, `span_id`, `parent_span_id` | Distributed trace structure |
 | `causation_id` | Direct causing event when explicitly known |
@@ -69,6 +85,23 @@ Do not sort only by wall-clock time.
 4. `occurred_at` and `observed_at` remain useful for latency and clock-skew analysis.
 5. Causality is represented separately.
 
+## Integrity boundary
+
+Stored events form an unkeyed SHA-256 chain over canonical event content and the
+previous event hash. Verification recalculates every event hash, checks the
+previous-hash link, contiguous `ingest_seq`, and duplicate IDs. This detects
+accidental or uncoordinated ledger changes; it is not a MAC, signature, or proof
+against an actor that can rewrite the ledger and all of its hashes. The
+process-local whole-ledger SHA-256 used to decide whether a validated append
+index can be reused is likewise an unkeyed change detector, not an
+authentication mechanism.
+
+A valid checksummed manifest that records a non-empty prior head makes a
+shortened, empty, or missing `events.jsonl` the same loss-of-history condition:
+`truncated_ledger`. Discovery must not silently treat any of those cases as a
+new empty run or recreate a missing ledger. A malformed or checksum-invalid
+manifest remains a disposable cache and cannot establish that prior head.
+
 ## Core event families
 
 The complete enum is in `CoreEventType`. Important groups are:
@@ -90,7 +123,7 @@ The complete enum is in `CoreEventType`. Important groups are:
 
 ```json
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "event_id": "evt-compact-done",
   "event_type": "compaction.completed",
   "run_id": "run-42",
@@ -144,4 +177,8 @@ Never place credentials in summary, identifiers, or source URIs. A field-level r
 - Minor: optional fields and new core event types.
 - Major: incompatible envelope meaning or required fields.
 
-Adapters declare their own version. Projectors declare `reducer_version`. Reprojection after an upgrade must never rewrite the original ledger.
+Protocol `0.2.0` adds stricter validation for newly written run identities while
+retaining the explicit storage-only `0.1.0` read path above. Adapters declare
+their own version. Projectors declare `reducer_version`; the current world
+reducer is `0.3.0`. Snapshots are isolated by reducer version, and reprojection
+after an upgrade must never rewrite the original ledger.

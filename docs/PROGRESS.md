@@ -2,7 +2,7 @@
 
 ## Current state
 
-Agent Anthill `0.6.0` is a runnable local alpha with a versioned canonical event protocol, tamper-evident JSONL ledger, deterministic projection/snapshots under reducer `0.2.0`, explicit causal inspection, historical playback, no-side-effect materialized forks, normalized run comparison, Python/OTLP/OpenInference/AG-UI/LangGraph v2 inputs, cursor-specific instrumentation visibility, and a Canvas + DOM observatory UI.
+Agent Anthill `0.6.0` is a runnable local alpha with event protocol `0.2.0`, a tamper-evident JSONL reference ledger, deterministic projection/snapshots under reducer `0.3.0`, explicit causal inspection, historical playback, no-side-effect materialized forks, normalized run comparison, Python/OTLP/OpenInference/AG-UI/LangGraph v2 inputs, cursor-specific instrumentation visibility, and a Canvas + DOM observatory UI.
 
 Current verified baseline:
 
@@ -10,15 +10,15 @@ Current verified baseline:
 - metadata-only default with explicit truth/fidelity levels;
 - 12 semantic chambers plus Source Archive, Quality Gate, and Unknown Fog;
 - live SSE, gap recovery, time travel, compare, snapshot fallback, branch provenance, and hash verification;
-- Apache-2.0 community files, multi-version CI configuration, and a hardened Docker/Compose definition; hosted CI/container execution remains pending;
-- 204 tests passed in the ambient suite; one optional real-LangGraph runtime test was skipped, while isolated LangGraph `1.1.0` and `1.2.9` probes passed separately;
-- 13 local Chromium observatory contracts passed, with all 26 executions passing under a two-repeat order-isolation run; the hosted browser job is configured but has not run;
+- Apache-2.0 community files, multi-version CI configuration, and a hardened Docker/Compose definition; the initial hosted container job passed, while the current branch still requires a fresh hosted matrix;
+- 326 tests passed locally; one optional real-LangGraph runtime test was skipped because the ambient environment exposes the unsupported pre-1.1 tuple boundary, while isolated LangGraph `1.1.0` and `1.2.9` probes passed separately;
+- 29 local Chromium observatory contracts passed, with all 58 executions passing under a two-repeat order-isolation run; the initial hosted 13-contract browser job passed, while the current 29-contract branch remains pending hosted verification;
 - latest-code manual Chromium verification of LangGraph JSON import; NDJSON, AG-UI, Demo, sequence-20 seek, Fork, and Compare remain earlier same-day manual evidence;
 - real LangGraph `1.1.0` and `1.2.9` runtime probes across `tasks`, `messages`, `updates`, `values`, `checkpoints`, and `custom`.
 
 ## Next milestones
 
-1. Finish visual Phase -1: add run identity labels, per-field memory observation provenance, complete reduced-motion/keyboard/DOM mirrors, and checked-in visual baselines described in [VISUAL_SYSTEM.md](VISUAL_SYSTEM.md).
+1. Continue visual Phase -1 against all eight blocking corrections in [VISUAL_SYSTEM.md](VISUAL_SYSTEM.md). Remaining work includes projection reconciliation, signal prioritization, color-vocabulary separation, per-field memory observation provenance, complete reduced-motion/keyboard/DOM mirrors, and checked-in visual baselines. Run/Compare HEAD identity is implemented.
 2. Build the renderer-independent `VisualModel`, deterministic animation contract, PixiJS 8 vertical slice, and same-scene Phaser 4.2.1 benchmark. Publish measurements before selecting the migration path.
 3. Add standard live OTLP collection plus AG-UI and LangGraph stream bridges with bounded ingestion/backpressure.
 4. Add native Claude Code and Codex hooks with published capability contracts.
@@ -65,4 +65,22 @@ Current verified baseline:
 - Added run/request epochs plus cancellation so delayed world responses cannot overwrite a newly selected run.
 - Added ARIA tab/tabpanel state plus roving left/right keyboard navigation for the Inspector.
 - Proved browser order isolation with a two-repeat run: 26/26 executions passed. The ordinary suite passed 13/13 in 34.3 seconds.
-- Remaining Phase -1 work is explicit: selector identity/status labels, per-layer memory observation provenance, full reduced-motion CSS, panel/view/follow keyboard semantics, Canvas entity DOM mirror, and screenshot baselines.
+- At that milestone, remaining Phase -1 work included selector identity/status labels, per-layer memory observation provenance, full reduced-motion CSS, panel/view/follow keyboard semantics, a Canvas entity DOM mirror, and screenshot baselines. The next session completed the selector identity work.
+
+### 2026-07-18 — run identity, lifecycle, and ledger discovery hardening
+
+- Bumped the canonical write schema to `0.2.0`. New `run_id` values must be one display-stable API path segment; explicit store-only context keeps safe access to legacy `0.1.0` records without weakening new writes.
+- Bumped the world reducer to `0.3.0` and made the reducer and manifest cache share one lifecycle fold. A terminal event remains authoritative when non-lifecycle events follow it.
+- Added collision-aware Run/Compare identities with title, first-event source adapter, ledger-HEAD lifecycle status, first ingest observation in UTC, stable ID, and a `[DEMO]` marker only for explicit synthetic runs. HEAD identity never rewrites historical cursor truth.
+- Added request epochs, abortable single-flight Compare work, left/right SSE refresh, atomic run-selection rollback, visible stale identity state, and uniform control/bidi/delimiter neutralization across selectors, titles, and Compare cards.
+- Hardened discovery with a checksummed rebuildable manifest cache, 100-record privacy-safe diagnostics, a 96-bit opaque correlation reference, striped re-entrant locks, storage-only legacy validation, and content-verified append-index reuse.
+- A checksum-valid non-empty manifest now quarantines a shortened, emptied, or missing ledger as `truncated_ledger`; it never recreates or overwrites the damaged ledger. `/runs` remains a lightweight `discovery_boundary`, not a full integrity verdict.
+- Enforced the same valid-manifest damage anchor on normal event, replay, causal, comparison, and integrity reads, while preserving the established `invalid_event` classification for a malformed ledger record.
+- Each append hashes the current ledger bytes and performs full JSON/sequence/duplicate/hash-chain validation on first use or changed content. Repeated single-event appends still accumulate `O(k²)` byte scanning; the local JSONL backend is not the production multi-process store.
+- Moved blocking API storage, adapter normalization, projection, comparison, integrity, and SSE backlog/gap reads off the event-loop thread. All import bodies, route path parameters, Compare query IDs, and returned `world_url` values now share the addressable run-ID contract.
+- Added canonical query-form event-detail and causal routes for opaque IDs, deprecated path-form compatibility, and removed event-ID reflection from 404/409/422 errors. Fork target creation now performs its empty-ledger check and complete batch write under one run lock: a competing direct write cannot create a second origin, and concurrent same-ID forks return one `201` plus one stable `409`.
+- Made failed run selection restore the last successfully committed run even across an intervening in-flight selection; the frontend now uses the canonical query routes so exact `.`/`..` IDs cannot be rewritten by browser path normalization.
+- Added a quote/escape-aware NDJSON nesting guard at 256 levels. This is an initial conservative validation limit, not a measured ingestion budget.
+- Upgraded workflow action major tags to checkout/setup Python/setup Node `v6` and upload-artifact `v7`; these actions use a Node 24 action runtime while project tests remain Node 22. Hosted verification of the upgraded workflow is still pending.
+- Current local gates: `326 passed, 1 skipped`; Ruff and JavaScript syntax checks pass; Playwright `29/29` and repeated `58/58` pass on the isolated `8878` service.
+- Initial hosted run [29570924390](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29570924390) is retained as historical evidence: browser 13/13, container, frontend, and Python 3.11 passed; Python 3.12/3.13 and both LangGraph jobs failed on the same now-fixed deep-NDJSON error classification. It predates every current-branch claim above.

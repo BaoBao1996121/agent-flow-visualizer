@@ -5,14 +5,23 @@ from __future__ import annotations
 import asyncio
 import json
 from collections import defaultdict
-from typing import AsyncIterator, Literal
+from itertools import islice
+from typing import Annotated, AsyncIterator, Literal
 from uuid import uuid4
+from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.routing import APIRoute
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    ValidationError,
+)
 
 from .adapters.agui import (
     AguiImportError,
@@ -46,9 +55,35 @@ from .schema import (
     CoreEventType,
     EvidenceLevel,
     SourceFidelity,
+    is_addressable_run_id,
 )
 from .snapshots import JsonWorldSnapshotStore, calculate_state_hash
-from .store import DuplicateEventError, JsonlEventStore
+from .store import (
+    CorruptLedgerError,
+    DuplicateEventError,
+    JsonlEventStore,
+    RunAlreadyExistsError,
+)
+
+
+_DISCOVERY_DIAGNOSTIC_LIMIT = 100
+
+
+def _require_addressable_run_id(value: str) -> str:
+    if not 1 <= len(value) <= 256 or not is_addressable_run_id(value):
+        raise ValueError("run_id must be one addressable API path segment")
+    return value
+
+
+_AddressableRunId = Annotated[
+    str,
+    StringConstraints(min_length=1, max_length=256),
+    AfterValidator(_require_addressable_run_id),
+]
+
+
+def _world_url(run_id: str) -> str:
+    return f"/api/anthill/runs/{quote(run_id, safe='')}/world"
 
 
 class ApiModel(BaseModel):
@@ -64,7 +99,7 @@ class PrivacySafeValidationRoute(APIRoute):
         async def privacy_safe_route_handler(request: Request):
             try:
                 return await original_route_handler(request)
-            except RequestValidationError as exc:
+            except (RequestValidationError, ValidationError) as exc:
                 details = []
                 for error in exc.errors():
                     location = error.get("loc", ())
@@ -82,6 +117,14 @@ class PrivacySafeValidationRoute(APIRoute):
                         }
                     )
                 return JSONResponse(status_code=422, content={"detail": details})
+            except CorruptLedgerError as exc:
+                return JSONResponse(
+                    status_code=409,
+                    content={
+                        "detail": "ledger integrity check failed",
+                        "error_type": exc.error_type,
+                    },
+                )
 
         return privacy_safe_route_handler
 
@@ -92,7 +135,7 @@ class IngestEventsRequest(ApiModel):
 
 class OtlpImportRequest(ApiModel):
     payload: dict
-    run_id: str | None = Field(default=None, min_length=1, max_length=256)
+    run_id: _AddressableRunId | None = Field(default=None, min_length=1, max_length=256)
     semantic_convention_version: str | None = Field(default=None, max_length=64)
     capture_content: bool = False
 
@@ -100,7 +143,7 @@ class OtlpImportRequest(ApiModel):
 class AguiImportRequest(ApiModel):
     payload: dict | list[dict] | str
     format: Literal["json", "ndjson"] = "json"
-    run_id: str | None = Field(default=None, min_length=1, max_length=256)
+    run_id: _AddressableRunId | None = Field(default=None, min_length=1, max_length=256)
     protocol_version: str | None = Field(default=None, max_length=64)
     capture_content: bool = False
 
@@ -108,7 +151,7 @@ class AguiImportRequest(ApiModel):
 class LangGraphImportRequest(ApiModel):
     payload: dict | list[dict] | str
     format: Literal["json", "ndjson"] = "json"
-    run_id: str | None = Field(default=None, min_length=1, max_length=256)
+    run_id: _AddressableRunId | None = Field(default=None, min_length=1, max_length=256)
     thread_id: str | None = Field(default=None, min_length=1, max_length=256)
     framework_version: str | None = Field(default=None, max_length=64)
     stream_complete: bool | None = None
@@ -118,7 +161,7 @@ class LangGraphImportRequest(ApiModel):
 
 class ForkRunRequest(ApiModel):
     at_seq: int | None = Field(default=None, ge=0)
-    new_run_id: str | None = Field(default=None, min_length=1, max_length=256)
+    new_run_id: _AddressableRunId | None = Field(default=None, min_length=1, max_length=256)
     title: str | None = Field(default=None, min_length=1, max_length=240)
 
 
@@ -202,24 +245,39 @@ def create_anthill_router(
         limit: int = Query(default=100, ge=1, le=1_000),
         offset: int = Query(default=0, ge=0),
     ):
-        manifests = store.list_runs()
+        listing = await asyncio.to_thread(
+            store.list_runs_with_diagnostics,
+            diagnostic_limit=_DISCOVERY_DIAGNOSTIC_LIMIT,
+        )
+        manifests = listing["items"]
+        discovery_errors = listing["discovery_errors"]
+        discovery_error_count = listing["discovery_error_count"]
         return {
             "total": len(manifests),
             "offset": offset,
             "limit": limit,
             "items": manifests[offset : offset + limit],
+            "integrity_status": "not_checked",
+            "integrity_scope": "discovery_boundary",
+            "discovery_error_count": discovery_error_count,
+            "discovery_errors": discovery_errors,
+            "diagnostics_truncated": listing["diagnostics_truncated"],
         }
 
     @router.get("/compare")
     async def compare_run_pair(
-        left_run_id: str = Query(min_length=1, max_length=256),
-        right_run_id: str = Query(min_length=1, max_length=256),
+        left_run_id: _AddressableRunId,
+        right_run_id: _AddressableRunId,
         progress: float = Query(default=1.0, ge=0.0, le=1.0),
     ):
         if left_run_id == right_run_id:
             raise HTTPException(status_code=422, detail="choose two different runs")
-        left = list(store.read_run(left_run_id))
-        right = list(store.read_run(right_run_id))
+        left, right = await asyncio.to_thread(
+            lambda: (
+                list(store.read_run(left_run_id)),
+                list(store.read_run(right_run_id)),
+            )
+        )
         missing = [
             run_id for run_id, events in ((left_run_id, left), (right_run_id, right)) if not events
         ]
@@ -228,7 +286,8 @@ def create_anthill_router(
                 status_code=404,
                 detail={"message": "run not found", "run_ids": missing},
             )
-        return compare_runs(
+        return await asyncio.to_thread(
+            compare_runs,
             left,
             right,
             left_run_id=left_run_id,
@@ -239,37 +298,38 @@ def create_anthill_router(
     @router.post("/demo", status_code=201)
     async def create_demo():
         run_id = f"demo_{uuid4().hex}"
-        stored = store.append_many(build_demo_events(run_id))
+        stored = await asyncio.to_thread(store.append_many, build_demo_events(run_id))
         await broker.publish_many(stored)
         return {
             "run_id": run_id,
             "event_count": len(stored),
             "synthetic": True,
-            "world_url": f"/api/anthill/runs/{run_id}/world",
+            "world_url": _world_url(run_id),
         }
 
     @router.post("/import/otlp", status_code=201)
     async def import_otlp(body: OtlpImportRequest):
         run_id = body.run_id or f"otlp_{uuid4().hex}"
         try:
-            canonical = otlp_json_to_events(
+            canonical = await asyncio.to_thread(
+                otlp_json_to_events,
                 body.payload,
                 run_id=run_id,
                 semantic_convention_version=body.semantic_convention_version,
                 capture_content=body.capture_content,
             )
-            stored = store.append_many(canonical)
+            stored = await asyncio.to_thread(store.append_many, canonical)
         except OtlpImportError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         except DuplicateEventError as exc:
-            raise HTTPException(status_code=409, detail=str(exc)) from exc
+            raise HTTPException(status_code=409, detail="event conflict") from exc
         await broker.publish_many(stored)
         return {
             "run_id": run_id,
             "event_count": len(stored),
             "span_count": max((len(stored) - 3) // 2, 0),
             "content_capture": ("plaintext_opt_in" if body.capture_content else "metadata_only"),
-            "world_url": f"/api/anthill/runs/{run_id}/world",
+            "world_url": _world_url(run_id),
         }
 
     @router.post("/import/agui", status_code=201)
@@ -278,7 +338,8 @@ def create_anthill_router(
             if body.format == "ndjson":
                 if not isinstance(body.payload, str):
                     raise AguiImportError("NDJSON import payload must be a string")
-                canonical = agui_ndjson_to_events(
+                canonical = await asyncio.to_thread(
+                    agui_ndjson_to_events,
                     body.payload,
                     run_id=body.run_id,
                     protocol_version=body.protocol_version,
@@ -287,17 +348,18 @@ def create_anthill_router(
             else:
                 if not isinstance(body.payload, (dict, list)):
                     raise AguiImportError("JSON import payload must be an object or array")
-                canonical = agui_json_to_events(
+                canonical = await asyncio.to_thread(
+                    agui_json_to_events,
                     body.payload,
                     run_id=body.run_id,
                     protocol_version=body.protocol_version,
                     capture_content=body.capture_content,
                 )
-            stored = store.append_many(canonical)
+            stored = await asyncio.to_thread(store.append_many, canonical)
         except AguiImportError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         except DuplicateEventError as exc:
-            raise HTTPException(status_code=409, detail=str(exc)) from exc
+            raise HTTPException(status_code=409, detail="event conflict") from exc
         effective_run_id = canonical[0].run_id
         await broker.publish_many(stored)
         return {
@@ -306,7 +368,7 @@ def create_anthill_router(
             "source_format": body.format,
             "protocol_version": canonical[0].source.semantic_convention_version,
             "content_capture": ("plaintext_opt_in" if body.capture_content else "metadata_only"),
-            "world_url": f"/api/anthill/runs/{effective_run_id}/world",
+            "world_url": _world_url(effective_run_id),
         }
 
     @router.post("/import/langgraph", status_code=201)
@@ -317,7 +379,8 @@ def create_anthill_router(
                     raise LangGraphImportError("NDJSON import payload must be a string")
                 if body.run_id is None:
                     raise LangGraphImportError("run_id is required for NDJSON import")
-                canonical = langgraph_ndjson_to_events(
+                canonical = await asyncio.to_thread(
+                    langgraph_ndjson_to_events,
                     body.payload,
                     run_id=body.run_id,
                     thread_id=body.thread_id,
@@ -331,7 +394,8 @@ def create_anthill_router(
                     raise LangGraphImportError(
                         "JSON import payload must be a StreamPart object, array, or envelope"
                     )
-                canonical = langgraph_v2_to_events(
+                canonical = await asyncio.to_thread(
+                    langgraph_v2_to_events,
                     body.payload,
                     run_id=body.run_id,
                     thread_id=body.thread_id,
@@ -340,11 +404,11 @@ def create_anthill_router(
                     run_status=body.run_status,
                     capture_content=body.capture_content,
                 )
-            stored = store.append_many(canonical)
+            stored = await asyncio.to_thread(store.append_many, canonical)
         except LangGraphImportError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         except DuplicateEventError as exc:
-            raise HTTPException(status_code=409, detail=str(exc)) from exc
+            raise HTTPException(status_code=409, detail="event conflict") from exc
         effective_run_id = canonical[0].run_id
         terminal_event = next(
             (event for event in reversed(stored) if event.event_type == "run.completed"),
@@ -359,24 +423,18 @@ def create_anthill_router(
             "stream_complete": terminal_event is not None,
             "run_status": (terminal_event.payload.get("status") if terminal_event else None),
             "content_capture": ("plaintext_opt_in" if body.capture_content else "metadata_only"),
-            "world_url": f"/api/anthill/runs/{effective_run_id}/world",
+            "world_url": _world_url(effective_run_id),
         }
 
     @router.post("/runs/{run_id}/events", status_code=201)
-    async def ingest_events(run_id: str, body: IngestEventsRequest):
+    async def ingest_events(run_id: _AddressableRunId, body: IngestEventsRequest):
         mismatched = [event.event_id for event in body.events if event.run_id != run_id]
         if mismatched:
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "message": "all event run_id values must match the URL",
-                    "event_ids": mismatched[:20],
-                },
-            )
+            raise HTTPException(status_code=422, detail="run_id mismatch")
         try:
-            stored = store.append_many(body.events)
+            stored = await asyncio.to_thread(store.append_many, body.events)
         except DuplicateEventError as exc:
-            raise HTTPException(status_code=409, detail=str(exc)) from exc
+            raise HTTPException(status_code=409, detail="event conflict") from exc
         await broker.publish_many(stored)
         return {
             "run_id": run_id,
@@ -387,24 +445,34 @@ def create_anthill_router(
         }
 
     @router.post("/runs/{run_id}/fork", status_code=201)
-    async def fork_run(run_id: str, body: ForkRunRequest):
-        projection = projection_service.project(run_id, at_seq=body.at_seq)
+    async def fork_run(run_id: _AddressableRunId, body: ForkRunRequest):
+        projection = await asyncio.to_thread(projection_service.project, run_id, at_seq=body.at_seq)
         if projection is None:
             raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
         new_run_id = body.new_run_id or f"fork_{uuid4().hex}"
         if new_run_id == run_id:
             raise HTTPException(status_code=422, detail="new_run_id must differ from parent")
-        if _run_exists(store, new_run_id):
-            raise HTTPException(status_code=409, detail=f"run already exists: {new_run_id}")
-        parent_events = list(store.read_run(run_id, to_seq=projection.target_seq))
-        canonical = materialize_fork_events(
+        if await asyncio.to_thread(_run_exists, store, new_run_id):
+            raise HTTPException(status_code=409, detail="run already exists")
+        parent_events = await asyncio.to_thread(
+            lambda: list(store.read_run(run_id, to_seq=projection.target_seq))
+        )
+        canonical = await asyncio.to_thread(
+            materialize_fork_events,
             parent_events,
             parent_run_id=run_id,
             new_run_id=new_run_id,
             parent_state_hash=calculate_state_hash(projection.state),
             title=body.title,
         )
-        stored = store.append_many(canonical)
+        try:
+            stored = await asyncio.to_thread(
+                store.append_many,
+                canonical,
+                require_empty=True,
+            )
+        except RunAlreadyExistsError as exc:
+            raise HTTPException(status_code=409, detail="run already exists") from exc
         await broker.publish_many(stored)
         return {
             "run_id": new_run_id,
@@ -413,12 +481,12 @@ def create_anthill_router(
             "parent_event_id": projection.state.cursor_event_id,
             "event_count": len(stored),
             "side_effects_replayed": False,
-            "world_url": f"/api/anthill/runs/{new_run_id}/world",
+            "world_url": _world_url(new_run_id),
         }
 
     @router.get("/runs/{run_id}/events")
     async def query_events(
-        run_id: str,
+        run_id: _AddressableRunId,
         from_seq: int = Query(default=0, ge=0),
         to_seq: int | None = Query(default=None, ge=0),
         event_type: list[str] | None = Query(default=None),
@@ -426,20 +494,22 @@ def create_anthill_router(
     ):
         if to_seq is not None and to_seq < from_seq:
             raise HTTPException(status_code=422, detail="to_seq cannot be below from_seq")
-        iterator = store.read_run(
-            run_id,
-            from_seq=from_seq,
-            to_seq=to_seq,
-            event_types=event_type,
+        page = await asyncio.to_thread(
+            lambda: list(
+                islice(
+                    store.read_run(
+                        run_id,
+                        from_seq=from_seq,
+                        to_seq=to_seq,
+                        event_types=event_type,
+                    ),
+                    limit + 1,
+                )
+            )
         )
-        items = []
-        has_more = False
-        for item in iterator:
-            if len(items) >= limit:
-                has_more = True
-                break
-            items.append(item)
-        if not items and not _run_exists(store, run_id):
+        has_more = len(page) > limit
+        items = page[:limit]
+        if not items and not await asyncio.to_thread(_run_exists, store, run_id):
             raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
         return {
             "run_id": run_id,
@@ -451,19 +521,29 @@ def create_anthill_router(
             "items": [item.model_dump(mode="json") for item in items],
         }
 
-    @router.get("/runs/{run_id}/events/{event_id}")
-    async def get_event(run_id: str, event_id: str):
-        event = store.get_event(run_id, event_id)
+    @router.get("/runs/{run_id}/event")
+    async def get_event_by_query(
+        run_id: _AddressableRunId,
+        event_id: str = Query(min_length=1, max_length=256),
+    ):
+        event = await asyncio.to_thread(store.get_event, run_id, event_id)
         if event is None:
-            raise HTTPException(status_code=404, detail=f"event not found: {event_id}")
+            raise HTTPException(status_code=404, detail="event not found")
+        return event.model_dump(mode="json")
+
+    @router.get("/runs/{run_id}/events/{event_id:path}", deprecated=True)
+    async def get_event(run_id: _AddressableRunId, event_id: str):
+        event = await asyncio.to_thread(store.get_event, run_id, event_id)
+        if event is None:
+            raise HTTPException(status_code=404, detail="event not found")
         return event.model_dump(mode="json")
 
     @router.get("/runs/{run_id}/world")
     async def get_world(
-        run_id: str,
+        run_id: _AddressableRunId,
         at_seq: int | None = Query(default=None, ge=0),
     ):
-        result = projection_service.project(run_id, at_seq=at_seq)
+        result = await asyncio.to_thread(projection_service.project, run_id, at_seq=at_seq)
         if result is None:
             raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
         state = result.state
@@ -484,8 +564,8 @@ def create_anthill_router(
         }
 
     @router.post("/runs/{run_id}/snapshots", status_code=201)
-    async def create_world_snapshot(run_id: str):
-        result = projection_service.project(run_id, force_snapshot=True)
+    async def create_world_snapshot(run_id: _AddressableRunId):
+        result = await asyncio.to_thread(projection_service.project, run_id, force_snapshot=True)
         if result is None:
             raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
         return {
@@ -497,39 +577,43 @@ def create_anthill_router(
         }
 
     @router.get("/runs/{run_id}/snapshots")
-    async def list_world_snapshots(run_id: str):
-        if not _run_exists(store, run_id):
+    async def list_world_snapshots(run_id: _AddressableRunId):
+        if not await asyncio.to_thread(_run_exists, store, run_id):
             raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
-        items = snapshot_store.list_run(run_id)
+        items = await asyncio.to_thread(snapshot_store.list_run, run_id)
         return {"run_id": run_id, "count": len(items), "items": items}
 
     @router.get("/runs/{run_id}/replay")
     async def get_replay_window(
-        run_id: str,
+        run_id: _AddressableRunId,
         from_seq: int = Query(default=0, ge=0),
         to_seq: int | None = Query(default=None, ge=0),
         limit: int = Query(default=2_000, ge=1, le=5_000),
     ):
-        all_events = list(store.read_run(run_id))
+        all_events = await asyncio.to_thread(lambda: list(store.read_run(run_id)))
         if not all_events:
             raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
         if to_seq is not None and to_seq < from_seq:
             raise HTTPException(status_code=422, detail="to_seq cannot be below from_seq")
 
-        initial = project_world(
+        initial = await asyncio.to_thread(
+            project_world,
             all_events,
             run_id=run_id,
             at_seq=from_seq - 1,
         )
-        selected = [
-            event
-            for event in all_events
-            if (event.clock.ingest_seq or 0) >= from_seq
-            and (to_seq is None or (event.clock.ingest_seq or 0) <= to_seq)
-        ]
+        selected = await asyncio.to_thread(
+            lambda: [
+                event
+                for event in all_events
+                if (event.clock.ingest_seq or 0) >= from_seq
+                and (to_seq is None or (event.clock.ingest_seq or 0) <= to_seq)
+            ]
+        )
         truncated = len(selected) > limit
         selected = selected[:limit]
-        final = project_world(
+        final = await asyncio.to_thread(
+            project_world,
             selected,
             run_id=run_id,
             initial_state=initial,
@@ -547,40 +631,62 @@ def create_anthill_router(
             "final_state": final.model_dump(mode="json"),
         }
 
-    @router.get("/runs/{run_id}/causal/{event_id}")
-    async def get_causal_slice(
-        run_id: str,
-        event_id: str,
+    @router.get("/runs/{run_id}/causal")
+    async def get_causal_slice_by_query(
+        run_id: _AddressableRunId,
+        event_id: str = Query(min_length=1, max_length=256),
         direction: str = Query(default="both", pattern="^(ancestors|descendants|both)$"),
         max_depth: int = Query(default=12, ge=0, le=100),
     ):
-        events = list(store.read_run(run_id))
+        events = await asyncio.to_thread(lambda: list(store.read_run(run_id)))
         if not events:
             raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
         try:
-            return build_causal_slice(
+            return await asyncio.to_thread(
+                build_causal_slice,
                 events,
                 event_id=event_id,
                 direction=direction,
                 max_depth=max_depth,
             )
         except KeyError as exc:
-            raise HTTPException(status_code=404, detail=f"event not found: {event_id}") from exc
+            raise HTTPException(status_code=404, detail="event not found") from exc
+
+    @router.get("/runs/{run_id}/causal/{event_id:path}", deprecated=True)
+    async def get_causal_slice(
+        run_id: _AddressableRunId,
+        event_id: str,
+        direction: str = Query(default="both", pattern="^(ancestors|descendants|both)$"),
+        max_depth: int = Query(default=12, ge=0, le=100),
+    ):
+        events = await asyncio.to_thread(lambda: list(store.read_run(run_id)))
+        if not events:
+            raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
+        try:
+            return await asyncio.to_thread(
+                build_causal_slice,
+                events,
+                event_id=event_id,
+                direction=direction,
+                max_depth=max_depth,
+            )
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail="event not found") from exc
 
     @router.get("/runs/{run_id}/integrity")
-    async def verify_integrity(run_id: str):
-        result = store.verify_run(run_id)
-        if result["event_count"] == 0 and not _run_exists(store, run_id):
+    async def verify_integrity(run_id: _AddressableRunId):
+        result = await asyncio.to_thread(store.verify_run, run_id)
+        if result["event_count"] == 0 and not await asyncio.to_thread(_run_exists, store, run_id):
             raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
         return result
 
     @router.get("/runs/{run_id}/stream")
     async def stream_run(
         request: Request,
-        run_id: str,
+        run_id: _AddressableRunId,
         after_seq: int = Query(default=-1, ge=-1),
     ):
-        if not _run_exists(store, run_id):
+        if not await asyncio.to_thread(_run_exists, store, run_id):
             raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
 
         async def stream() -> AsyncIterator[str]:
@@ -589,7 +695,10 @@ def create_anthill_router(
             try:
                 # Subscribe before reading backlog. Duplicate notifications are
                 # removed by the sequence cursor, so no event can fall in the gap.
-                for event in store.read_run(run_id, from_seq=after_seq + 1):
+                backlog = await asyncio.to_thread(
+                    lambda: list(store.read_run(run_id, from_seq=after_seq + 1))
+                )
+                for event in backlog:
                     if await request.is_disconnected():
                         return
                     if event.clock.ingest_seq is not None:
@@ -612,11 +721,16 @@ def create_anthill_router(
                             "resync_from": cursor + 1,
                         }
                         yield f"event: gap\ndata: {json.dumps(gap)}\n\n"
-                        for missed in store.read_run(
-                            run_id,
-                            from_seq=cursor + 1,
-                            to_seq=seq - 1,
-                        ):
+                        missed_events = await asyncio.to_thread(
+                            lambda gap_from=cursor + 1, gap_to=seq - 1: list(
+                                store.read_run(
+                                    run_id,
+                                    from_seq=gap_from,
+                                    to_seq=gap_to,
+                                )
+                            )
+                        )
+                        for missed in missed_events:
                             if missed.clock.ingest_seq is not None:
                                 cursor = missed.clock.ingest_seq
                             yield _sse_event(missed)

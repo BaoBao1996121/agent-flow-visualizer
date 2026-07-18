@@ -1,7 +1,13 @@
+import asyncio
+from datetime import datetime
+import hashlib
 import json
 from pathlib import Path
+import threading
+from urllib.parse import quote
 
 import pytest
+from httpx import ASGITransport, AsyncClient
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -18,6 +24,7 @@ from anthill.schema import (
 from anthill.store import JsonlEventStore
 
 
+OTLP_FIXTURE = Path(__file__).parent / "fixtures" / "otlp_openinference.json"
 AGUI_FIXTURE = Path(__file__).parent / "fixtures" / "agui_events.json"
 LANGGRAPH_FIXTURE = Path(__file__).parent / "fixtures" / "langgraph_stream_v2.json"
 
@@ -55,14 +62,39 @@ def test_request_validation_errors_do_not_echo_rejected_input(tmp_path):
     assert response.json()["detail"]
 
 
+def test_corrupt_ledger_api_error_is_stable_and_privacy_safe(tmp_path):
+    client = client_for(tmp_path, raise_server_exceptions=False)
+    created = client.post(
+        "/api/anthill/runs/api-run/events",
+        json={"events": [runtime_event("private-event", "run.started").model_dump(mode="json")]},
+    )
+    assert created.status_code == 201
+    ledger = next(tmp_path.glob("*/events.jsonl"))
+    secret = "SECRET_CORRUPT_LEDGER_VALUE"
+    ledger.write_text(
+        json.dumps({"schema_version": "0.2.0", "secret": secret}) + "\n",
+        encoding="utf-8",
+    )
+
+    response = client.get("/api/anthill/runs/api-run/events")
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "ledger integrity check failed",
+        "error_type": "invalid_event",
+    }
+    assert str(tmp_path) not in response.text
+    assert secret not in response.text
+
+
 def test_schema_endpoint_publishes_truth_contract(tmp_path):
     client = client_for(tmp_path)
     response = client.get("/api/anthill/schema")
 
     assert response.status_code == 200
     body = response.json()
-    assert body["schema_version"] == "0.1.0"
-    assert body["reducer_version"] == "0.2.0"
+    assert body["schema_version"] == "0.2.0"
+    assert body["reducer_version"] == "0.3.0"
     assert body["coverage_contract_version"] == "0.2.0"
     assert "anthill.ag-ui" in body["adapter_coverage_contracts"]
     assert "anthill.langgraph-v2" in body["adapter_coverage_contracts"]
@@ -80,6 +112,7 @@ def test_one_click_demo_is_explicitly_synthetic_and_projects_all_core_chambers(t
     created = client.post("/api/anthill/demo")
 
     assert created.status_code == 201
+    assert client.get(created.json()["world_url"]).status_code == 200
     assert created.json()["synthetic"] is True
     run_id = created.json()["run_id"]
 
@@ -104,6 +137,204 @@ def test_one_click_demo_is_explicitly_synthetic_and_projects_all_core_chambers(t
     assert all(item["status"] == "recovered" for item in world["errors"])
 
 
+def test_run_listing_exposes_privacy_safe_corrupt_ledger_diagnostics(tmp_path):
+    client = client_for(tmp_path)
+    created = client.post("/api/anthill/demo")
+    assert created.status_code == 201
+    corrupt_dir = tmp_path / "corrupt-ledger"
+    corrupt_dir.mkdir()
+    (corrupt_dir / "events.jsonl").write_text("{broken\n", encoding="utf-8")
+    opaque_ref = "ledger:" + hashlib.sha256(corrupt_dir.name.encode()).hexdigest()[:24]
+
+    response = client.get("/api/anthill/runs")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 1
+    assert body["integrity_status"] == "not_checked"
+    assert body["integrity_scope"] == "discovery_boundary"
+    assert body["discovery_error_count"] == 1
+    assert body["diagnostics_truncated"] is False
+    assert body["discovery_errors"] == [
+        {
+            "ledger_ref": opaque_ref,
+            "error_type": "invalid_first_event",
+        }
+    ]
+    assert "corrupt_run_count" not in body
+    assert "corrupt_runs" not in body
+
+
+def test_run_listing_caps_discovery_diagnostic_payloads(tmp_path):
+    client = client_for(tmp_path)
+    for index in range(105):
+        corrupt_dir = tmp_path / f"corrupt-{index:03d}"
+        corrupt_dir.mkdir()
+        (corrupt_dir / "events.jsonl").write_text("{broken\n", encoding="utf-8")
+
+    response = client.get("/api/anthill/runs?limit=1")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 0
+    assert body["discovery_error_count"] == 105
+    assert len(body["discovery_errors"]) == 100
+    assert body["diagnostics_truncated"] is True
+    assert body["integrity_status"] == "not_checked"
+
+
+@pytest.mark.parametrize("ledger_state", ["shortened", "empty", "missing"])
+@pytest.mark.parametrize("lookup", ["event", "replay", "causal", "compare"])
+def test_valid_manifest_anchor_quarantines_damaged_ledgers_on_normal_reads(
+    tmp_path,
+    ledger_state,
+    lookup,
+):
+    client = client_for(tmp_path, raise_server_exceptions=False)
+    run_id = client.post("/api/anthill/demo").json()["run_id"]
+    other_run_id = client.post("/api/anthill/demo").json()["run_id"]
+    event_id = client.get(
+        f"/api/anthill/runs/{run_id}/events",
+        params={"limit": 1},
+    ).json()["items"][0]["event_id"]
+    ledger = next(tmp_path.glob(f"{run_id}-*/events.jsonl"))
+    if ledger_state == "shortened":
+        lines = ledger.read_bytes().splitlines(keepends=True)
+        ledger.write_bytes(b"".join(lines[:-1]))
+    elif ledger_state == "empty":
+        ledger.write_bytes(b"")
+    else:
+        ledger.unlink()
+
+    if lookup == "event":
+        response = client.get(
+            f"/api/anthill/runs/{run_id}/event",
+            params={"event_id": event_id},
+        )
+    elif lookup == "replay":
+        response = client.get(f"/api/anthill/runs/{run_id}/replay")
+    elif lookup == "causal":
+        response = client.get(
+            f"/api/anthill/runs/{run_id}/causal",
+            params={"event_id": event_id},
+        )
+    else:
+        response = client.get(
+            "/api/anthill/compare",
+            params={
+                "left_run_id": run_id,
+                "right_run_id": other_run_id,
+            },
+        )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "ledger integrity check failed",
+        "error_type": "truncated_ledger",
+    }
+
+
+def test_run_listing_folds_lifecycle_status_across_trailing_events(tmp_path):
+    client = client_for(tmp_path)
+
+    def observed_event(run_id, event_id, event_type, adapter, payload=None):
+        return AgentRuntimeEvent(
+            event_id=event_id,
+            event_type=event_type,
+            run_id=run_id,
+            source=EventSource(adapter=adapter, fidelity=SourceFidelity.NATIVE),
+            evidence=Evidence(level=EvidenceLevel.OBSERVED, confidence=1.0),
+            payload=payload or {},
+        )
+
+    runs = {
+        "identity-running": (
+            "fixture.alpha",
+            [
+                observed_event(
+                    "identity-running",
+                    "running-start",
+                    "run.started",
+                    "fixture.alpha",
+                    {"title": "同名任务"},
+                ),
+                observed_event(
+                    "identity-running",
+                    "running-agent",
+                    "agent.spawned",
+                    "fixture.alpha",
+                ),
+            ],
+        ),
+        "identity-completed": (
+            "fixture.beta",
+            [
+                observed_event(
+                    "identity-completed",
+                    "completed-start",
+                    "run.started",
+                    "fixture.beta",
+                    {"title": "同名任务"},
+                ),
+                observed_event(
+                    "identity-completed",
+                    "completed-run",
+                    "run.completed",
+                    "fixture.beta",
+                    {"status": "success"},
+                ),
+                observed_event(
+                    "identity-completed",
+                    "completed-artifact",
+                    "artifact.created",
+                    "fixture.beta",
+                ),
+            ],
+        ),
+    }
+    for run_id, (_, events) in runs.items():
+        response = client.post(
+            f"/api/anthill/runs/{run_id}/events",
+            json={"events": [event.model_dump(mode="json") for event in events]},
+        )
+        assert response.status_code == 201
+
+    listing = client.get("/api/anthill/runs").json()["items"]
+    by_id = {item["run_id"]: item for item in listing}
+    assert by_id["identity-running"]["run_status"] == "running"
+    assert by_id["identity-completed"]["run_status"] == "completed"
+    for run_id, (adapter, _) in runs.items():
+        assert by_id[run_id]["title"] == "同名任务"
+        assert by_id[run_id]["source_adapter"] == adapter
+        created_at = datetime.fromisoformat(by_id[run_id]["created_at"])
+        assert created_at.tzinfo is not None
+        assert created_at.utcoffset().total_seconds() == 0
+
+
+def test_terminal_error_alias_is_normalized_consistently_for_listing_and_world(tmp_path):
+    client = client_for(tmp_path)
+    events = [
+        runtime_event("alias-start", "run.started"),
+        runtime_event(
+            "alias-complete",
+            "run.completed",
+            causation_id="alias-start",
+            payload={"status": "error"},
+        ),
+    ]
+
+    response = client.post(
+        "/api/anthill/runs/api-run/events",
+        json={"events": [event.model_dump(mode="json") for event in events]},
+    )
+    assert response.status_code == 201
+
+    manifest = client.get("/api/anthill/runs").json()["items"][0]
+    world = client.get("/api/anthill/runs/api-run/world").json()["state"]
+    assert manifest["run_status"] == "failed"
+    assert world["run_status"] == "failed"
+
+
 def test_world_visibility_tracks_the_historical_cursor_without_absence_claims(tmp_path):
     client = client_for(tmp_path)
     run_id = client.post("/api/anthill/demo").json()["run_id"]
@@ -117,6 +348,160 @@ def test_world_visibility_tracks_the_historical_cursor_without_absence_claims(tm
     assert head_domains["tool"]["event_count"] == 6
     assert historical["visibility"]["score"] is None
     assert head["visibility"]["warnings"]
+
+
+def test_otlp_import_rejects_unaddressable_run_id_without_leaking_input(tmp_path):
+    client = client_for(tmp_path, raise_server_exceptions=False)
+    rejected_run_id = "SECRET/team"
+    payload = json.loads(OTLP_FIXTURE.read_text(encoding="utf-8"))
+
+    response = client.post(
+        "/api/anthill/import/otlp",
+        json={"payload": payload, "run_id": rejected_run_id},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "type": "value_error",
+                "loc": ["body"],
+                "msg": "Request validation failed",
+            }
+        ]
+    }
+    assert rejected_run_id not in response.text
+    assert client.get("/api/anthill/runs").json()["total"] == 0
+
+
+def test_otlp_import_returns_an_addressable_encoded_world_url(tmp_path):
+    client = client_for(tmp_path)
+    run_id = "研究 run 1"
+    payload = json.loads(OTLP_FIXTURE.read_text(encoding="utf-8"))
+
+    response = client.post(
+        "/api/anthill/import/otlp",
+        json={"payload": payload, "run_id": run_id},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["run_id"] == run_id
+    world_url = response.json()["world_url"]
+    assert world_url == f"/api/anthill/runs/{quote(run_id, safe='')}/world"
+    assert client.get(world_url).status_code == 200
+
+
+def test_agui_adapter_validation_error_is_a_privacy_safe_422(tmp_path):
+    client = client_for(tmp_path, raise_server_exceptions=False)
+    rejected_run_id = "SECRET/derived-run"
+    payload = json.loads(AGUI_FIXTURE.read_text(encoding="utf-8"))
+    for event in payload["events"]:
+        if "runId" in event:
+            event["runId"] = rejected_run_id
+
+    response = client.post(
+        "/api/anthill/import/agui",
+        json={"payload": payload, "format": "json"},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "type": "value_error",
+                "loc": ["request"],
+                "msg": "Request validation failed",
+            }
+        ]
+    }
+    assert rejected_run_id not in response.text
+    assert client.get("/api/anthill/runs").json()["total"] == 0
+
+
+def test_agui_explicit_run_id_is_validated_at_the_request_boundary(tmp_path):
+    client = client_for(tmp_path, raise_server_exceptions=False)
+    rejected_run_id = "SECRET/explicit-run"
+    payload = json.loads(AGUI_FIXTURE.read_text(encoding="utf-8"))
+    for event in payload["events"]:
+        if "runId" in event:
+            event["runId"] = rejected_run_id
+
+    response = client.post(
+        "/api/anthill/import/agui",
+        json={
+            "payload": payload,
+            "format": "json",
+            "run_id": rejected_run_id,
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "type": "value_error",
+                "loc": ["body"],
+                "msg": "Request validation failed",
+            }
+        ]
+    }
+    assert rejected_run_id not in response.text
+    assert client.get("/api/anthill/runs").json()["total"] == 0
+
+
+def test_agui_derived_run_id_returns_an_addressable_encoded_world_url(tmp_path):
+    client = client_for(tmp_path)
+    run_id = "协作 run 2"
+    payload = json.loads(AGUI_FIXTURE.read_text(encoding="utf-8"))
+    for event in payload["events"]:
+        if "runId" in event:
+            event["runId"] = run_id
+
+    response = client.post(
+        "/api/anthill/import/agui",
+        json={"payload": payload, "format": "json"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["run_id"] == run_id
+    world_url = response.json()["world_url"]
+    assert world_url == f"/api/anthill/runs/{quote(run_id, safe='')}/world"
+    assert client.get(world_url).status_code == 200
+
+
+@pytest.mark.parametrize(
+    ("adapter", "fixture"),
+    [
+        ("otlp", OTLP_FIXTURE),
+        ("agui", AGUI_FIXTURE),
+        ("langgraph", LANGGRAPH_FIXTURE),
+    ],
+)
+def test_duplicate_imports_return_one_stable_private_conflict(tmp_path, adapter, fixture):
+    client = client_for(tmp_path)
+    run_id = f"SECRET-{adapter}-duplicate"
+    payload = json.loads(fixture.read_text(encoding="utf-8"))
+    if adapter == "agui":
+        for event in payload["events"]:
+            if "runId" in event:
+                event["runId"] = run_id
+    elif adapter == "langgraph":
+        payload["runId"] = run_id
+    body = {"payload": payload, "run_id": run_id}
+
+    first = client.post(
+        f"/api/anthill/import/{adapter}",
+        json=body,
+    )
+    conflict = client.post(
+        f"/api/anthill/import/{adapter}",
+        json=body,
+    )
+
+    assert first.status_code == 201
+    assert conflict.status_code == 409
+    assert conflict.json() == {"detail": "event conflict"}
+    assert run_id not in conflict.text
 
 
 def test_agui_import_is_metadata_only_and_immediately_projectable(tmp_path):
@@ -330,7 +715,10 @@ def test_ingest_query_world_replay_causality_and_integrity(tmp_path):
     assert query["has_more"] is True
     assert query["next_seq"] == 3
 
-    detail = client.get("/api/anthill/runs/api-run/events/e2")
+    detail = client.get(
+        "/api/anthill/runs/api-run/event",
+        params={"event_id": "e2"},
+    )
     assert detail.status_code == 200
     assert detail.json()["payload"]["state"] == "working"
 
@@ -353,8 +741,8 @@ def test_ingest_query_world_replay_causality_and_integrity(tmp_path):
     assert replay["final_state"]["run_status"] == "completed"
 
     causal = client.get(
-        "/api/anthill/runs/api-run/causal/e3",
-        params={"direction": "ancestors"},
+        "/api/anthill/runs/api-run/causal",
+        params={"event_id": "e3", "direction": "ancestors"},
     ).json()
     assert {node["event_id"] for node in causal["nodes"]} == {
         "e0",
@@ -368,15 +756,119 @@ def test_ingest_query_world_replay_causality_and_integrity(tmp_path):
     assert integrity["event_count"] == 4
 
 
+def test_deprecated_event_path_routes_preserve_url_delimiters_for_compatible_ids(tmp_path):
+    client = client_for(tmp_path)
+    event_id = "source/event?part#1%raw"
+    event = runtime_event(event_id, "run.started")
+    created = client.post(
+        "/api/anthill/runs/api-run/events",
+        json={"events": [event.model_dump(mode="json")]},
+    )
+    assert created.status_code == 201
+
+    encoded_event_id = quote(event_id, safe="")
+    fetched = client.get(
+        f"/api/anthill/runs/api-run/events/{encoded_event_id}"
+    )
+    causal = client.get(
+        f"/api/anthill/runs/api-run/causal/{encoded_event_id}"
+    )
+
+    assert fetched.status_code == 200
+    assert fetched.json()["event_id"] == event_id
+    assert causal.status_code == 200
+    assert [node["event_id"] for node in causal.json()["nodes"]] == [event_id]
+
+
+@pytest.mark.parametrize(
+    "event_id",
+    [".", "..", "source/event?part#1%raw"],
+    ids=["dot", "dot-dot", "url-delimiters"],
+)
+def test_canonical_event_query_routes_address_any_event_id(tmp_path, event_id):
+    client = client_for(tmp_path)
+    event = runtime_event(event_id, "run.started")
+    created = client.post(
+        "/api/anthill/runs/api-run/events",
+        json={"events": [event.model_dump(mode="json")]},
+    )
+    assert created.status_code == 201
+
+    fetched = client.get(
+        "/api/anthill/runs/api-run/event",
+        params={"event_id": event_id},
+    )
+    causal = client.get(
+        "/api/anthill/runs/api-run/causal",
+        params={"event_id": event_id},
+    )
+
+    assert fetched.status_code == 200
+    assert fetched.json()["event_id"] == event_id
+    assert causal.status_code == 200
+    assert [node["event_id"] for node in causal.json()["nodes"]] == [event_id]
+
+
+@pytest.mark.parametrize(
+    ("suffix", "params"),
+    [
+        ("/event", {"event_id": "SECRET/missing?part#1%raw"}),
+        (
+            f"/events/{quote('SECRET/missing?part#1%raw', safe='')}",
+            None,
+        ),
+        ("/causal", {"event_id": "SECRET/missing?part#1%raw"}),
+        (
+            f"/causal/{quote('SECRET/missing?part#1%raw', safe='')}",
+            None,
+        ),
+    ],
+    ids=["event-query", "event-path", "causal-query", "causal-path"],
+)
+def test_event_lookup_misses_are_stable_and_do_not_reflect_event_id(
+    tmp_path,
+    suffix,
+    params,
+):
+    client = client_for(tmp_path)
+    run_id = client.post("/api/anthill/demo").json()["run_id"]
+
+    response = client.get(
+        f"/api/anthill/runs/{run_id}{suffix}",
+        params=params,
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "event not found"}
+    assert "SECRET" not in response.text
+
+
+def test_event_query_routes_are_canonical_and_path_routes_are_deprecated(tmp_path):
+    client = client_for(tmp_path)
+
+    paths = client.get("/openapi.json").json()["paths"]
+
+    assert paths["/api/anthill/runs/{run_id}/event"]["get"].get("deprecated") is not True
+    assert paths["/api/anthill/runs/{run_id}/causal"]["get"].get("deprecated") is not True
+    assert (
+        paths["/api/anthill/runs/{run_id}/events/{event_id}"]["get"]["deprecated"] is True
+    )
+    assert (
+        paths["/api/anthill/runs/{run_id}/causal/{event_id}"]["get"]["deprecated"] is True
+    )
+
+
 def test_ingest_rejects_run_mismatch_and_duplicate(tmp_path):
     client = client_for(tmp_path)
-    event = runtime_event("e0", "run.started")
+    event = runtime_event("SECRET_EVENT_IDENTIFIER", "run.started")
 
     mismatch = client.post(
         "/api/anthill/runs/wrong-run/events",
         json={"events": [event.model_dump(mode="json")]},
     )
     assert mismatch.status_code == 422
+    assert mismatch.json() == {"detail": "run_id mismatch"}
+    assert event.event_id not in mismatch.text
 
     first = client.post(
         "/api/anthill/runs/api-run/events",
@@ -388,14 +880,18 @@ def test_ingest_rejects_run_mismatch_and_duplicate(tmp_path):
     )
     assert first.status_code == 201
     assert duplicate.status_code == 409
+    assert duplicate.json() == {"detail": "event conflict"}
+    assert event.event_id not in duplicate.text
 
 
 def test_unknown_run_returns_404(tmp_path):
     client = client_for(tmp_path)
     for path in [
         "/api/anthill/runs/missing/events",
+        "/api/anthill/runs/missing/event?event_id=missing",
         "/api/anthill/runs/missing/world",
         "/api/anthill/runs/missing/replay",
+        "/api/anthill/runs/missing/causal?event_id=missing",
         "/api/anthill/runs/missing/integrity",
     ]:
         assert client.get(path).status_code == 404
@@ -538,6 +1034,32 @@ def test_langgraph_run_id_rejects_path_and_url_delimiters(tmp_path, run_id):
 
     assert response.status_code == 422
     assert response.json()["detail"]
+
+
+def test_langgraph_explicit_run_id_uses_the_shared_privacy_safe_contract(tmp_path):
+    client = client_for(tmp_path, raise_server_exceptions=False)
+    rejected_run_id = "SECRET/langgraph-run"
+
+    response = client.post(
+        "/api/anthill/import/langgraph",
+        json={
+            "run_id": rejected_run_id,
+            "payload": [{"type": "values", "ns": [], "data": {}, "interrupts": []}],
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "type": "value_error",
+                "loc": ["body"],
+                "msg": "Request validation failed",
+            }
+        ]
+    }
+    assert rejected_run_id not in response.text
+    assert client.get("/api/anthill/runs").json()["total"] == 0
 
 
 def test_langgraph_safe_run_id_returns_a_usable_world_url(tmp_path):
@@ -957,3 +1479,298 @@ def test_langgraph_values_without_interrupts_returns_422_without_a_ledger(tmp_pa
     assert response.status_code == 422
     assert client.get("/api/anthill/runs").json()["total"] == 0
     assert client.get("/api/anthill/runs").json()["total"] == 0
+
+
+def test_fork_new_run_id_is_validated_at_the_request_boundary(tmp_path):
+    client = client_for(tmp_path, raise_server_exceptions=False)
+    parent_run_id = client.post("/api/anthill/demo").json()["run_id"]
+    rejected_run_id = "SECRET/fork-run"
+
+    response = client.post(
+        f"/api/anthill/runs/{parent_run_id}/fork",
+        json={"at_seq": 2, "new_run_id": rejected_run_id},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "type": "value_error",
+                "loc": ["body"],
+                "msg": "Request validation failed",
+            }
+        ]
+    }
+    assert rejected_run_id not in response.text
+    listing = client.get("/api/anthill/runs").json()
+    assert listing["total"] == 1
+    assert listing["items"][0]["run_id"] == parent_run_id
+
+
+def test_concurrent_forks_with_the_same_run_id_return_a_stable_private_conflict(tmp_path):
+    new_run_id = "SECRET-collision-fork"
+
+    class BarrierStore(JsonlEventStore):
+        def __init__(self, root):
+            super().__init__(root)
+            self.collision_barrier = threading.Barrier(2)
+
+        def get_manifest(self, run_id):
+            manifest = super().get_manifest(run_id)
+            if run_id == new_run_id and manifest is None:
+                self.collision_barrier.wait(timeout=3)
+            return manifest
+
+    app = FastAPI()
+    app.include_router(create_anthill_router(BarrierStore(tmp_path), EventBroker()))
+
+    async def exercise():
+        transport = ASGITransport(app=app, raise_app_exceptions=False)
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            parent_run_id = (await client.post("/api/anthill/demo")).json()["run_id"]
+            return await asyncio.gather(
+                *(
+                    client.post(
+                        f"/api/anthill/runs/{parent_run_id}/fork",
+                        json={"at_seq": 2, "new_run_id": new_run_id},
+                    )
+                    for _ in range(2)
+                )
+            )
+
+    responses = asyncio.run(exercise())
+
+    assert sorted(response.status_code for response in responses) == [201, 409]
+    conflict = next(response for response in responses if response.status_code == 409)
+    assert conflict.json() == {"detail": "run already exists"}
+    assert new_run_id not in conflict.text
+
+
+def test_fork_rejects_a_target_created_by_concurrent_direct_ingest(tmp_path):
+    new_run_id = "SECRET-direct-ingest-wins"
+
+    class DirectIngestWinsStore(JsonlEventStore):
+        def __init__(self, root):
+            super().__init__(root)
+            self.arm_race = False
+            self.fork_saw_empty_target = threading.Event()
+            self.direct_ingest_committed = threading.Event()
+
+        def get_manifest(self, run_id):
+            manifest = super().get_manifest(run_id)
+            if self.arm_race and run_id == new_run_id and manifest is None:
+                self.fork_saw_empty_target.set()
+                assert self.direct_ingest_committed.wait(timeout=3)
+            return manifest
+
+    store = DirectIngestWinsStore(tmp_path)
+    app = FastAPI()
+    app.include_router(create_anthill_router(store, EventBroker()))
+
+    async def exercise():
+        transport = ASGITransport(app=app, raise_app_exceptions=False)
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            parent_run_id = (await client.post("/api/anthill/demo")).json()["run_id"]
+            store.arm_race = True
+
+            async def fork():
+                return await client.post(
+                    f"/api/anthill/runs/{parent_run_id}/fork",
+                    json={"at_seq": 2, "new_run_id": new_run_id},
+                )
+
+            async def ingest_directly():
+                assert await asyncio.to_thread(store.fork_saw_empty_target.wait, 3)
+                direct_event = runtime_event(
+                    "non-overlapping-direct-event",
+                    "run.started",
+                ).model_copy(update={"run_id": new_run_id})
+                try:
+                    return await client.post(
+                        f"/api/anthill/runs/{new_run_id}/events",
+                        json={"events": [direct_event.model_dump(mode="json")]},
+                    )
+                finally:
+                    store.direct_ingest_committed.set()
+
+            fork_response, direct_response = await asyncio.gather(
+                fork(),
+                ingest_directly(),
+            )
+            events_response = await client.get(
+                f"/api/anthill/runs/{new_run_id}/events",
+                params={"limit": 100},
+            )
+            return fork_response, direct_response, events_response
+
+    fork_response, direct_response, events_response = asyncio.run(exercise())
+
+    assert direct_response.status_code == 201
+    assert fork_response.status_code == 409
+    assert fork_response.json() == {"detail": "run already exists"}
+    assert new_run_id not in fork_response.text
+    assert [item["event_id"] for item in events_response.json()["items"]] == [
+        "non-overlapping-direct-event"
+    ]
+
+
+def test_direct_ingest_after_fork_starts_after_the_complete_fork_batch(tmp_path):
+    client = client_for(tmp_path)
+    parent_run_id = client.post("/api/anthill/demo").json()["run_id"]
+    new_run_id = "fork-wins-before-direct-ingest"
+
+    fork_response = client.post(
+        f"/api/anthill/runs/{parent_run_id}/fork",
+        json={"at_seq": 2, "new_run_id": new_run_id},
+    )
+    assert fork_response.status_code == 201
+    fork_event_count = fork_response.json()["event_count"]
+
+    direct_event = runtime_event(
+        "direct-event-after-fork",
+        "artifact.created",
+    ).model_copy(update={"run_id": new_run_id})
+    direct_response = client.post(
+        f"/api/anthill/runs/{new_run_id}/events",
+        json={"events": [direct_event.model_dump(mode="json")]},
+    )
+    events_response = client.get(
+        f"/api/anthill/runs/{new_run_id}/events",
+        params={"limit": 100},
+    )
+
+    assert direct_response.status_code == 201
+    assert direct_response.json()["first_seq"] == fork_event_count
+    items = events_response.json()["items"]
+    assert len(items) == fork_event_count + 1
+    assert items[0]["event_type"] == "manifest.snapshot"
+    assert items[fork_event_count - 1]["event_type"] == "run.forked"
+    assert items[-1]["event_id"] == "direct-event-after-fork"
+
+
+@pytest.mark.parametrize(
+    "rejected_run_id",
+    ["SECRET/run", "SECRET\\run", "SECRET?run", "SECRET#run", "SECRET%2Frun", ".", ".."],
+)
+def test_direct_ingest_rejects_unaddressable_run_ids_without_leaking_input(
+    tmp_path, rejected_run_id
+):
+    client = client_for(tmp_path, raise_server_exceptions=False)
+    payload = runtime_event("invalid-run-id", "run.started").model_dump(mode="json")
+    payload["run_id"] = rejected_run_id
+
+    response = client.post(
+        "/api/anthill/runs/api-run/events",
+        json={"events": [payload]},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"]
+    assert rejected_run_id not in response.text
+    assert client.get("/api/anthill/runs").json()["total"] == 0
+
+
+@pytest.mark.parametrize(
+    ("method", "suffix", "json_body"),
+    [
+        ("get", "/events", None),
+        ("post", "/events", {"events": [runtime_event("path-event", "run.started").model_dump(mode="json")]}),
+        ("get", "/events/path-event", None),
+        ("get", "/event?event_id=path-event", None),
+        ("get", "/world", None),
+        ("post", "/fork", {}),
+        ("post", "/snapshots", None),
+        ("get", "/snapshots", None),
+        ("get", "/replay", None),
+        ("get", "/causal/path-event", None),
+        ("get", "/causal?event_id=path-event", None),
+        ("get", "/integrity", None),
+        ("get", "/stream", None),
+    ],
+)
+def test_every_run_path_rejects_an_unaddressable_segment_without_reflection(
+    tmp_path, method, suffix, json_body
+):
+    client = client_for(tmp_path, raise_server_exceptions=False)
+    response = client.request(
+        method,
+        f"/api/anthill/runs/private%25run{suffix}",
+        json=json_body,
+    )
+
+    assert response.status_code == 422
+    assert "private%run" not in response.text
+    assert response.json()["detail"]
+
+
+def test_compare_query_rejects_an_unaddressable_run_id_without_reflection(tmp_path):
+    client = client_for(tmp_path, raise_server_exceptions=False)
+
+    response = client.get(
+        "/api/anthill/compare",
+        params={"left_run_id": "private/run", "right_run_id": "safe-run"},
+    )
+
+    assert response.status_code == 422
+    assert "private/run" not in response.text
+    assert response.json()["detail"]
+
+
+def test_fork_returns_an_addressable_encoded_world_url(tmp_path):
+    client = client_for(tmp_path)
+    parent_run_id = client.post("/api/anthill/demo").json()["run_id"]
+    run_id = "分支 run 3"
+
+    response = client.post(
+        f"/api/anthill/runs/{parent_run_id}/fork",
+        json={"at_seq": 2, "new_run_id": run_id},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["run_id"] == run_id
+    world_url = response.json()["world_url"]
+    assert world_url == f"/api/anthill/runs/{quote(run_id, safe='')}/world"
+    assert client.get(world_url).status_code == 200
+
+
+def test_blocking_append_does_not_stall_unrelated_api_requests(tmp_path):
+    class BlockingAppendStore(JsonlEventStore):
+        def __init__(self, root):
+            super().__init__(root)
+            self.append_started = threading.Event()
+            self.release_append = threading.Event()
+
+        def append_many(self, events):
+            self.append_started.set()
+            assert self.release_append.wait(2)
+            return super().append_many(events)
+
+    store = BlockingAppendStore(tmp_path)
+    app = FastAPI()
+    app.include_router(create_anthill_router(store, EventBroker()))
+
+    async def exercise():
+        transport = ASGITransport(app=app)
+        release_timer = threading.Timer(1.5, store.release_append.set)
+        release_timer.start()
+        try:
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://testserver",
+            ) as client:
+                create_task = asyncio.create_task(client.post("/api/anthill/demo"))
+                assert await asyncio.to_thread(store.append_started.wait, 1)
+                heartbeat = await client.get("/api/anthill/schema")
+                heartbeat_preceded_release = not store.release_append.is_set()
+                store.release_append.set()
+                created = await create_task
+        finally:
+            store.release_append.set()
+            release_timer.cancel()
+        return heartbeat, created, heartbeat_preceded_release
+
+    heartbeat, created, heartbeat_preceded_release = asyncio.run(exercise())
+
+    assert heartbeat.status_code == 200
+    assert created.status_code == 201
+    assert heartbeat_preceded_release is True

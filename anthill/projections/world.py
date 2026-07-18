@@ -13,10 +13,11 @@ from typing import Any, Iterable
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..run_lifecycle import transition_run_status
 from ..schema import AgentRuntimeEvent, EvidenceLevel
 
 
-REDUCER_VERSION = "0.2.0"
+REDUCER_VERSION = "0.3.0"
 MAX_RECENT_EVENTS = 80
 MAX_ERRORS = 100
 
@@ -259,25 +260,14 @@ def project_world(
 
 
 def _update_run(state: WorldState, event: AgentRuntimeEvent) -> None:
-    if event.event_type == "run.started":
-        state.run_status = "running"
-        state.started_at = event.clock.occurred_at.isoformat()
-    elif event.event_type == "run.paused":
-        state.run_status = "paused"
-    elif event.event_type == "run.resumed":
-        state.run_status = "running"
-    elif event.event_type == "run.forked":
-        state.run_status = "running"
+    state.run_status = transition_run_status(
+        state.run_status, event.event_type, event.payload
+    )
+    if event.event_type in {"run.started", "run.resumed", "run.forked", "run.paused"}:
         state.completed_at = None
-    elif event.event_type == "run.completed":
-        status = str(event.payload.get("status", "completed"))
-        state.run_status = "completed" if status == "success" else status
-        state.completed_at = event.clock.occurred_at.isoformat()
-    elif event.event_type == "run.cancelled":
-        state.run_status = "cancelled"
-        state.completed_at = event.clock.occurred_at.isoformat()
-    elif event.event_type == "error.fatal":
-        state.run_status = "failed"
+        if event.event_type == "run.started":
+            state.started_at = event.clock.occurred_at.isoformat()
+    elif event.event_type in {"run.completed", "run.cancelled", "error.fatal"}:
         state.completed_at = event.clock.occurred_at.isoformat()
 
 

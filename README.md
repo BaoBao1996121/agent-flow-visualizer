@@ -5,7 +5,7 @@
 
 ![Agent Anthill overview](docs/assets/anthill-overview.png)
 
-> Alpha · application `0.6.0` · event protocol `0.1.0` · coverage contract `0.2.0`
+> Alpha · application `0.6.0` · event protocol `0.2.0` · reducer `0.3.0` · coverage contract `0.2.0`
 > Python runtime tracing plus OTLP/OpenInference, AG-UI, and LangGraph StreamPart v2 offline import work today. Framework-native live bridges remain the next expansion, not a claim hidden behind the UI.
 
 Most agent visualizers answer “what looks busy?” Agent Anthill is built to answer harder questions:
@@ -34,7 +34,8 @@ The pixel world is a semantic projection over an append-only event ledger. It is
 - AG-UI JSON/NDJSON importer for run, step, message, tool, shared state, activity, and public reasoning-summary lifecycles. Explicit stream IDs become causal/correlation links; content and encrypted reasoning values are redacted by default.
 - LangGraph StreamPart v2 JSON/NDJSON importer for `tasks`, `messages`, `updates`, `values`, `checkpoints`, and `custom`. Its LangGraph 1.x compatibility floor is `1.1.0`; the configured supported lane is `>=1.2,<2`, with real probes at `1.1.0` and `1.2.9`.
 - Truth-preserving LangGraph interruption mapping: task interruption stays `agent.step.interrupted`; the first explicit interrupt ID in a namespace becomes `human.interrupt`; repeated observations become linked `langgraph.interrupt.reobserved` events; checkpoint interrupt snapshots remain separate evidence.
-- Thread-safe local JSONL ledger with duplicate rejection, monotonic ingest sequence, SHA-256 hash chain, integrity verification, and per-run manifests.
+- In-process thread-safe, single-process JSONL reference ledger with duplicate rejection, monotonic ingest sequence, a SHA-256 event chain, and explicit integrity verification. Every append hashes the current ledger bytes; full JSON/sequence/duplicate/hash-chain validation runs on first access or changed content. Very long and multi-process production ingestion still requires a transactional store.
+- Rebuildable per-run manifest caches with an unkeyed cache checksum, lifecycle-derived HEAD status, and privacy-safe discovery diagnostics. A checksum-valid non-empty manifest quarantines a shortened, emptied, or missing ledger instead of silently reusing sequence numbers. The run-list endpoint reports `integrity_status: not_checked`; full-chain health belongs to the per-run integrity endpoint.
 - Deterministic world reducer and historical projection at any ingest sequence.
 - Immutable, reducer-versioned world snapshots anchored to ledger event hashes; corrupt caches are ignored and recomputed from the ledger.
 - Side-effect-free materialized forks from any timeline cursor, with parent event/state hashes and remapped provenance links.
@@ -44,6 +45,7 @@ The pixel world is a semantic projection over an append-only event ledger. It is
 - Context budget, memory layers, compaction lineage, handoff, checkpoint, artifacts, usage, and incident projections.
 - FastAPI ingestion/query/replay/integrity APIs plus live SSE with gap detection and ledger resync.
 - Source X-Ray view for the original static call graph and real Python execution trace.
+- Collision-aware run selectors that show source, ledger-head lifecycle status, UTC ingest date, stable ID, and an explicit synthetic marker; historical world status remains tied to the selected cursor rather than being rewritten by head metadata.
 - One-click, clearly labelled **synthetic fixture** covering all core chambers without network or model calls.
 - Metadata-only persistence by default; prompt, argument, return, and exception content require explicit opt-in. Metadata identifiers and structural names may still be sensitive.
 - The core suite plus an optional real-runtime compatibility test cover schema invariants, privacy, adapters, time travel, snapshots, branching, comparison, causality, instrumentation visibility, tamper detection, concurrent append, API behavior, malformed runtime objects, and StreamPart v2 compatibility. The dated count and commands live in [the verification record](docs/VERIFICATION.md).
@@ -84,7 +86,7 @@ Open <http://127.0.0.1:8765> and click **一键展品**. The fixture is marked `
 
 For a real local Python trace, open <http://127.0.0.1:8765/graph>, analyze `samples`, select an entry point, and run **实时运行**. The trace endpoint persists a metadata-only Anthill run by default.
 
-To inspect a captured LangGraph run, open the Anthill import menu and select **LANGGRAPH v2**. The latest-code local manual Chromium rerun on 2026-07-17 covered JSON import; an earlier same-day manual check covered NDJSON. Exact scope and limitations are recorded in [verification](docs/VERIFICATION.md). Local Chromium automation now covers the implemented Phase -1 observatory truth contracts, and its GitHub Actions job is configured; the first hosted result remains pending. This imports an existing capture; it does not subscribe to a running graph.
+To inspect a captured LangGraph run, open the Anthill import menu and select **LANGGRAPH v2**. This imports an existing capture; it does not subscribe to a running graph. Dated local and hosted evidence, including the exact commit and workflow version covered, lives in [verification](docs/VERIFICATION.md).
 
 Or run the hardened local container profile:
 
@@ -92,7 +94,7 @@ Or run the hardened local container profile:
 docker compose up --build
 ```
 
-The Compose profile binds only to `127.0.0.1:8765`, runs as a non-root user with a read-only root filesystem, and persists ledgers in the `anthill-data` volume. The CI workflow is configured to validate the Compose model, build the image, and exercise a runtime smoke on GitHub's Ubuntu runner; no hosted result exists yet. Dated local and hosted verification status belongs in [the environment checklist](docs/ENVIRONMENT_CHECKLIST.md), not in this long-lived capability statement.
+The Compose profile binds only to `127.0.0.1:8765`, runs as a non-root user with a read-only root filesystem, and persists ledgers in the `anthill-data` volume. CI validates the Compose model, builds the image, and exercises a runtime smoke on GitHub's Ubuntu runner. Dated local and hosted results belong in [the environment checklist](docs/ENVIRONMENT_CHECKLIST.md), not in this long-lived capability statement.
 
 ## The trust contract
 
@@ -138,6 +140,11 @@ Read [architecture](docs/ARCHITECTURE.md), [event protocol](docs/EVENT_PROTOCOL.
 Any runtime can integrate today by posting canonical events. Native adapters should preserve the original semantic-convention version in `source`.
 
 The repository includes a validated request body at `samples/canonical_event_batch.json`.
+Protocol `0.2.0` requires each newly written `run_id` to be a display-stable,
+single API path segment: no edge whitespace, Unicode control/format characters,
+path separators, URL delimiters `/`, `\`, `?`, `#`, `%`, or exact `.`/`..`
+segments. Existing `0.1.0` ledgers remain readable only through the store's
+private compatibility path; compatibility never weakens new API writes.
 On macOS, Linux, or Git Bash:
 
 ```bash
@@ -155,20 +162,30 @@ Useful endpoints:
 | Endpoint | Purpose |
 |---|---|
 | `GET /api/anthill/schema` | Protocol vocabulary and truth contract |
+| `GET /api/anthill/runs` | Lightweight HEAD discovery with bounded diagnostics; not a full integrity verdict |
 | `POST /api/anthill/runs/{run_id}/events` | Validated batch ingestion |
 | `POST /api/anthill/import/otlp` | OTLP JSON/OpenInference span import |
 | `POST /api/anthill/import/agui` | AG-UI JSON or NDJSON event import |
 | `POST /api/anthill/import/langgraph` | LangGraph 1.x StreamPart v2 JSON or NDJSON import; floor `1.1.0`, tested `1.1.0` and `1.2.9` |
 | `GET /api/anthill/runs/{run_id}/events` | Ordered, paginated event query |
+| `GET /api/anthill/runs/{run_id}/event?event_id={opaque_id}` | Canonical single-event lookup for any 1–256 character event ID |
 | `GET /api/anthill/runs/{run_id}/world?at_seq=17` | Historical world plus cursor-specific instrumentation visibility |
 | `POST/GET /api/anthill/runs/{run_id}/snapshots` | Create/inspect projection snapshots |
 | `POST /api/anthill/runs/{run_id}/fork` | Materialize a no-rerun branch at a cursor |
 | `GET /api/anthill/runs/{run_id}/replay` | Replay window with initial/final state |
-| `GET /api/anthill/runs/{run_id}/causal/{event_id}` | Explicit causal neighborhood |
+| `GET /api/anthill/runs/{run_id}/causal?event_id={opaque_id}` | Canonical explicit causal neighborhood lookup |
 | `GET /api/anthill/runs/{run_id}/integrity` | Full hash-chain verification |
 | `GET /api/anthill/runs/{run_id}/stream` | SSE live events with sequence-gap recovery |
 | `GET /api/anthill/compare` | Normalized two-run mechanism comparison |
 | `POST /api/anthill/demo` | No-network synthetic exhibit |
+
+The deprecated `/events/{event_id}` and `/causal/{event_id}` forms remain for
+path-safe client compatibility, but new clients must use the query forms. An
+opaque event ID may legally be `.`, `..`, or contain URL-reserved characters;
+browsers normalize some such path segments before the request reaches the API.
+Query encoding is routing, not encryption: sensitive source IDs should be
+stably hashed by an adapter because URLs can enter browser history and access,
+proxy, or APM logs.
 
 Interactive API documentation is available at `/docs`.
 
@@ -238,7 +255,7 @@ The renderer migration is governed by the [visual-system decision](docs/VISUAL_S
 
 Near-term, in order:
 
-1. Finish Phase -1 visual-truth cleanup: complete per-field observation provenance, keyboard/DOM mirrors, reduced-motion coverage, and reproducible visual baselines.
+1. Continue Phase -1 visual-truth cleanup against all eight blocking corrections in [VISUAL_SYSTEM.md](docs/VISUAL_SYSTEM.md). Remaining work includes projection reconciliation, signal prioritization, a non-overloaded color vocabulary, per-field observation provenance, keyboard/DOM mirrors, complete reduced-motion coverage, and reproducible visual baselines.
 2. Introduce a renderer-independent `VisualModel` and deterministic animation-intent contract; build the bounded PixiJS 8 vertical slice and same-scene Phaser 4.2.1 benchmark before choosing a migration path.
 3. Add OTLP protobuf/live collection plus AG-UI and LangGraph live stream bridges with bounded ingestion and backpressure.
 4. Add native Claude Code and Codex hook providers with published capability contracts.

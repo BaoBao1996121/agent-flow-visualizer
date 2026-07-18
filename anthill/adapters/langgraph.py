@@ -38,6 +38,7 @@ class LangGraphImportError(ValueError):
 
 _MAX_STREAM_MODE_LENGTH = 160
 _MAX_SOURCE_IDENTIFIER_LENGTH = 256
+_MAX_NDJSON_NESTING = 256
 _RESERVED_ID_SEPARATOR = "\x1f"
 _RUN_ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._~-]{0,255}")
 _RUN_STATUSES = frozenset({"completed", "success", "failed", "interrupted", "cancelled"})
@@ -262,6 +263,7 @@ def langgraph_ndjson_to_events(
     for line_number, line in enumerate(payload.splitlines(), start=1):
         if not line.strip():
             continue
+        _reject_excessive_json_nesting(line)
         try:
             part = json.loads(line)
         except json.JSONDecodeError as exc:
@@ -288,6 +290,31 @@ def langgraph_ndjson_to_events(
         run_status=run_status,
         capture_content=capture_content,
     )
+
+
+def _reject_excessive_json_nesting(line: str) -> None:
+    """Enforce one deterministic nesting limit before CPython's decoder diverges."""
+
+    depth = 0
+    in_string = False
+    escaped = False
+    for character in line:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+            continue
+        if character == '"':
+            in_string = True
+        elif character in "[{":
+            depth += 1
+            if depth > _MAX_NDJSON_NESTING:
+                raise LangGraphImportError("LangGraph NDJSON is excessively nested")
+        elif character in "]}":
+            depth -= 1
 
 
 def _part_to_events(

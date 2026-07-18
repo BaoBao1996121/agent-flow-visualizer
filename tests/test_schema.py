@@ -47,6 +47,52 @@ def test_event_type_must_be_lowercase_and_namespaced(event_type):
         make_event(event_type=event_type)
 
 
+@pytest.mark.parametrize("run_id", [" run-test", "run-test ", "   "])
+def test_run_id_rejects_leading_or_trailing_whitespace(run_id):
+    with pytest.raises(ValidationError, match="leading or trailing whitespace"):
+        make_event(run_id=run_id)
+
+
+@pytest.mark.parametrize("run_id", ["run\nidentity", "run\u202eidentity"])
+def test_run_id_rejects_control_and_format_characters(run_id):
+    with pytest.raises(ValidationError, match="control or format characters"):
+        make_event(run_id=run_id)
+
+
+@pytest.mark.parametrize(
+    "run_id",
+    [
+        "team/run",
+        "team\\run",
+        "team?run",
+        "team#run",
+        "team%run",
+        ".",
+        "..",
+    ],
+)
+def test_run_id_must_be_addressable_as_one_api_path_segment(run_id):
+    with pytest.raises(ValidationError, match="addressable API path segment"):
+        make_event(run_id=run_id)
+
+
+def test_legacy_run_id_is_readable_only_with_explicit_storage_context():
+    payload = make_event().model_dump(mode="json")
+    payload["schema_version"] = "0.1.0"
+    payload["run_id"] = " legacy-run "
+
+    with pytest.raises(ValidationError, match="leading or trailing whitespace"):
+        AgentRuntimeEvent.model_validate(payload)
+
+    restored = AgentRuntimeEvent.model_validate(
+        payload,
+        context={"allow_legacy_run_id": True},
+    )
+
+    assert restored.run_id == " legacy-run "
+    assert restored.schema_version == "0.1.0"
+
+
 def test_inferred_evidence_cannot_claim_perfect_certainty():
     with pytest.raises(ValidationError, match="cannot have confidence 1.0"):
         Evidence(level=EvidenceLevel.INFERRED, confidence=1.0)
