@@ -243,16 +243,18 @@ Those JavaScript action majors use the Node 24 action runtime; the project test
 runtime remains Node 22 as configured by `setup-node`. Major tags are not
 immutable dependency pins; commit-SHA pinning with a reviewed Dependabot update
 path remains follow-up supply-chain hardening. Run 29570924390 predates these
-upgrades; run 29639913312 passed the current action/runtime combination across
-all nine jobs. `main` protection uses strict status checks with administrator
-enforcement and requires those nine GitHub Actions contexts, including the
-digest-pinned visual regression.
+upgrades; protected-main run 29645305313 passed the current action/runtime
+combination, including the fast and aggregate jobs. `main` protection uses strict
+status checks with administrator enforcement and requires the original nine
+GitHub Actions contexts plus `Protected main validation gate`, all bound to the
+GitHub Actions app. The fast gate is enforced transitively by the aggregate.
 
-The current staged-validation change adds a small shadow fast job and a fail-closed
-aggregate without suppressing those jobs or weakening protection. Draft-to-Ready
-and protection migration rules live in [VALIDATION_STAGES.md](VALIDATION_STAGES.md);
-hosted shadow evidence is required before the aggregate becomes a protected
-context or any Draft S2 child is skipped.
+Draft pull requests run the fast gate while the six complete S2 job definitions
+are skipped; the required aggregate fails explicitly. `ready_for_review`, later
+non-Draft commits, manual runs, and protected-main pushes run complete S2 before
+the aggregate can pass. Migration and rollback rules live in
+[VALIDATION_STAGES.md](VALIDATION_STAGES.md). The original nine contexts remain
+required until failure/skip/cancel canaries and a longer observation window pass.
 
 This reduces accidental host exposure; it does not add authentication, tenant isolation, TLS, or a sandbox around Python trace execution. The container is therefore a reproducible local deployment, not evidence of hosted-service readiness.
 

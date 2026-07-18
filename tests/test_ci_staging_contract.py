@@ -97,4 +97,6 @@ def test_protected_main_gate_rejects_drafts_and_requires_every_stage():
         "visual-regression",
         "container",
     ):
-        assert "if" not in jobs[full_job]
+        assert _expression(jobs[full_job]["if"]) == (
+            "github.event_name!='pull_request'||!github.event.pull_request.draft"
+        )

@@ -37,8 +37,9 @@ source .venv/bin/activate
 
 Validation depth is staged so exploration stays fast without weakening protected
 `main`. During S0 exploration, run the narrow test file and syntax check for the
-module being changed. Before publishing, use the shadow `Exploration fast gate`;
-before merge, the complete S2 matrix remains mandatory. The canonical runner,
+module being changed. Opening or updating a pull request runs the current
+fixed-subset `Exploration fast gate`; before merge, the complete S2 matrix remains
+mandatory. The canonical runner,
 change-impact map, and manifests are still under development, so unknown-impact,
 workflow, dependency, container, browser-harness, and visual-golden changes must
 wait for hosted S2; run the broad local preflight below before publishing. See
@@ -64,9 +65,10 @@ npm run test:browser
 The hosted container and pinned-Linux visual jobs remain authoritative boundaries
 that this workstation may not reproduce. A Draft PR can therefore show a green
 `Exploration fast gate` and an intentionally red `Protected main validation gate`.
-The latter means full merge validation has not been requested yet; mark the PR
-Ready to trigger the complete matrix. A product-test failure remains a real
-failure and must not be relabelled as this expected Draft state.
+The six complete S2 job definitions are skipped in Draft; the red required
+aggregate means full merge validation has not been requested. Mark the PR Ready
+to trigger the complete matrix. A product-test failure remains a real failure
+and must not be relabelled as this expected Draft state.
 
 On Linux or CI, use `npx playwright install --with-deps chromium`. The browser
 suite owns `127.0.0.1:8878` and an ignored ledger under `output/playwright/`; it
