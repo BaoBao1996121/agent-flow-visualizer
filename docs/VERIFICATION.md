@@ -380,6 +380,16 @@ Hosted Phase C promotion evidence:
 | [29659548968](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29659548968), same candidate | Ready PR | All 11 jobs passed; exact six-state Playwright artifact uploaded and reviewed. |
 | [29659786458](https://github.com/BaoBao1996121/agent-flow-visualizer/actions/runs/29659786458), squash `91d3e09…` | Protected-main push | All 11 jobs passed; Chromium took 1m36s; six 1600×1000 states were reviewed. Artifact `8433977660` is 2,202,008 bytes with SHA-256 `4ba200b7ed5fd53ed643986951e7451f59096cd932867e62a3db573247b71519`. |
 
+### VA1 independent-audit correction
+
+| Boundary | RED | Current local GREEN |
+|---|---|---|
+| Cursor truth | Manifest source binding absent; cursor 30 displayed seq-31 `near full`; event agent was labelled as event subject; Compaction inferred `idle` | Fixture SHA/path/exact event are manifest-bound; Researcher, `tool.logs-1`, and `agent.researcher` are distinct; room state is cursor-specific; seq 37 is timeline-only and visibly `FUTURE` |
+| Cross-direction semantics | Blueprint/Miniature fact mutations passed because fixture truth was asserted only for Field Manual | One fixture-derived semantic snapshot now covers all three panels: four health signals, eight rooms, evidence data/text, and timeline seq/relation/ARIA |
+| Compare readability | `COMPACTION PRESS` clipped in all three directions; 6 px `FUTURE` bypassed the 12 px floor and drifted 152.5 px from seq 37 in focus | All answer labels are at least 12 px and unclipped; `FUTURE` is data-bound and center-aligned to seq 37 with 0 px delta across 1600/1251/1250/1024 widths and forced-colors geometry |
+| Dedicated S1 | Grep selected only compare while policy claimed complete; runner hard-coded exactly one Playwright test; a passing title containing `skipped` caused a false failure | Policy `2026-07-19.9` selects compare plus focus once with `expected_tests: 2`; unique exact summary parsing ignores title words while rejecting real skip, duplicate/conflicting outcomes, and Playwright's singular/plural out-of-test fatal-error summaries |
+| Visible evidence | Prior Ready artifact and screenshots predated the audit | Browser-memory 1600×1000 compare/focus were reviewed at SHA-256 `0009be46…88dc5` and `a2a41aa2…7614f`; refreshed Ready and protected-main artifacts remain required |
+
 ## Explicitly pending
 
 - Staged validation still needs representative observation-window samples,

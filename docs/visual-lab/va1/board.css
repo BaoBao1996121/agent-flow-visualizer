@@ -253,7 +253,7 @@ button, a { font: inherit; }
 
 .room::before { content: ""; position: absolute; top: 0; right: 0; width: 22px; height: 3px; background: color-mix(in srgb, var(--accent) 62%, var(--edge)); }
 .room-code { display: block; margin-bottom: 3px; color: #7e9288; font: 750 7px/1 ui-monospace, "Cascadia Code", Consolas, monospace; letter-spacing: 0.12em; }
-.room b { position: relative; z-index: 2; max-width: calc(100% - 30px); height: 15px; display: block; overflow: hidden; font: 800 12px/15px ui-monospace, "Cascadia Code", Consolas, monospace; white-space: nowrap; }
+.room b { position: relative; z-index: 2; max-width: 100%; height: 15px; display: block; overflow: hidden; font: 800 12px/15px ui-monospace, "Cascadia Code", Consolas, monospace; white-space: nowrap; }
 .room em { position: relative; z-index: 2; display: block; margin-top: 2px; color: #85968e; font: normal 700 8px/1 ui-monospace, "Cascadia Code", Consolas, monospace; text-transform: uppercase; }
 .room.incident-room { border: 2px solid var(--coral); background: color-mix(in srgb, var(--coral) 9%, var(--surface-2)); }
 .room.incident-room::before { background: var(--coral); }
@@ -336,6 +336,7 @@ button, a { font: inherit; }
 .timeline .event.recovery { background: var(--acid); }
 .timeline .event.compact { background: var(--violet); }
 .timeline .cursor { width: 2px; height: 20px; background: #fff5ae; box-shadow: 0 0 0 1px #514f31; }
+.timeline-track .future-label { position: absolute; left: var(--p); top: -16px; color: var(--violet); font: 800 12px/13px ui-monospace, "Cascadia Code", Consolas, monospace; letter-spacing: 0.05em; white-space: nowrap; transform: translateX(-50%); }
 .timeline-seq { color: #82948b; font: 700 7px/1 ui-monospace, "Cascadia Code", Consolas, monospace; white-space: nowrap; }
 .timeline-seq strong { color: #fff5ae; }
 
@@ -380,7 +381,7 @@ body[data-view="focus"] .health-row > span { padding-inline: 14px; font-size: 8p
 body[data-view="focus"] .health-row strong { font-size: 10px; }
 body[data-view="focus"] .room-grid { inset: 7% 4% 10%; gap: 10px 14px; }
 body[data-view="focus"] .room { padding: 10px 12px; }
-body[data-view="focus"] .room b { max-width: calc(100% - 42px); height: 18px; font-size: 14px; line-height: 18px; }
+body[data-view="focus"] .room b { max-width: 100%; height: 18px; font-size: 14px; line-height: 18px; }
 body[data-view="focus"] .room-code { font-size: 8px; }
 body[data-view="focus"] .room em { font-size: 9px; }
 body[data-view="focus"] .room-glyph { width: 28px; height: 28px; transform: scale(1.15); transform-origin: right bottom; }

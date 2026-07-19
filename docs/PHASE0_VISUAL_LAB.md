@@ -163,28 +163,41 @@ state, and the failed built-in image-generation attempt. That attempt ended at
 the service network layer and produced no asset; the exact prompt and failure
 boundary remain in [the attempt record](visual-lab/va1/IMAGEGEN_ATTEMPT.md).
 
-The first visual review rejected a misleading concept state before freeze. At
-synthetic cursor 30, the board originally placed `error.recovered` in Context
-Loom as `OBSERVED`. The frozen fixture instead projects Researcher and Query
-logs as recovered in Incident Bay with `DECLARED` evidence. A focused browser
-assertion failed on the old claim, then passed after all three surfaces moved
-the selection and evidence to the fixture-backed state.
+Two truth reviews rejected misleading concept states before freeze. The first
+removed a fictional Context Worker. The independent merge audit then blocked
+promotion because the cursor-30 board still leaked the seq-31 `near full`
+context state, called the event agent its `SUBJECT`, inferred `idle` from the
+absence of compaction, and let the allegedly complete S1 omit the focus case.
+
+The corrected board anchors its source path, whole-file SHA-256, and exact
+cursor event in the manifest. It keeps Researcher as the selected projected
+agent while separately showing the canonical event subject `tool.logs-1` and
+agent ID `agent.researcher`. Room facts now stay at cursor 30: Context is
+`READY · 1,680/8,192`, the last tool fact succeeded at seq 29, Memory has one
+declared hit, and Compaction says `NO COMPACTION OBSERVED`. The seq-37
+compaction marker remains useful historical context only on the timeline, where
+it is explicitly marked `FUTURE`. That 12 px answer-bearing label is bound to
+seq 37 in both data and geometry instead of floating at the end of a widening
+track.
 
 Current local VA1 observations:
 
-- exact `@va1-s0`: 1/1 passed after the initial missing-board RED;
-- complete board slice: 2/2 passed in 12.9 seconds of Playwright-reported time;
-- all three directions made only `file:` requests and retained equal semantic
-  inventories;
-- the recommended 1600×1000 focus view has zero measured answer-label clipping,
-  no horizontal overflow, and a 12 px minimum answer-bearing label;
-- browser-memory compare screenshot: 490,018 bytes, SHA-256
-  `b7a0f5a6b5bce13c4d2fb71d8c769b1ced536ba331c87cf5597efaeee54b343d`;
-- browser-memory focus screenshot: 218,786 bytes, SHA-256
-  `4f0eff7130bbce47bf496ca8a9c85d97f0ddba1d8e522057ab4730ebb83c906a`.
+- final repository-owned `@va1-(compare|focus)-s1`: 2/2 passed in 12.5 seconds of
+  Playwright-reported time from one Chromium start;
+- all three directions made only `file:` requests and matched one
+  fixture-derived semantic snapshot across health, eight room states, evidence,
+  and timeline fields;
+- compare and focus now have zero measured answer-label clipping; focus has no
+  horizontal overflow and retains a 12 px minimum answer-bearing label;
+- the `FUTURE` label has zero horizontal center delta from seq 37 at 1600,
+  1251, 1250, and 1024 px widths, including automated forced-colors geometry;
+- browser-memory compare screenshot: 511,013 bytes, SHA-256
+  `0009be46d20c4b02ae4f7522deb9042a9c1cb52b7c61af3cceee0b9b3e488dc5`;
+- browser-memory focus screenshot: 227,296 bytes, SHA-256
+  `a2a41aa2fd6a7e101738f6514cb227d8d63225fd5aef4ba2457219213fb7614f`.
 
 These are engineering and visual-review observations only. Independent
-five-second recognition, grayscale/forced-colors review, hosted unmodified
+five-second recognition, human grayscale/forced-colors review, hosted unmodified
 attachments, and keep/revise/kill evidence remain pending. VA1 does not add an
 engine or authorize VA2 production assets.
 
