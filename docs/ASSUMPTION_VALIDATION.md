@@ -363,3 +363,39 @@ timeout/retry, motion, and density paths are explicit; every threshold is
 identified as protocol-derived or an initial value pending calibration; public
 or sensitive-run response minimization remains a named later gate; the direction
 precursor remains outside the frozen study conditions and production Canvas.
+
+## 2026-07-19 — VA1 concept-board preimplementation spikes
+
+Three PowerShell spikes, each under 20 lines, gate the isolated art-direction
+board before any HTML, CSS, or browser-contract implementation:
+
+| Assumption | Executable evidence | Result |
+|---|---|---|
+| A repository-local board can be reviewed through the pinned Chromium without adding an application route or server dependency. | `scripts/spikes/va1_file_board_preflight.ps1` opened an existing repository file at a `file:` URL in a 1600×1000 page and checked CSS Grid, `color-mix()`, and polygon `clip-path`. | PASS: `file:`, Grid, color mixing, and clip paths were all supported in the installed pinned browser. This validates the review surface, not the future board content. |
+| Three equal comparison panels can retain a useful scene width in the fixed review viewport. | `scripts/spikes/va1_layout_budget.ps1` reserved 64 px outer space and 32 px of gaps inside 1600 px. | PASS: each panel receives 501 px and its inner scene 477 px, above the initial 470 px concept-review floor. The floor is a layout assumption pending the rendered clipping check. |
+| VA1 can remain outside the production server, `static/`, and `anthill/` runtime boundaries. | `scripts/spikes/va1_runtime_isolation.ps1` scans those three boundaries for the reserved VA1 paths. Its first run scanned the whole repository and correctly RED on its own source text; the corrected scan is limited to the actual runtime paths. | PASS after the visible scope correction: zero production references. The later S0 contract must preserve this invariant after assets and tests exist. |
+
+These spikes permit only a local, non-runtime concept board. They do not approve
+generated imagery, select a production renderer, freeze a Phase 0 stimulus, or
+claim that a visual direction improves comprehension.
+
+### VA1 browser and truth RED→GREEN
+
+| Behavior | RED observation | GREEN observation |
+|---|---|---|
+| Executable board boundary | The exact `@va1-s0` test failed with `ERR_FILE_NOT_FOUND` because the concept board did not exist. | The repository-local board loads from `file:`, exposes three directions with identical inventories, and makes no non-`file:` request. |
+| Focus routing under isolation | The comparison state stayed active because Chromium refused a local ES module under the `file:` security boundary. | The dependency-free classic script reads the same bounded query values without adding a product route or changing browser security. |
+| Frozen fixture truth, first audit | Visual inspection found the focus view calling cursor-30 `error.recovered` a fictional `Context Worker 02 / OBSERVED` state in Context Loom. A new browser assertion failed on that text. | The first correction selected projected Researcher in Incident Bay, but an independent merge audit later proved that correction incomplete. |
+| Cursor truth, independent merge audit | The audit BLOCK found four contradictions: seq-31 `near full` leaked into cursor 30; `SUBJECT` incorrectly named the event agent; Compaction inferred `idle` without an event; and cursor health claimed live capture plus verified ledger integrity that the file board never evaluated. Fixture-backed assertions and manifest provenance first RED on the absent source binding. | All surfaces now distinguish selected Researcher, event subject `tool.logs-1`, and agent `agent.researcher`; use only cursor-30 room facts; label transport as synthetic and ledger as not checked; and isolate the seq-37 marker on the timeline as `FUTURE`. |
+| Three-direction truth symmetry | Independent review changed Blueprint ledger/context text and Miniature event subject independently; both counterexamples still passed because fixture-backed truth was asserted only for Field Manual. | The compare contract derives one semantic snapshot from the fixture and requires every panel to match it across four health signals, eight room states, evidence fields/text, and timeline seq/relation/ARIA. |
+| Compare answer-label clipping | The new compare assertion found `COMPACTION PRESS` clipped in all three directions. | The room title now uses the available width without reducing its 12 px font; all three exact labels pass the no-clipping check. |
+| Complete VA1 S1 selection | The dedicated path claimed complete feedback while grep selected only the compare case; tagging both cases exposed the runner's hard-coded one-test guard. | Policy `2026-07-19.9` declares `expected_tests: 2`; the runner validates positive integer counts and requires one exact `Running 2 tests` line plus one exact `2 passed` summary. |
+| Playwright summary word collision | A passing test title containing `displays skipped spans` returned exit zero and `2 passed`, but the runner searched the entire output for the bare word `skipped` and falsely failed it. | ANSI-stripped output is parsed as exact, unique summary lines. Title text is ignored; duplicate/conflicting summaries and real `skipped`, `failed`, `flaky`, `interrupted`, `did not run`, or error summaries fail closed. |
+| Temporal-label readability and anchoring | Raising `FUTURE` from 6 px to 12 px first produced `scrollHeight 13 > clientHeight 12`; right anchoring also drifted 152.5 px away from seq 37 in focus view. | The label is a 12 px answer-bearing element with a 13 px line box and an explicit `data-for-event-seq="37"`; its center delta from the marker is 0 px at 1600, 1251, 1250, and 1024 px widths, including forced-colors geometry. |
+| Answer-label readability | The rendered focus view was measured rather than accepted from CSS intent. | At 1600×1000, answer-bearing labels have zero horizontal/vertical clipping, the minimum computed font is 12 px, and the document has no horizontal overflow. |
+
+The independently corrected two-test slice passed in 9.7 seconds of
+Playwright-reported time.
+It proves a deterministic review board and one frozen truth state only. Human
+recognition, visual forced-colors/grayscale review, hosted unmodified
+screenshots, and the keep/revise/kill decision remain pending.

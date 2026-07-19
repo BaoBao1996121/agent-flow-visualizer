@@ -327,6 +327,16 @@ def _validate_policy(policy: dict[str, Any]) -> None:
             raise ValueError(f"check {check_id!r} must define a playwright grep")
         if check.get("kind") == "playwright" and not check["grep"].strip():
             raise ValueError(f"check {check_id!r} must define a non-empty playwright grep")
+        if check.get("kind") == "playwright":
+            expected_tests = check.get("expected_tests", 1)
+            if (
+                isinstance(expected_tests, bool)
+                or not isinstance(expected_tests, int)
+                or expected_tests < 1
+            ):
+                raise ValueError(
+                    f"check {check_id!r} has an invalid playwright expected_tests"
+                )
         timeout = check.get("timeout_seconds")
         if not isinstance(timeout, int) or timeout < 0:
             raise ValueError(f"check {check_id!r} has an invalid timeout")
@@ -702,6 +712,7 @@ def commands_for_plan(
                         "--grep",
                         check["grep"],
                     ],
+                    "expected_tests": check.get("expected_tests", 1),
                     "timeout_seconds": check["timeout_seconds"],
                 }
             )
@@ -792,12 +803,55 @@ def execute_plan(
                     else raw_output or ""
                 )
                 plain_output = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", playwright_output)
-                passed_once = re.search(r"\bRunning 1 test\b", plain_output) and re.search(
-                    r"\b1 passed\b", plain_output
+                expected_tests = command["expected_tests"]
+                noun = "test" if expected_tests == 1 else "tests"
+                run_pattern = re.compile(
+                    r"[ \t]*Running (?P<count>[1-9]\d*) (?P<noun>tests?) "
+                    r"using (?P<workers>[1-9]\d*) (?P<worker_noun>workers?)"
+                    r"(?:, shard (?P<shard>[1-9]\d*) of (?P<shards>[1-9]\d*))?[ \t]*"
                 )
-                if not passed_once or re.search(r"\bskipped\b", plain_output):
+                pass_pattern = re.compile(
+                    r"[ \t]*(?P<count>[1-9]\d*) passed"
+                    r"(?:[ \t]+\([^()\r\n]+\))?[ \t]*"
+                )
+                negative_pattern = re.compile(
+                    r"[ \t]*[1-9]\d* (?:"
+                    r"(?:failed|interrupted|flaky|skipped|did not run)"
+                    r"(?:[ \t]+\([^()\r\n]+\))?"
+                    r"|errors?(?:[ \t]+(?:was|were) not a part of any test, "
+                    r"see above for details)?"
+                    r")[ \t]*",
+                    re.IGNORECASE,
+                )
+                lines = plain_output.splitlines()
+                run_summaries = [
+                    match
+                    for line in lines
+                    if (match := run_pattern.fullmatch(line)) is not None
+                ]
+                pass_summaries = [
+                    match
+                    for line in lines
+                    if (match := pass_pattern.fullmatch(line)) is not None
+                ]
+                negative_summaries = [
+                    line for line in lines if negative_pattern.fullmatch(line) is not None
+                ]
+                exact_run = (
+                    len(run_summaries) == 1
+                    and int(run_summaries[0].group("count")) == expected_tests
+                    and run_summaries[0].group("noun") == noun
+                    and run_summaries[0].group("worker_noun")
+                    == ("worker" if int(run_summaries[0].group("workers")) == 1 else "workers")
+                )
+                exact_pass = (
+                    len(pass_summaries) == 1
+                    and int(pass_summaries[0].group("count")) == expected_tests
+                )
+                if not exact_run or not exact_pass or negative_summaries:
                     outcome = "failed"
-                    reason = "Playwright did not report exactly one passed test"
+                    count = "one" if expected_tests == 1 else str(expected_tests)
+                    reason = f"Playwright did not report exactly {count} passed {noun}"
         except subprocess.TimeoutExpired:
             returncode = None
             outcome = "timed_out"

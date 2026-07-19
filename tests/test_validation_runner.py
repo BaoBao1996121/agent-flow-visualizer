@@ -325,6 +325,26 @@ def test_phase0_visual_lab_has_a_dedicated_one_test_browser_and_syntax_path():
     ]
 
 
+def test_va1_concept_board_has_a_dedicated_s1_browser_docs_and_syntax_path():
+    policy = load_policy(POLICY)
+    plan = build_plan(
+        policy,
+        ["docs/visual-lab/va1/board.css"],
+        change_source="contract",
+    )
+
+    assert plan["required_stage"] == "S1"
+    assert plan["feedback_coverage"] == "complete"
+    assert [check["id"] for check in plan["checks"]] == [
+        "browser-va1-s1",
+        "docs-contracts",
+        "node-va1",
+    ]
+    browser_check = next(check for check in plan["checks"] if check["kind"] == "playwright")
+    assert browser_check["grep"] == "@va1-(compare|focus)-s1"
+    assert browser_check["expected_tests"] == 2
+
+
 def test_server_entrypoint_runs_both_production_and_visual_lab_browser_smokes():
     plan = build_plan(load_policy(POLICY), ["server.py"], change_source="contract")
     check_ids = {check["id"] for check in plan["checks"]}
@@ -368,6 +388,19 @@ def test_policy_requires_a_non_empty_playwright_grep(tmp_path):
     candidate.write_text(json.dumps(policy), encoding="utf-8")
 
     with pytest.raises(ValueError, match="playwright grep"):
+        load_policy(candidate)
+
+
+@pytest.mark.parametrize("expected_tests", [True, 0, -1, 1.5, "2"])
+def test_policy_requires_a_positive_integer_playwright_expected_test_count(
+    tmp_path, expected_tests
+):
+    policy = json.loads(POLICY.read_text(encoding="utf-8"))
+    policy["checks"]["browser-s0"]["expected_tests"] = expected_tests
+    candidate = tmp_path / "impact.json"
+    candidate.write_text(json.dumps(policy), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="playwright expected_tests"):
         load_policy(candidate)
 
 
@@ -501,6 +534,123 @@ def test_playwright_zero_exit_must_still_report_the_one_selected_test_passed(tmp
 
     assert browser_attempt["result"] == "failed"
     assert "did not report exactly one passed test" in browser_attempt["reason"]
+    assert report["feedback_conclusion"] == "failed"
+
+
+def test_playwright_expected_test_count_is_enforced_without_an_extra_browser_start(tmp_path):
+    playwright_cli = tmp_path / "node_modules" / "@playwright" / "test" / "cli.js"
+    playwright_cli.parent.mkdir(parents=True)
+    playwright_cli.write_text("// isolated prerequisite sentinel\n", encoding="utf-8")
+    plan = {
+        "plan_sha256": "va1-two-test-sentinel",
+        "feedback_coverage": "complete",
+        "checks": [
+            {
+                "id": "browser-va1-s1",
+                "kind": "playwright",
+                "grep": "@va1-(compare|focus)-s1",
+                "expected_tests": 2,
+                "timeout_seconds": 30,
+            }
+        ],
+    }
+
+    command_plan = commands_for_plan(plan, tmp_path)
+    assert len(command_plan["commands"]) == 1
+    assert command_plan["commands"][0]["expected_tests"] == 2
+
+    def run_with(output):
+        return execute_plan(
+            plan,
+            tmp_path,
+            run_command=lambda argv, **kwargs: CompletedProcess(argv, 0, stdout=output),
+        )
+
+    short = run_with(b"Running 1 test using 1 worker\n  1 passed\n")
+    assert short["attempts"][0]["result"] == "failed"
+    assert "exactly 2 passed tests" in short["attempts"][0]["reason"]
+
+    exact = run_with(b"Running 2 tests using 1 worker\n  2 passed\n")
+    assert exact["attempts"][0]["result"] == "passed"
+    assert exact["feedback_conclusion"] == "passed"
+
+
+def test_playwright_passing_title_containing_skipped_is_not_a_false_failure(tmp_path):
+    playwright_cli = tmp_path / "node_modules" / "@playwright" / "test" / "cli.js"
+    playwright_cli.parent.mkdir(parents=True)
+    playwright_cli.write_text("// isolated prerequisite sentinel\n", encoding="utf-8")
+    plan = {
+        "plan_sha256": "playwright-skipped-word-sentinel",
+        "feedback_coverage": "complete",
+        "checks": [
+            {
+                "id": "browser-va1-s1",
+                "kind": "playwright",
+                "grep": "@va1-(compare|focus)-s1",
+                "expected_tests": 2,
+                "timeout_seconds": 30,
+            }
+        ],
+    }
+    output = (
+        b"\x1b[2mRunning 2 tests using 1 worker\x1b[22m\r\n"
+        b"  [1/2] va1.spec.mjs:1:1 displays skipped spans\r\n"
+        b"  \x1b[32m2 passed (1s)\x1b[39m\r\n"
+    )
+
+    report = execute_plan(
+        plan,
+        tmp_path,
+        run_command=lambda argv, **kwargs: CompletedProcess(argv, 0, stdout=output),
+    )
+
+    assert report["attempts"][0]["result"] == "passed"
+    assert report["feedback_conclusion"] == "passed"
+
+
+@pytest.mark.parametrize(
+    "output",
+    [
+        b"Running 2 tests using 1 worker\nRunning 2 tests using 1 worker\n  2 passed (1s)\n",
+        b"Running 2 tests using 1 worker\n  2 passed (1s)\n  2 passed (1s)\n",
+        b"Running 2 tests using 1 worker\n  2 passed (1s)\n  1 skipped\n",
+        (
+            b"Running 2 tests using 1 worker\n  2 passed (1s)\n"
+            b"  1 error was not a part of any test, see above for details\n"
+        ),
+        (
+            b"Running 2 tests using 1 worker\n  2 passed (1s)\n"
+            b"  2 errors were not a part of any test, see above for details\n"
+        ),
+    ],
+)
+def test_playwright_summary_parser_rejects_duplicate_or_conflicting_summaries(
+    tmp_path, output
+):
+    playwright_cli = tmp_path / "node_modules" / "@playwright" / "test" / "cli.js"
+    playwright_cli.parent.mkdir(parents=True)
+    playwright_cli.write_text("// isolated prerequisite sentinel\n", encoding="utf-8")
+    plan = {
+        "plan_sha256": "playwright-summary-conflict-sentinel",
+        "feedback_coverage": "complete",
+        "checks": [
+            {
+                "id": "browser-va1-s1",
+                "kind": "playwright",
+                "grep": "@va1-(compare|focus)-s1",
+                "expected_tests": 2,
+                "timeout_seconds": 30,
+            }
+        ],
+    }
+
+    report = execute_plan(
+        plan,
+        tmp_path,
+        run_command=lambda argv, **kwargs: CompletedProcess(argv, 0, stdout=output),
+    )
+
+    assert report["attempts"][0]["result"] == "failed"
     assert report["feedback_conclusion"] == "failed"
 
 

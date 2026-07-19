@@ -1,0 +1,63 @@
+{
+  "schema": "anthill.va1-concept-manifest/0.1.0",
+  "status": "exploration_reference",
+  "created_at": "2026-07-19T05:08:10+08:00",
+  "updated_at": "2026-07-19T06:54:51+08:00",
+  "runtime_import_allowed": false,
+  "phase0_stimulus": false,
+  "renderer_decision": false,
+  "information_skeleton": {
+    "rooms": 8,
+    "worker_actions": 7,
+    "health_signals": 4,
+    "cursor_seq": 30,
+    "head_seq": 43,
+    "future_event_seq": 37
+  },
+  "source_fixture": {
+    "path": "tests/fixtures/visual_rich_v1.json",
+    "sha256": "6ae35e714fb6c99d98b8598e0d7f18ccfac8f305c655b294fb67d10d6a360ac2",
+    "synthetic": true,
+    "integrity_evaluated": false,
+    "cursor_event": {
+      "event_id": "evt_9f3509c116f482a3ea0b204f63c214eb",
+      "event_type": "error.recovered",
+      "agent_id": "agent.researcher",
+      "clock": { "source_seq": 30 },
+      "subject": { "kind": "tool.call", "id": "tool.logs-1", "name": "Query logs" },
+      "evidence": { "level": "declared" }
+    }
+  },
+  "directions": [
+    { "id": "field-manual", "label": "Technical field manual", "decision": "hypothesis" },
+    { "id": "blueprint", "label": "Luminous blueprint", "decision": "peer" },
+    { "id": "miniature", "label": "Mechanism miniature", "decision": "depth-risk-peer" }
+  ],
+  "source_assets": [],
+  "generation_attempts": [
+    {
+      "tool": "built-in image generation",
+      "date": "2026-07-19",
+      "result": "network_error_no_artifact",
+      "record": "IMAGEGEN_ATTEMPT.md",
+      "record_sha256": "a8d5d272e0618a158c5d9e9d3d917321ea3ab131923ad6c748feeeaa29c244ee",
+      "runtime_imported": false
+    }
+  ],
+  "authored_files": [
+    { "path": "index.html", "sha256": "efc14ab350df3880f81248765c27609aea81116d17af47ddf1c3166a881a77ad" },
+    { "path": "board.css", "sha256": "ad1f893f0276a9d50b1924d6c062c288e8ce1682f1c228c5c5b3964f7a07556c" },
+    { "path": "board.js", "sha256": "3dab74bb70edb4311ed78d06724cd1450af80c8fc3da51dc7e9396d79828f479" },
+    { "path": "README.md", "sha256": "e44860bb0e9ee5cb99ecd34abdfddda29091bc18836981ac4ea9e5238f7c1d04" }
+  ],
+  "local_browser_memory_screenshots": [
+    { "view": "compare", "viewport": "1600x1000", "bytes": 511013, "sha256": "0009be46d20c4b02ae4f7522deb9042a9c1cb52b7c61af3cceee0b9b3e488dc5" },
+    { "view": "focus:field-manual", "viewport": "1600x1000", "bytes": 227296, "sha256": "a2a41aa2fd6a7e101738f6514cb227d8d63225fd5aef4ba2457219213fb7614f" }
+  ],
+  "authored_with": ["HTML", "CSS", "SVG", "JavaScript"],
+  "review": {
+    "independent_human": "pending",
+    "five_second_recognition": "pending",
+    "keep_revise_kill": "pending"
+  }
+}
